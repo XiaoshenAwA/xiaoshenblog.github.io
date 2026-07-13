@@ -6,6 +6,12 @@
   <title>后台管理 | MyBlog</title>
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="<%= basePath %>/assets/admin.css">
+  <style>
+    .message-msg { margin-top: 10px; padding: 8px; border-radius: 4px; }
+    .message-msg.success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+    .message-msg.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+    .admin-header .btn-group { display: inline-flex; gap: 8px; align-items: center; }
+  </style>
 </head>
 <body>
 <div class="admin-page">
@@ -13,7 +19,10 @@
     <h1><i class="fas fa-cog"></i> 后台管理</h1>
     <div>
       <span class="admin-user" id="user-email"></span>
-      <button class="btn btn-sm btn-outline" id="logout-btn" style="margin-left:8px;display:none">退出</button>
+      <div class="btn-group">
+        <button class="btn btn-sm btn-outline" id="change-pw-btn" style="display:none">修改密码</button>
+        <button class="btn btn-sm btn-outline" id="logout-btn" style="display:none">退出</button>
+      </div>
     </div>
   </div>
 
@@ -68,6 +77,27 @@
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="edit-submit">保存</button>
           <button type="button" class="btn btn-outline" onclick="cancelEdit()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-view" id="view-change-pw">
+    <div class="edit-box">
+      <h3><i class="fas fa-key"></i> 修改密码</h3>
+      <form id="change-pw-form">
+        <div class="form-group">
+          <label>新密码</label>
+          <input type="password" id="new-password" required placeholder="输入新密码" minlength="6">
+        </div>
+        <div class="form-group">
+          <label>确认新密码</label>
+          <input type="password" id="confirm-password" required placeholder="再次输入新密码" minlength="6">
+        </div>
+        <div id="change-pw-message" class="message-msg" style="display:none;"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="change-pw-submit">确认修改</button>
+          <button type="button" class="btn btn-outline" onclick="cancelChangePw()">取消</button>
         </div>
       </form>
     </div>

@@ -16,10 +16,23 @@ function triggerDeploy() {
 const $ = s => document.querySelector(s)
 const $$ = s => document.querySelectorAll(s)
 
+// DOM refs
+const logoutBtn = $('#logout-btn')
+const changePwBtn = $('#change-pw-btn')
+const changePwForm = $('#change-pw-form')
+const changePwMessage = $('#change-pw-message')
+const newPasswordInput = $('#new-password')
+const confirmPasswordInput = $('#confirm-password')
+
 function showView(id) {
   $$('.admin-view').forEach(v => v.style.display = 'none')
   const el = document.getElementById(id)
   if (el) el.style.display = 'block'
+}
+
+function showButtons(show) {
+  logoutBtn.style.display = show ? 'inline-block' : 'none'
+  changePwBtn.style.display = show ? 'inline-block' : 'none'
 }
 
 async function checkAuth() {
@@ -27,9 +40,11 @@ async function checkAuth() {
   if (user) {
     showView('view-posts')
     $('#user-email').textContent = user.email
+    showButtons(true)
     loadPosts()
   } else {
     showView('view-login')
+    showButtons(false)
   }
 }
 
@@ -46,9 +61,80 @@ $('#login-form').addEventListener('submit', async e => {
   }
 })
 
-$('#logout-btn').addEventListener('click', async () => {
+logoutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut()
   showView('view-login')
+  showButtons(false)
+})
+
+// Change Password
+window.showChangePassword = function() {
+  changePwMessage.style.display = 'none'
+  changePwMessage.textContent = ''
+  changePwMessage.className = 'message-msg'
+  changePwForm.reset()
+  showView('view-change-pw')
+}
+
+window.cancelChangePw = function() {
+  showView('view-posts')
+}
+
+changePwBtn.addEventListener('click', showChangePassword)
+
+changePwForm.addEventListener('submit', async e => {
+  e.preventDefault()
+  const newPw = newPasswordInput.value
+  const confirmPw = confirmPasswordInput.value
+
+  changePwMessage.style.display = 'none'
+  changePwMessage.textContent = ''
+  changePwMessage.className = 'message-msg'
+
+  if (!newPw) {
+    changePwMessage.textContent = '请输入新密码'
+    changePwMessage.className = 'message-msg error'
+    changePwMessage.style.display = 'block'
+    return
+  }
+  if (newPw !== confirmPw) {
+    changePwMessage.textContent = '两次输入的密码不一致'
+    changePwMessage.className = 'message-msg error'
+    changePwMessage.style.display = 'block'
+    return
+  }
+  if (newPw.length < 6) {
+    changePwMessage.textContent = '密码至少6位'
+    changePwMessage.className = 'message-msg error'
+    changePwMessage.style.display = 'block'
+    return
+  }
+
+  const submitBtn = $('#change-pw-submit')
+  submitBtn.disabled = true
+  submitBtn.textContent = '修改中...'
+
+  const { error } = await supabase.auth.updateUser({ password: newPw })
+
+  submitBtn.disabled = false
+  submitBtn.textContent = '确认修改'
+
+  if (error) {
+    changePwMessage.textContent = '修改失败: ' + error.message
+    changePwMessage.className = 'message-msg error'
+    changePwMessage.style.display = 'block'
+    return
+  }
+
+  changePwMessage.textContent = '密码修改成功！'
+  changePwMessage.className = 'message-msg success'
+  changePwMessage.style.display = 'block'
+  changePwForm.reset()
+
+  // Automatically return to posts list after 2 seconds
+  setTimeout(() => {
+    cancelChangePw()
+  }, 2000)
 })
 
 async function loadPosts() {
