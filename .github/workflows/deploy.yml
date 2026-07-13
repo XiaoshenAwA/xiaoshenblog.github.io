@@ -29,13 +29,15 @@ jobs:
       - name: 安装依赖
         run: npm ci
 
+      - name: 构建 Vite 资源
+        run: npx vite build
+
       - name: 构建静态站点
-        run: npm run build
+        run: npm run build:static
         env:
           BASE_PATH: ${{ vars.BASE_PATH || '/xiaoshenblog.github.io' }}
-
-      - name: 配置 GitHub Pages
-        uses: actions/configure-pages@v4
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
       - name: 上传构建产物
         uses: actions/upload-pages-artifact@v3
