@@ -1,4 +1,13 @@
-<%- include('partials/header', { title: '后台管理' }) %>
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理 | MyBlog</title>
+  <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
+  <link rel="stylesheet" href="<%= basePath %>/assets/admin.css">
+</head>
+<body>
 <div class="admin-page">
   <div class="admin-header">
     <h1><i class="fas fa-cog"></i> 后台管理</h1>
@@ -66,9 +75,5 @@
 </div>
 
 <script src="<%= basePath %>/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
-<script>
-try {
-  document.getElementById('logout-btn').style.display = ''
-} catch(e) {}
-</script>
-<%- include('partials/footer') %>
+</body>
+</html>
