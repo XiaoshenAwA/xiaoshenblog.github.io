@@ -1,0 +1,118 @@
+<%- include('partials/header') %>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">MyBlog</h1>
+      <p class="hero-subtitle">记录生活，分享思考</p>
+      <div class="hero-search">
+        <input type="text" id="searchInput" placeholder="搜索文章..." onkeyup="if(event.key==='Enter')search()">
+        <button onclick="search()"><i class="fas fa-search"></i></button>
+      </div>
+    </div>
+  </section>
+
+  <div class="main-layout">
+    <div class="main-content">
+      <% if (tag) { %>
+        <div class="tag-filter-bar reveal">
+          <span class="tag-filter-label"><i class="fas fa-tag"></i> 标签：</span>
+          <span class="tag-pill active"><%= tag %></span>
+          <a href="<%= basePath %>/<%= isStatic ? '' : '' %>" class="tag-clear"><i class="fas fa-times"></i> 清除筛选</a>
+        </div>
+      <% } %>
+
+      <% if (posts.length === 0) { %>
+        <div class="empty-state reveal">
+          <div class="empty-icon"><i class="fas fa-book-open"></i></div>
+          <h3>还没有文章</h3>
+          <p>开始你的第一篇博客吧！</p>
+          <a href="<%= basePath %>/posts/new" class="btn btn-primary"><i class="fas fa-pen"></i> 开始写作</a>
+        </div>
+      <% } else { %>
+        <div class="articles-grid">
+          <% posts.forEach((post, i) => { %>
+            <article class="article-card reveal" style="animation-delay:<%= (i*0.08) %>s">
+              <% if (post.cover) { %>
+                <div class="article-cover" style="background-image:url('<%= post.cover %>')"></div>
+              <% } %>
+              <div class="article-body">
+                <div class="article-meta">
+                  <span><i class="far fa-calendar-alt"></i> <%= post.created_at %></span>
+                  <% post.tags.forEach(t => { %>
+                    <% var tagEnc = encodeURIComponent(t) %>
+                    <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="article-tag"><i class="fas fa-tag"></i> <%= t %></a>
+                  <% }) %>
+                </div>
+                <h2 class="article-title"><a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>"><%= post.title %></a></h2>
+                <p class="article-excerpt"><%= post.excerptText %></p>
+                <a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" class="read-more-btn">
+                  阅读全文 <i class="fas fa-arrow-right"></i>
+                </a>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+
+        <% if (totalPages > 1) { %>
+          <div class="pagination reveal">
+            <% if (page > 1) { %>
+              <a href="<%= basePath %><%= isStatic ? '/page/' + (page-1) + '/' : '/?page=' + (page-1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            <% } %>
+            <% for (let p = 1; p <= totalPages; p++) { %>
+              <a href="<%= basePath %><%= isStatic ? '/page/' + p + '/' : '/?page=' + p %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>"
+                 class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
+            <% } %>
+            <% if (page < totalPages) { %>
+              <a href="<%= basePath %><%= isStatic ? '/page/' + (page+1) + '/' : '/?page=' + (page+1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            <% } %>
+          </div>
+        <% } %>
+      <% } %>
+    </div>
+
+    <aside class="sidebar">
+      <div class="widget card reveal">
+        <div class="avatar-box">
+          <div class="avatar"><i class="fas fa-user-circle"></i></div>
+          <h3>博主</h3>
+          <p class="bio">热爱技术，享受生活</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="#"><i class="fab fa-weibo"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="widget card reveal">
+        <h3 class="widget-title"><i class="fas fa-chart-simple"></i> 站点统计</h3>
+        <ul class="stats-list">
+          <li><span>文章</span><span><%= posts.length %></span></li>
+        </ul>
+      </div>
+      <% if (typeof allTags !== 'undefined' && allTags.length > 0) { %>
+        <div class="widget card reveal">
+          <h3 class="widget-title"><i class="fas fa-tags"></i> 标签云</h3>
+          <div class="tag-cloud">
+            <% allTags.forEach(t => { %>
+              <% var tagEnc = encodeURIComponent(t) %>
+              <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="cloud-tag"><%= t %></a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+
+<% var searchBase = isStatic ? (basePath + '/tag/') : (basePath + '/?tag='); %>
+<script>
+function search() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) window.location.href = '<%= searchBase %>' + encodeURIComponent(q) + '<%= isStatic ? "/" : "" %>';
+}
+</script>
+<%- include('partials/footer') %>

@@ -1,0 +1,39 @@
+<%- include('partials/header', { title: '关于' }) %>
+
+  <div class="main-layout single-layout">
+    <div class="main-content">
+      <div class="about-page reveal">
+        <div class="about-hero">
+          <div class="about-avatar"><i class="fas fa-user-astronaut"></i></div>
+          <h1>关于我</h1>
+          <p class="about-tagline">一名热爱技术的开发者</p>
+        </div>
+
+        <div class="about-content card">
+          <p>欢迎来到我的个人博客！这里是我分享技术、生活和思考的地方。</p>
+          <p>目前已经写了 <strong><%= postCount %></strong> 篇文章。</p>
+
+          <h3><i class="fas fa-tags"></i> 所有标签</h3>
+          <div class="tag-cloud about-tags">
+            <% if (allTags.length > 0) { %>
+              <% allTags.forEach(t => { %>
+                <% var tagEnc = encodeURIComponent(t) %>
+                <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="cloud-tag"><%= t %></a>
+              <% }) %>
+            <% } else { %>
+              <p class="muted">暂无标签</p>
+            <% } %>
+          </div>
+
+          <h3><i class="fas fa-link"></i> 联系方式</h3>
+          <div class="contact-links">
+            <a href="#" class="contact-btn"><i class="fab fa-github"></i> GitHub</a>
+            <a href="#" class="contact-btn"><i class="fab fa-weibo"></i> 微博</a>
+            <a href="#" class="contact-btn"><i class="fab fa-twitter"></i> Twitter</a>
+            <a href="#" class="contact-btn"><i class="fas fa-envelope"></i> Email</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+<%- include('partials/footer') %>

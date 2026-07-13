@@ -1,0 +1,63 @@
+<%- include('partials/header', { title: post.title }) %>
+
+  <div class="main-layout single-layout">
+    <div class="main-content">
+      <article class="post-article reveal">
+        <header class="post-header">
+          <h1 class="post-title"><%= post.title %></h1>
+          <div class="post-meta-bar">
+            <span><i class="far fa-calendar-alt"></i> <%= post.created_at %></span>
+            <% if (post.updated_at !== post.created_at) { %>
+              <span><i class="far fa-edit"></i> 更新于 <%= post.updated_at %></span>
+            <% } %>
+            <span><i class="far fa-clock"></i> <%= Math.ceil(post.content.length / 500) || 1 %> 分钟</span>
+          </div>
+          <% if (post.tags.length > 0) { %>
+            <div class="post-tags">
+              <% post.tags.forEach(t => { %>
+                <% var tagEnc = encodeURIComponent(t) %>
+                <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="tag-pill"><i class="fas fa-tag"></i> <%= t %></a>
+              <% }) %>
+            </div>
+          <% } %>
+        </header>
+        <div class="post-content"><%- post.contentHtml %></div>
+        <div class="post-actions">
+          <% if (!isStatic) { %>
+            <a href="<%= basePath %>/posts/<%= post.id %>/edit" class="btn btn-primary"><i class="fas fa-edit"></i> 编辑</a>
+            <form action="<%= basePath %>/posts/<%= post.id %>?_method=DELETE" method="POST" style="display:inline">
+              <button type="submit" class="btn btn-danger" onclick="return confirm('确定删除？')"><i class="fas fa-trash"></i> 删除</button>
+            </form>
+          <% } %>
+          <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        </div>
+      </article>
+    </div>
+
+    <aside class="sidebar">
+      <div class="widget card reveal">
+        <div class="avatar-box">
+          <div class="avatar"><i class="fas fa-user-circle"></i></div>
+          <h3>博主</h3>
+          <p class="bio">热爱技术，享受生活</p>
+          <div class="social-links">
+            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="#"><i class="fab fa-weibo"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+          </div>
+        </div>
+      </div>
+      <% if (typeof allTags !== 'undefined' && allTags.length > 0) { %>
+        <div class="widget card reveal">
+          <h3 class="widget-title"><i class="fas fa-tags"></i> 标签云</h3>
+          <div class="tag-cloud">
+            <% allTags.forEach(t => { %>
+              <% var tagEnc = encodeURIComponent(t) %>
+              <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="cloud-tag"><%= t %></a>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+    </aside>
+  </div>
+<%- include('partials/footer') %>

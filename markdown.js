@@ -1,0 +1,210 @@
+const katex = require('katex');
+
+const katexOptions = {
+  throwOnError: false,
+  errorColor: '#cc0000',
+  strict: false
+};
+
+let md = null;
+let ready = false;
+
+const langDisplay = {
+  vue: 'Vue', vuejs: 'Vue',
+  jsx: 'JSX', tsx: 'TSX',
+  html: 'HTML', css: 'CSS',
+  javascript: 'JavaScript', typescript: 'TypeScript',
+  python: 'Python', sql: 'SQL',
+  json: 'JSON', yaml: 'YAML',
+  markdown: 'Markdown',
+  bash: 'Bash', shell: 'Shell', powershell: 'PowerShell',
+  xml: 'XML', dockerfile: 'Docker',
+  go: 'Go', rust: 'Rust', java: 'Java',
+  c: 'C', cpp: 'C++', csharp: 'C#',
+  php: 'PHP', ruby: 'Ruby', swift: 'Swift',
+  kotlin: 'Kotlin',
+  scss: 'SCSS', sass: 'Sass', less: 'Less',
+  diff: 'Diff', graphql: 'GraphQL',
+  http: 'HTTP', ini: 'INI', toml: 'TOML',
+  makefile: 'Makefile', nginx: 'Nginx',
+  plaintext: 'Text', text: 'Text',
+  latex: 'LaTeX', tex: 'TeX'
+};
+
+async function init() {
+  if (ready) return;
+
+  const shiki = await import('shiki');
+  const { fromHighlighter } = await import('@shikijs/markdown-it/core');
+  const {
+    transformerMetaHighlight,
+    transformerNotationHighlight,
+    transformerNotationDiff,
+    transformerNotationFocus,
+    transformerNotationErrorLevel
+  } = await import('@shikijs/transformers');
+
+  const highlighter = await shiki.createHighlighter({
+    langs: [
+      'javascript', 'typescript', 'html', 'css', 'vue', 'vue-html',
+      'python', 'jsx', 'tsx', 'json', 'bash', 'sql', 'markdown',
+      'yaml', 'xml', 'shell', 'go', 'rust', 'java', 'c', 'cpp',
+      'php', 'ruby', 'swift', 'kotlin', 'scss', 'less', 'diff',
+      'dockerfile', 'graphql', 'http', 'ini', 'makefile', 'nginx',
+      'plaintext', 'regexp', 'sass', 'toml', 'csharp',
+      'r', 'perl', 'lua', 'haskell', 'elixir',
+      'clojure', 'powershell', 'latex', 'tex'
+    ],
+    themes: ['github-light', 'github-dark']
+  });
+
+  const MarkdownIt = require('markdown-it');
+  const markdownItMath = (await import('markdown-it-math')).default;
+  const markdownItEmoji = (await import('markdown-it-emoji')).full;
+  const markdownItMark = require('markdown-it-mark');
+  const markdownItInsDel = require('markdown-it-ins-del');
+  const { default: markdownItContainer } = await import('markdown-it-container');
+
+  md = new MarkdownIt({
+    html: true,
+    linkify: true,
+    typographer: true
+  });
+
+  md.use(markdownItEmoji);
+  md.use(markdownItMark);
+  md.use(markdownItInsDel);
+
+  function makeContainer(name, icon, defaultTitle) {
+    md.use(markdownItContainer, name, {
+      validate: function (params) {
+        return params.trim().startsWith(name) || params.trim().match(new RegExp('^' + name + '\\['));
+      },
+      render: function (tokens, idx) {
+        if (tokens[idx].nesting === 1) {
+          var title = defaultTitle;
+          var info = tokens[idx].info.trim().slice(name.length).trim();
+          var optMatch = info.match(/\{([^}]*)\}$/);
+          var opts = optMatch ? optMatch[1].trim() : '';
+          if (optMatch) info = info.slice(0, optMatch.index).trim();
+          var titleMatch = info.match(/^\[([\s\S]*)\]$/);
+          if (titleMatch) title = md.renderInline(titleMatch[1]);
+          var openAttr = opts === 'open' ? ' open' : '';
+          return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + icon + ' ' + title + '</summary>\n';
+        }
+        return '</details>\n';
+      }
+    });
+  }
+
+  function makeAdmonition(name, icon, defaultTitle) {
+    md.use(markdownItContainer, name, {
+      validate: function (params) {
+        return params.trim() === name || params.trim().match(new RegExp('^' + name + '\\['));
+      },
+      render: function (tokens, idx) {
+        if (tokens[idx].nesting === 1) {
+          var title = defaultTitle;
+          var info = tokens[idx].info.trim().slice(name.length).trim();
+          var titleMatch = info.match(/^\[([\s\S]*)\]$/);
+          if (titleMatch) title = md.renderInline(titleMatch[1]);
+          return '<div class="admonition ' + name + '"><p class="admonition-title">' + icon + ' ' + title + '</p>\n';
+        }
+        return '</div>\n';
+      }
+    });
+  }
+
+  makeAdmonition('info', '<i class="fas fa-circle-info"></i>', '提示');
+  makeAdmonition('success', '<i class="fas fa-circle-check"></i>', '完成');
+  makeAdmonition('warning', '<i class="fas fa-triangle-exclamation"></i>', '注意');
+  makeAdmonition('error', '<i class="fas fa-circle-xmark"></i>', '错误');
+  makeAdmonition('danger', '<i class="fas fa-ban"></i>', '危险');
+  makeContainer('details', '<i class="fas fa-chevron-right"></i>', '详情');
+
+  md.use(await fromHighlighter(highlighter, {
+    themes: { light: 'github-light', dark: 'github-dark' },
+    defaultColor: false,
+    transformers: [
+      transformerMetaHighlight(),
+      transformerNotationHighlight(),
+      transformerNotationDiff(),
+      transformerNotationFocus(),
+      transformerNotationErrorLevel()
+    ]
+  }));
+
+  const originalFence = md.renderer.rules.fence;
+  md.renderer.rules.fence = function (tokens, idx, options, env, self) {
+    const token = tokens[idx];
+    const fullInfo = token.info.trim();
+    const parts = fullInfo.split(/\s+/);
+    const lang = parts[0];
+    const langName = langDisplay[lang] || (lang ? lang.toUpperCase() : '');
+
+    const html = originalFence.call(this, tokens, idx, options, env, self);
+
+    const preMatch = html.match(/^<pre[^>]*>/);
+    if (!preMatch) return html;
+
+    const preTag = preMatch[0];
+    const styleMatch = preTag.match(/style="([^"]+)"/);
+    const preStyle = styleMatch ? styleMatch[1] : '';
+
+    const afterPre = html.slice(preTag.length);
+    const closePre = '</pre>';
+    const closeIdx = afterPre.lastIndexOf(closePre);
+    const innerCode = closeIdx >= 0 ? afterPre.slice(0, closeIdx) : afterPre;
+
+    const toolsHtml = '<div class="highlight-tools">'
+      + '<div class="mac-style">'
+      + '<span class="mac-close"></span>'
+      + '<span class="mac-minimize"></span>'
+      + '<span class="mac-maximize"></span>'
+      + '</div>'
+      + '<span class="code-lang">' + langName + '</span>'
+      + '<i class="copy-btn" title="复制">复制</i>'
+      + '</div>';
+
+    return '<figure class="highlight" style="' + preStyle + '">'
+      + toolsHtml
+      + '<pre class="code-wrap">' + innerCode + '</pre>'
+      + '</figure>';
+  };
+
+  md.use(markdownItMath, {
+    inlineOpen: '$',
+    inlineClose: '$',
+    blockOpen: '$$',
+    blockClose: '$$',
+    inlineRenderer: (str) => {
+      try {
+        return katex.renderToString(str, { ...katexOptions, displayMode: false });
+      } catch (e) {
+        return `<span style="color:#cc0000">[公式错误: ${e.message}]</span>`;
+      }
+    },
+    blockRenderer: (str) => {
+      try {
+        return katex.renderToString(str, { ...katexOptions, displayMode: true });
+      } catch (e) {
+        return `<span style="color:#cc0000" class="katex-error katex-display">[公式错误: ${e.message}]</span>`;
+      }
+    }
+  });
+
+  ready = true;
+}
+
+async function render(content) {
+  await init();
+  return md.render(content || '');
+}
+
+async function excerpt(content, maxLen = 200) {
+  const html = await render(content);
+  const text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
+}
+
+module.exports = { render, excerpt, init };

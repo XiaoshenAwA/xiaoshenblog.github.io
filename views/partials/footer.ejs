@@ -1,0 +1,70 @@
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-social">
+        <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+        <a href="#" title="微博"><i class="fab fa-weibo"></i></a>
+        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" title="RSS"><i class="fas fa-rss"></i></a>
+      </div>
+      <p class="footer-text">
+        &copy; 2026 MyBlog. Powered by Express &amp; SQLite.
+        <br>Theme inspired by <strong>Butterfly</strong>
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    try {
+      var t = document.getElementById('themeToggle');
+      if (t) {
+        var h = document.documentElement;
+        var i = t.querySelector('i');
+        var s = localStorage.getItem('theme');
+        if (s) { h.setAttribute('data-theme', s); i.className = s === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; }
+        t.addEventListener('click', function() {
+          var c = h.getAttribute('data-theme');
+          var n = c === 'dark' ? 'light' : 'dark';
+          h.setAttribute('data-theme', n);
+          localStorage.setItem('theme', n);
+          i.className = n === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+      }
+    } catch(e) {}
+
+    try {
+      document.getElementById('menuToggle').addEventListener('click', function() {
+        document.getElementById('mobileMenu').classList.toggle('open');
+      });
+    } catch(e) {}
+
+    try {
+      window.addEventListener('scroll', function() {
+        var bar = document.getElementById('progressBar');
+        if (!bar) return;
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+        bar.style.width = p + '%';
+      });
+    } catch(e) {}
+
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.copy-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        var codeEl = fig.querySelector('pre.code-wrap code');
+        if (!codeEl) return;
+        var text = codeEl.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+          var orig = btn.textContent;
+          btn.textContent = '\u5df2\u590d\u5236';
+          setTimeout(function() { btn.textContent = orig; }, 1500);
+        }).catch(function() {
+          btn.textContent = '\u590d\u5236\u5931\u8d25';
+          setTimeout(function() { btn.textContent = '\u590d\u5236'; }, 1500);
+        });
+      });
+    } catch(e) {}
+  </script>
+</body>
+</html>
