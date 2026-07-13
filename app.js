@@ -20,6 +20,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get(`${BASE_PATH}/admin`, (req, res) => {
+  res.render('admin');
+});
+
 app.use(BASE_PATH, postsRouter);
 
 app.listen(PORT, () => {
