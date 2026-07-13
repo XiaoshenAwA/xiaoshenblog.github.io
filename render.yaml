@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: my-blog
+    env: node
+    buildCommand: npm install && npx vite build
+    startCommand: node app.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: BASE_PATH
+        value: ''
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
