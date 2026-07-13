@@ -3,7 +3,7 @@ const path = require('path');
 const ejs = require('ejs');
 const { getAllTags, getAllPosts } = require('./db');
 const { PAGE_SIZE, BASE_PATH } = require('./config');
-const { render: renderMd, excerpt } = require('./markdown');
+const { render: renderMd, excerpt, init } = require('./markdown');
 const dist = path.join(__dirname, 'dist');
 
 function writeFile(filePath, content) {
@@ -89,7 +89,9 @@ async function build() {
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u5173\u4E8E\u9875\u9762...');
-  await render('about.ejs', { allTags, postCount: allPosts.length }, 'about/index.html');
+  const aboutContent = fs.readFileSync(path.join(__dirname, 'views', 'about_content.md'), 'utf-8');
+  const aboutHtml = await renderMd(aboutContent);
+  await render('about.ejs', { allTags, postCount: allPosts.length, aboutHtml }, 'about/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210\u540E\u53F0\u7BA1\u7406\u9875\u9762...');
   await render('admin.ejs', { allTags: [], postCount: 0, title: '\u540E\u53F0\u7BA1\u7406' }, 'admin/index.html');

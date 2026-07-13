@@ -10,9 +10,13 @@
         </div>
 
         <div class="about-content card">
-          <p>欢迎来到我的个人博客！这里是我分享技术、生活和思考的地方。</p>
-          <p>目前已经写了 <strong><%= postCount %></strong> 篇文章。</p>
+          <h3><i class="fas fa-info-circle"></i> 关于本站</h3>
+          <div class="about-rendered">
+            <%- aboutHtml %>
+          </div>
+        </div>
 
+        <div class="about-content card" style="margin-top:24px">
           <h3><i class="fas fa-tags"></i> 所有标签</h3>
           <div class="tag-cloud about-tags">
             <% if (allTags.length > 0) { %>
@@ -24,7 +28,9 @@
               <p class="muted">暂无标签</p>
             <% } %>
           </div>
+        </div>
 
+        <div class="about-content card" style="margin-top:24px">
           <h3><i class="fas fa-link"></i> 联系方式</h3>
           <div class="contact-links">
             <a href="#" class="contact-btn"><i class="fab fa-github"></i> GitHub</a>
