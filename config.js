@@ -1,4 +1,4 @@
-const BASE_PATH = process.env.BASE_PATH || '';
+const BASE_PATH = process.env.BASE_PATH || '/xiaoshenblog.github.io';
 const IS_STATIC = process.env.STATIC_BUILD === 'true';
 const PAGE_SIZE = 5;
 
