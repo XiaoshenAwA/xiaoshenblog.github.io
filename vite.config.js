@@ -11,10 +11,14 @@ export default defineConfig({
     outDir: path.resolve(__dirname, 'public/assets'),
     emptyOutDir: true,
     rollupOptions: {
-      input: path.resolve(__dirname, 'src/main.js'),
+      input: {
+        main: path.resolve(__dirname, 'src/main.js'),
+        admin: path.resolve(__dirname, 'src/admin.js')
+      },
       output: {
-        entryFileNames: 'main.js',
-        assetFileNames: 'main[extname]'
+        entryFileNames: '[name].js',
+        chunkFileNames: 'chunk.[hash].js',
+        assetFileNames: '[name][extname]'
       }
     }
   }

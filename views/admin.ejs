@@ -1,0 +1,74 @@
+<%- include('partials/header', { title: '后台管理' }) %>
+<div class="admin-page">
+  <div class="admin-header">
+    <h1><i class="fas fa-cog"></i> 后台管理</h1>
+    <div>
+      <span class="admin-user" id="user-email"></span>
+      <button class="btn btn-sm btn-outline" id="logout-btn" style="margin-left:8px;display:none">退出</button>
+    </div>
+  </div>
+
+  <div class="admin-view" id="view-login">
+    <div class="login-box">
+      <h2><i class="fas fa-lock"></i> 管理员登录</h2>
+      <form id="login-form">
+        <div class="form-group">
+          <input type="email" id="login-email" placeholder="邮箱" required>
+        </div>
+        <div class="form-group">
+          <input type="password" id="login-password" placeholder="密码" required>
+        </div>
+        <button type="submit" class="btn btn-primary">登录</button>
+        <div class="error-msg" id="login-error"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-view" id="view-posts">
+    <div class="toolbar">
+      <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-plus"></i> 写新文章</button>
+      <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
+    </div>
+    <div id="posts-loading" class="loading">加载中...</div>
+    <div id="posts-error" class="error-msg"></div>
+    <div id="posts-list"></div>
+  </div>
+
+  <div class="admin-view" id="view-edit">
+    <div class="edit-box">
+      <h3 id="edit-heading"><i class="fas fa-pen"></i> 编辑文章</h3>
+      <form id="edit-form">
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+          <label>标题</label>
+          <input type="text" id="edit-title" required placeholder="文章标题">
+        </div>
+        <div class="form-group">
+          <label>内容 (Markdown)</label>
+          <textarea id="edit-content" required placeholder="支持 Markdown 语法"></textarea>
+        </div>
+        <div class="form-group">
+          <label>标签（逗号分隔）</label>
+          <input type="text" id="edit-tags" placeholder="标签1, 标签2">
+        </div>
+        <div class="form-group">
+          <label>封面图 URL</label>
+          <input type="text" id="edit-cover" placeholder="https://...">
+        </div>
+        <div class="error-msg" id="edit-error"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="edit-submit">保存</button>
+          <button type="button" class="btn btn-outline" onclick="cancelEdit()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="<%= basePath %>/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
+<script>
+try {
+  document.getElementById('logout-btn').style.display = ''
+} catch(e) {}
+</script>
+<%- include('partials/footer') %>

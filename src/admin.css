@@ -1,0 +1,37 @@
+.admin-page { max-width: 1000px; margin: 40px auto; padding: 0 24px; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.admin-header h1 { font-size: 1.5em; display: flex; align-items: center; gap: 8px; }
+.admin-user { font-size: 0.85em; color: #999; }
+.admin-view { display: none; }
+.admin-view:first-child { display: block; }
+
+.login-box { max-width: 360px; margin: 80px auto; padding: 32px; background: var(--bg-card); border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.login-box h2 { text-align: center; margin-bottom: 24px; }
+.login-box .form-group { margin-bottom: 16px; }
+.login-box input { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95em; background: var(--input-bg); color: var(--text); }
+.login-box input:focus { outline: none; border-color: var(--accent); }
+.login-box .btn { width: 100%; justify-content: center; }
+.error-msg { color: #e74c3c; font-size: 0.85em; margin-top: 8px; }
+
+.toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+
+.post-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 10px; transition: 0.2s; gap: 12px; }
+.post-item:hover { border-color: var(--accent); }
+.post-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.post-item-info strong { font-size: 1em; }
+.post-item-info .muted { font-size: 0.82em; }
+.post-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag-list .tag-pill { font-size: 0.75em; padding: 1px 8px; }
+
+.edit-box { max-width: 800px; }
+.edit-box .form-group { margin-bottom: 16px; }
+.edit-box label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 0.92em; color: var(--text-secondary); }
+.edit-box input, .edit-box textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95em; background: var(--input-bg); color: var(--text); font-family: inherit; }
+.edit-box input:focus, .edit-box textarea:focus { outline: none; border-color: var(--accent); }
+.edit-box textarea { min-height: 300px; resize: vertical; line-height: 1.6; }
+.form-actions { display: flex; gap: 10px; }
+
+.btn-sm { padding: 6px 14px; font-size: 0.85em; border-radius: 8px; }
+
+.loading { text-align: center; padding: 40px; color: #999; }
