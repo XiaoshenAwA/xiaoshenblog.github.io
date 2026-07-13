@@ -7,6 +7,11 @@ import { createClient } from '@supabase/supabase-js'
 const SUPABASE_URL = 'https://eacieurozwzligrxnyos.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P'
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const DEPLOY_HOOK_URL = 'https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/aeddd3fe-52ad-45c1-9b29-4b0093c2168b'
+
+function triggerDeploy() {
+  fetch(DEPLOY_HOOK_URL, { method: 'POST' }).catch(() => {})
+}
 
 const $ = s => document.querySelector(s)
 const $$ = s => document.querySelectorAll(s)
@@ -109,6 +114,7 @@ $('#edit-form').addEventListener('submit', async e => {
   if (error) { $('#edit-error').textContent = '保存失败: ' + error.message; return }
   cancelEdit()
   loadPosts()
+  triggerDeploy()
 })
 
 $('#new-post-btn').addEventListener('click', () => {
@@ -130,6 +136,7 @@ window.deletePost = async function (id) {
   const { error } = await supabase.from('posts').delete().eq('id', id)
   if (error) { alert('删除失败: ' + error.message); return }
   loadPosts()
+  triggerDeploy()
 }
 
 checkAuth()
