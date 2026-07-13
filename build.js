@@ -29,7 +29,7 @@ function copyDirSync(src, dest) {
 }
 
 async function build() {
-  const basePath = process.env.BASE_PATH || BASE_PATH;
+  const basePath = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : BASE_PATH;
   const isStatic = true;
 
   console.log('\u6B63\u5728\u6E05\u7406 dist \u76EE\u5F55...');

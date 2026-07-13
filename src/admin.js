@@ -5,7 +5,7 @@ import 'katex/dist/katex.min.css'
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = 'https://eacieurozwzligrxnyos.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A-Ez0P'
+const SUPABASE_ANON_KEY = 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P'
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const $ = s => document.querySelector(s)

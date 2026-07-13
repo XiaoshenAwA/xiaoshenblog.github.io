@@ -1,7 +1,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-const BASE_PATH = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : '/xiaoshenblog.github.io';
+const BASE_PATH = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : '';
 const IS_STATIC = process.env.STATIC_BUILD === 'true';
 const PAGE_SIZE = 5;
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
