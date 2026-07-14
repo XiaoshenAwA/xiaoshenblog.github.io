@@ -46,6 +46,7 @@
   <div class="admin-view" id="view-posts">
     <div class="toolbar">
       <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-plus"></i> 写新文章</button>
+      <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> 编辑关于页</button>
       <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
     </div>
     <div id="posts-loading" class="loading">加载中...</div>
@@ -99,6 +100,23 @@
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="change-pw-submit">确认修改</button>
           <button type="button" class="btn btn-outline" onclick="cancelChangePw()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="admin-view" id="view-about">
+    <div class="edit-box">
+      <h3><i class="fas fa-info-circle"></i> 编辑关于页</h3>
+      <form id="about-form">
+        <div class="form-group">
+          <label>内容 (Markdown)</label>
+          <textarea id="about-content" rows="20" placeholder="支持 Markdown 语法"></textarea>
+        </div>
+        <div id="about-message" class="message-msg" style="display:none;"></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="about-submit">保存</button>
+          <button type="button" class="btn btn-outline" onclick="cancelAbout()">取消</button>
         </div>
       </form>
     </div>

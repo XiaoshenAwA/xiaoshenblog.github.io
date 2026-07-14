@@ -806,6 +806,35 @@ figure.highlight code .line.highlighted.info {
   box-shadow: inset 3px 0 0 #3b82f6;
 }
 
+/* Focus mode: dim non-focused lines */
+figure.highlight:has(code .focused) code .line:not(.focused) {
+  opacity: 0.35;
+  filter: grayscale(0.5);
+  transition: opacity 0.2s, filter 0.2s;
+}
+figure.highlight:has(code .focused) code .line.focused {
+  opacity: 1;
+  filter: none;
+}
+
+/* Diff markers replace line numbers */
+figure.highlight code .line.diff.add::before {
+  content: '+';
+  color: #22c55e;
+  font-weight: bold;
+}
+figure.highlight code .line.diff.remove::before {
+  content: '-';
+  color: #ef4444;
+  font-weight: bold;
+}
+
+/* Focused line highlight */
+figure.highlight code .line.focused {
+  background: rgba(59,130,246,0.06);
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .main-layout {

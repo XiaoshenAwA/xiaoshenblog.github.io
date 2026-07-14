@@ -82,11 +82,33 @@ router.put('/posts/:id', async (req, res) => {
   }
 });
 
+const aboutFilePath = path.join(__dirname, '..', 'views', 'about_content.md');
+
+router.get('/about/raw', (req, res) => {
+  try {
+    const content = fs.readFileSync(aboutFilePath, 'utf-8');
+    res.type('text/plain').send(content);
+  } catch (e) {
+    res.status(500).send('读取失败');
+  }
+});
+
+router.post('/about', (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content) return res.status(400).send('内容不能为空');
+    fs.writeFileSync(aboutFilePath, content, 'utf-8');
+    res.send('ok');
+  } catch (e) {
+    res.status(500).send('保存失败');
+  }
+});
+
 router.get('/about', async (req, res) => {
   try {
     const allTags = await getAllTags();
     const postCount = await getPostCount();
-    const aboutContent = fs.readFileSync(path.join(__dirname, '..', 'views', 'about_content.md'), 'utf-8');
+    const aboutContent = fs.readFileSync(aboutFilePath, 'utf-8');
     const aboutHtml = await render(aboutContent);
     res.render('about', { allTags, postCount, aboutHtml, basePath: BASE_PATH, isStatic: false });
   } catch (e) {

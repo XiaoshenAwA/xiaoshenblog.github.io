@@ -23,6 +23,11 @@ const changePwForm = $('#change-pw-form')
 const changePwMessage = $('#change-pw-message')
 const newPasswordInput = $('#new-password')
 const confirmPasswordInput = $('#confirm-password')
+const editAboutBtn = $('#edit-about-btn')
+const aboutForm = $('#about-form')
+const aboutContent = $('#about-content')
+const aboutMessage = $('#about-message')
+const aboutSubmit = $('#about-submit')
 
 function showView(id) {
   $$('.admin-view').forEach(v => v.style.display = 'none')
@@ -63,8 +68,10 @@ $('#login-form').addEventListener('submit', async e => {
 
 logoutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut()
-  showView('view-login')
-  showButtons(false)
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('sb-')) localStorage.removeItem(key)
+  })
+  location.reload()
 })
 
 // Change Password
@@ -135,6 +142,65 @@ changePwForm.addEventListener('submit', async e => {
   setTimeout(() => {
     cancelChangePw()
   }, 2000)
+})
+
+// About editing
+editAboutBtn.addEventListener('click', async () => {
+  aboutMessage.style.display = 'none'
+  aboutContent.value = '加载中...'
+  showView('view-about')
+  try {
+    const res = await fetch('/about/raw')
+    const text = await res.text()
+    aboutContent.value = text
+  } catch {
+    aboutContent.value = ''
+    aboutMessage.textContent = '加载失败'
+    aboutMessage.className = 'message-msg error'
+    aboutMessage.style.display = 'block'
+  }
+})
+
+window.cancelAbout = function () {
+  showView('view-posts')
+}
+
+aboutForm.addEventListener('submit', async e => {
+  e.preventDefault()
+  aboutMessage.style.display = 'none'
+  aboutMessage.textContent = ''
+  aboutMessage.className = 'message-msg'
+
+  const content = aboutContent.value
+  if (!content) {
+    aboutMessage.textContent = '内容不能为空'
+    aboutMessage.className = 'message-msg error'
+    aboutMessage.style.display = 'block'
+    return
+  }
+
+  aboutSubmit.disabled = true
+  aboutSubmit.textContent = '保存中...'
+
+  try {
+    const res = await fetch('/about', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    })
+    if (!res.ok) throw new Error(await res.text())
+    aboutMessage.textContent = '保存成功！'
+    aboutMessage.className = 'message-msg success'
+    aboutMessage.style.display = 'block'
+    setTimeout(cancelAbout, 1500)
+  } catch (err) {
+    aboutMessage.textContent = '保存失败: ' + err.message
+    aboutMessage.className = 'message-msg error'
+    aboutMessage.style.display = 'block'
+  }
+
+  aboutSubmit.disabled = false
+  aboutSubmit.textContent = '保存'
 })
 
 async function loadPosts() {

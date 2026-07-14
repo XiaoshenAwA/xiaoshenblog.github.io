@@ -148,8 +148,14 @@ async function init() {
     if (!preMatch) return html;
 
     const preTag = preMatch[0];
+
     const styleMatch = preTag.match(/style="([^"]+)"/);
     const preStyle = styleMatch ? styleMatch[1] : '';
+
+    const classMatch = preTag.match(/class="([^"]*)"/);
+    const preClass = classMatch ? classMatch[1] + ' code-wrap' : 'code-wrap';
+
+    const otherAttrs = preTag.replace(/^<pre\s*/i, '').replace(/\s*>$/i, '').replace(/(style|class)="[^"]*"/g, '').trim();
 
     const afterPre = html.slice(preTag.length);
     const closePre = '</pre>';
@@ -168,7 +174,7 @@ async function init() {
 
     return '<figure class="highlight" style="' + preStyle + '">'
       + toolsHtml
-      + '<pre class="code-wrap">' + innerCode + '</pre>'
+      + '<pre class="' + preClass + '"' + (otherAttrs ? ' ' + otherAttrs : '') + '>' + innerCode + '</pre>'
       + '</figure>';
   };
 
