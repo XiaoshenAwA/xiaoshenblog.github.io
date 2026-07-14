@@ -1,0 +1,44 @@
+<%- include('partials/header', { title: 'Markdown 编辑器' }) %>
+<link rel="stylesheet" href="<%= basePath %>/assets/editor.css">
+<link rel="stylesheet" href="<%= basePath %>/assets/hljs.css">
+<style>
+.editor-page ~ .site-footer { display: none !important; }
+</style>
+<div class="editor-page">
+  <div class="editor-toolbar">
+    <button class="toolbar-btn" data-md="**" data-wrap="**" title="粗体"><i class="fas fa-bold"></i></button>
+    <button class="toolbar-btn" data-md="*" data-wrap="*" title="斜体"><i class="fas fa-italic"></i></button>
+    <button class="toolbar-btn" data-md="~~" data-wrap="~~" title="删除线"><i class="fas fa-strikethrough"></i></button>
+    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" data-md="# " data-wrap="" title="标题"><i class="fas fa-heading"></i></button>
+    <button class="toolbar-btn" data-md="> " data-wrap="" title="引用"><i class="fas fa-quote-right"></i></button>
+    <button class="toolbar-btn" data-md="- " data-wrap="" title="无序列表"><i class="fas fa-list-ul"></i></button>
+    <button class="toolbar-btn" data-md="1. " data-wrap="" title="有序列表"><i class="fas fa-list-ol"></i></button>
+    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" data-md="```\n" data-wrap="\n```" title="代码块"><i class="fas fa-code"></i></button>
+    <button class="toolbar-btn" data-md="[" data-wrap="](url)" title="链接"><i class="fas fa-link"></i></button>
+    <button class="toolbar-btn" data-md="![" data-wrap="](url)" title="图片"><i class="fas fa-image"></i></button>
+    <button class="toolbar-btn" data-md="---" data-wrap="" title="分割线"><i class="fas fa-minus"></i></button>
+    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" id="editor-download" title="下载为 Markdown"><i class="fas fa-download"></i></button>
+    <span class="toolbar-divider"></span>
+    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" id="indent-toggle" title="缩进方式：Tab（点击切换为空格）"><i class="fas fa-indent"></i></button>
+    <button class="toolbar-btn view-mode-btn active" data-mode="split" title="分栏"><i class="fas fa-columns"></i></button>
+    <button class="toolbar-btn view-mode-btn" data-mode="edit" title="仅编辑"><i class="fas fa-pen"></i></button>
+    <button class="toolbar-btn view-mode-btn" data-mode="preview" title="仅预览"><i class="fas fa-eye"></i></button>
+  </div>
+  <div class="editor-container">
+    <div class="editor-pane">
+      <div class="editor-input-wrap">
+        <div class="editor-gutter" id="editor-gutter"></div>
+        <textarea id="editor-input" placeholder="在此输入 Markdown..."></textarea>
+      </div>
+    </div>
+    <div class="editor-pane">
+      <div class="post-content" id="editor-preview"><p class="muted">等待输入...</p></div>
+    </div>
+  </div>
+</div>
+<script type="module" src="<%= basePath %>/assets/editor.js" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
+<%- include('partials/footer') %>

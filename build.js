@@ -96,6 +96,9 @@ async function build() {
   console.log('\u6B63\u5728\u751F\u6210\u540E\u53F0\u7BA1\u7406\u9875\u9762...');
   await render('admin.ejs', { allTags: [], postCount: 0, title: '\u540E\u53F0\u7BA1\u7406' }, 'admin/index.html');
 
+  console.log('\u6B63\u5728\u751F\u6210 Markdown \u7F16\u8F91\u5668\u9875\u9762...');
+  await render('editor.ejs', { title: 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');
+
   console.log('\u6B63\u5728\u590D\u5236\u9759\u6001\u8D44\u6E90...');
   copyDirSync(path.join(__dirname, 'public'), dist);
 

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/admin.css">
+<link rel="stylesheet" href="<%= basePath %>/assets/hljs.css">
   <style>
     .message-msg { margin-top: 10px; padding: 8px; border-radius: 4px; }
     .message-msg.success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
@@ -45,7 +46,7 @@
 
   <div class="admin-view" id="view-posts">
     <div class="toolbar">
-      <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-plus"></i> 写新文章</button>
+      <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-pen"></i> 写文章</button>
       <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> 编辑关于页</button>
       <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
     </div>
@@ -56,24 +57,50 @@
 
   <div class="admin-view" id="view-edit">
     <div class="edit-box">
-      <h3 id="edit-heading"><i class="fas fa-pen"></i> 编辑文章</h3>
+      <h3 id="edit-heading"><i class="fas fa-pen"></i> 写文章</h3>
       <form id="edit-form">
         <input type="hidden" id="edit-id">
         <div class="form-group">
-          <label>标题</label>
-          <input type="text" id="edit-title" required placeholder="文章标题">
+          <input type="text" id="edit-title" required placeholder="标题" style="font-size:1.3em;font-weight:600;border:none;padding:8px 0;background:transparent;color:var(--text);width:100%;outline:none;">
         </div>
-        <div class="form-group">
-          <label>内容 (Markdown)</label>
-          <textarea id="edit-content" required placeholder="支持 Markdown 语法"></textarea>
+        <div class="form-group editor-wrap">
+          <div class="editor-toolbar">
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="**" data-wrap="**" title="粗体"><i class="fas fa-bold"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="*" data-wrap="*" title="斜体"><i class="fas fa-italic"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="~~" data-wrap="~~" title="删除线"><i class="fas fa-strikethrough"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="# " data-wrap="" title="标题"><i class="fas fa-heading"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="> " data-wrap="" title="引用"><i class="fas fa-quote-right"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="- " data-wrap="" title="无序列表"><i class="fas fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="1. " data-wrap="" title="有序列表"><i class="fas fa-list-ol"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="```\n" data-wrap="\n```" title="代码块"><i class="fas fa-code"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="[" data-wrap="](url)" title="链接"><i class="fas fa-link"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="![" data-wrap="](url)" title="图片"><i class="fas fa-image"></i></button>
+            <button type="button" class="toolbar-btn" data-target="edit-content" data-md="---" data-wrap="" title="分割线"><i class="fas fa-minus"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn fs-toggle" title="全屏"><i class="fas fa-expand"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn indent-toggle" title="缩进方式：Tab（点击切换为空格）"><i class="fas fa-indent"></i></button>
+            <button type="button" class="toolbar-btn view-mode-btn active" data-mode="split" data-target="editor-edit" title="分栏"><i class="fas fa-columns"></i></button>
+            <button type="button" class="toolbar-btn view-mode-btn" data-mode="edit" data-target="editor-edit" title="仅编辑"><i class="fas fa-pen"></i></button>
+            <button type="button" class="toolbar-btn view-mode-btn" data-mode="preview" data-target="editor-edit" title="仅预览"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="editor-container" id="editor-edit">
+            <div class="editor-pane">
+              <div class="editor-input-wrap">
+                <div class="editor-gutter" data-for="edit-content"></div>
+                <textarea id="edit-content" required placeholder="支持 Markdown 语法"></textarea>
+              </div>
+            </div>
+            <div class="editor-pane">
+              <div class="post-content" id="edit-preview"><p class="muted">预览区域</p></div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label>标签（逗号分隔）</label>
-          <input type="text" id="edit-tags" placeholder="标签1, 标签2">
-        </div>
-        <div class="form-group">
-          <label>封面图 URL</label>
-          <input type="text" id="edit-cover" placeholder="https://...">
+        <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;">
+          <input type="text" id="edit-tags" placeholder="标签（逗号分隔）" style="flex:1;min-width:150px;">
+          <input type="text" id="edit-cover" placeholder="封面图 URL" style="flex:2;min-width:200px;">
         </div>
         <div class="error-msg" id="edit-error"></div>
         <div class="form-actions">
@@ -109,9 +136,40 @@
     <div class="edit-box">
       <h3><i class="fas fa-info-circle"></i> 编辑关于页</h3>
       <form id="about-form">
-        <div class="form-group">
-          <label>内容 (Markdown)</label>
-          <textarea id="about-content" rows="20" placeholder="支持 Markdown 语法"></textarea>
+        <div class="form-group editor-wrap">
+          <div class="editor-toolbar">
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="**" data-wrap="**" title="粗体"><i class="fas fa-bold"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="*" data-wrap="*" title="斜体"><i class="fas fa-italic"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="~~" data-wrap="~~" title="删除线"><i class="fas fa-strikethrough"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="# " data-wrap="" title="标题"><i class="fas fa-heading"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="> " data-wrap="" title="引用"><i class="fas fa-quote-right"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="- " data-wrap="" title="无序列表"><i class="fas fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="1. " data-wrap="" title="有序列表"><i class="fas fa-list-ol"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="```\n" data-wrap="\n```" title="代码块"><i class="fas fa-code"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="[" data-wrap="](url)" title="链接"><i class="fas fa-link"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="![" data-wrap="](url)" title="图片"><i class="fas fa-image"></i></button>
+            <button type="button" class="toolbar-btn" data-target="about-content" data-md="---" data-wrap="" title="分割线"><i class="fas fa-minus"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn fs-toggle" title="全屏"><i class="fas fa-expand"></i></button>
+            <span class="toolbar-divider"></span>
+            <button type="button" class="toolbar-btn indent-toggle" title="缩进方式：Tab（点击切换为空格）"><i class="fas fa-indent"></i></button>
+            <button type="button" class="toolbar-btn view-mode-btn active" data-mode="split" data-target="editor-about" title="分栏"><i class="fas fa-columns"></i></button>
+            <button type="button" class="toolbar-btn view-mode-btn" data-mode="edit" data-target="editor-about" title="仅编辑"><i class="fas fa-pen"></i></button>
+            <button type="button" class="toolbar-btn view-mode-btn" data-mode="preview" data-target="editor-about" title="仅预览"><i class="fas fa-eye"></i></button>
+          </div>
+          <div class="editor-container" id="editor-about">
+            <div class="editor-pane">
+              <div class="editor-input-wrap">
+                <div class="editor-gutter" data-for="about-content"></div>
+                <textarea id="about-content" placeholder="支持 Markdown 语法"></textarea>
+              </div>
+            </div>
+            <div class="editor-pane">
+              <div class="post-content" id="about-preview"><p class="muted">预览区域</p></div>
+            </div>
+          </div>
         </div>
         <div id="about-message" class="message-msg" style="display:none;"></div>
         <div class="form-actions">

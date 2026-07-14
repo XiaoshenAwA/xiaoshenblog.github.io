@@ -98,19 +98,32 @@ async function init() {
   }
 
   function makeAdmonition(name, icon, defaultTitle) {
+    var tagStack = [];
     md.use(markdownItContainer, name, {
       validate: function (params) {
         return params.trim() === name || params.trim().match(new RegExp('^' + name + '\\['));
       },
       render: function (tokens, idx) {
         if (tokens[idx].nesting === 1) {
-          var title = defaultTitle;
           var info = tokens[idx].info.trim().slice(name.length).trim();
+          var title = defaultTitle;
+          var openAttr = '';
+          var optMatch = info.match(/\{([^}]*)\}$/);
+          if (optMatch) {
+            if (optMatch[1].trim() === 'open') openAttr = ' open';
+            info = info.slice(0, optMatch.index).trim();
+          }
           var titleMatch = info.match(/^\[([\s\S]*)\]$/);
+          var hasTitle = !!titleMatch;
           if (titleMatch) title = md.renderInline(titleMatch[1]);
+          if (hasTitle) {
+            tagStack.push('details');
+            return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + icon + ' ' + title + '</summary>\n';
+          }
+          tagStack.push('div');
           return '<div class="admonition ' + name + '"><p class="admonition-title">' + icon + ' ' + title + '</p>\n';
         }
-        return '</div>\n';
+        return (tagStack.pop() === 'details' ? '</details>\n' : '</div>\n');
       }
     });
   }

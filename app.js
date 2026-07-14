@@ -25,6 +25,10 @@ app.get(`${BASE_PATH}/admin`, (req, res) => {
   res.render('admin');
 });
 
+app.get(`${BASE_PATH}/editor`, (req, res) => {
+  res.render('editor');
+});
+
 app.use(BASE_PATH, postsRouter);
 
 app.listen(PORT, () => {

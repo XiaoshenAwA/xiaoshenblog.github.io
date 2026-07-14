@@ -13,12 +13,18 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'src/main.js'),
-        admin: path.resolve(__dirname, 'src/admin.js')
+        admin: path.resolve(__dirname, 'src/admin.js'),
+        editor: path.resolve(__dirname, 'src/editor.js')
       },
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: 'chunk.[hash].js',
-        assetFileNames: '[name][extname]'
+        assetFileNames: '[name][extname]',
+        manualChunks(id) {
+          if (id.includes('highlight.js')) return 'hljs'
+          if (id.includes('katex')) return 'katex'
+          if (id.includes('markdown-it')) return 'mdit'
+        }
       }
     }
   }
