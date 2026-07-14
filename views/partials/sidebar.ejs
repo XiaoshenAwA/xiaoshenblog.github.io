@@ -1,0 +1,152 @@
+<% if (config.ASIDE_CARD_AUTHOR) { %>
+<div class="card-widget card-info text-center">
+  <div class="avatar-img">
+    <img src="<%= basePath %><%= config.AVATAR_IMG || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>"<%= config.AVATAR_EFFECT ? ' class="avatar-effect"' : '' %>>
+  </div>
+  <div class="author-info-name"><%= config.BLOG_AUTHOR %></div>
+  <div class="author-info-description"><%= config.BLOG_AUTHOR_BIO %></div>
+  <div class="site-data">
+    <a href="<%= basePath %>/archives/"><div class="headline">文章</div><div class="length-num"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div></a>
+    <a href="<%= basePath %>/tags/"><div class="headline">标签</div><div class="length-num"><%= typeof allTags !== 'undefined' ? allTags.length : 0 %></div></a>
+    <a href="<%= basePath %>/categories/"><div class="headline">分类</div><div class="length-num"><%= typeof allCategories !== 'undefined' ? allCategories.length : 0 %></div></a>
+  </div>
+  <% if (config.SOCIAL_GITHUB) { %>
+  <a id="card-info-btn" target="_blank" rel="noopener" href="<%= config.SOCIAL_GITHUB %>"><i class="fab fa-github"></i><span>关注我</span></a>
+  <% } %>
+  <div class="card-info-social-icons">
+    <% if (config.SOCIAL_GITHUB) { %><a class="social-icon" href="<%= config.SOCIAL_GITHUB %>" target="_blank" title="Github"><i class="fab fa-github"></i></a><% } %>
+    <% if (config.SOCIAL_WEIBO) { %><a class="social-icon" href="<%= config.SOCIAL_WEIBO %>" target="_blank" title="微博"><i class="fab fa-weibo"></i></a><% } %>
+    <% if (config.SOCIAL_TWITTER) { %><a class="social-icon" href="<%= config.SOCIAL_TWITTER %>" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a><% } %>
+    <% if (config.SOCIAL_EMAIL) { %><a class="social-icon" href="mailto:<%= config.SOCIAL_EMAIL %>" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a><% } %>
+  </div>
+</div>
+<% } %>
+
+<% if (config.ASIDE_CARD_ANNOUNCEMENT && config.ASIDE_ANNOUNCEMENT_CONTENT) { %>
+<div class="card-widget card-announcement">
+  <div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div>
+  <div class="announcement_content"><%= config.ASIDE_ANNOUNCEMENT_CONTENT %></div>
+</div>
+<% } %>
+
+<div class="sticky_layout">
+  <% if (config.ASIDE_CARD_RECENT_POST && typeof recentPosts !== 'undefined' && recentPosts.length > 0) { %>
+  <div class="card-widget card-recent-post">
+    <div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div>
+    <div class="aside-list">
+      <% recentPosts.forEach(p => { %>
+        <div class="aside-list-item">
+          <a class="thumbnail" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>">
+            <img src="<%= p.cover || config.DEFAULT_COVER || 'https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png' %>" alt="<%= p.title %>">
+          </a>
+          <div class="content">
+            <a class="title" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>"><%= p.title %></a>
+            <time datetime="<%= p.created_at %>"><%= formatDate(p.created_at) %></time>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (config.ASIDE_CARD_CATEGORIES && typeof categoryTree !== 'undefined' && categoryTree.length > 0) { %>
+  <div class="card-widget card-categories">
+    <div class="item-headline">
+      <i class="fas fa-folder-open"></i>
+      <span>分类</span>
+      <a class="card-more-btn" href="<%= basePath %>/categories/" title="查看更多"><i class="fas fa-angle-right"></i></a>
+    </div>
+    <ul class="card-category-list" id="aside-cat-list">
+      <% function renderCatTree(nodes, maxNodes) { var count = 0; nodes.forEach(function(c) { if (maxNodes > 0 && count >= maxNodes) return; count++; var hasChild = categoryTree.some(function(x) { return x.path.indexOf(c.path + '/') === 0; }); %>
+        <li class="card-category-list-item" style="padding-left:<%= c.level * 16 %>px">
+          <% if (hasChild) { %><span class="cat-toggle" data-path="<%= c.path %>" style="cursor:pointer;display:inline-block;width:16px;text-align:center;font-size:0.75em;color:var(--accent);margin-right:4px"><i class="fas fa-plus"></i></span><% } else { %><span style="display:inline-block;width:16px;margin-right:4px"></span><% } %>
+          <a class="card-category-list-link" href="<%= basePath %>/?cat=<%= encodeURIComponent(c.path) %>" style="display:inline-flex;gap:4px">
+            <span class="card-category-list-name"><%= c.name %></span>
+            <span class="card-category-list-count"><%= c.count %></span>
+          </a>
+        </li>
+      <% }); } renderCatTree(categoryTree.filter(function(c) { return c.level === 0; }), config.ASIDE_CATEGORIES_LIMIT || 8); %>
+    </ul>
+    <div style="margin-top:8px;text-align:center">
+      <a href="<%= basePath %>/categories/" style="font-size:0.85em;color:var(--text-muted)"><i class="fas fa-folder-plus"></i> 所有分类</a>
+    </div>
+  </div>
+  <script>
+    try {
+      document.querySelectorAll('.cat-toggle').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var path = this.getAttribute('data-path');
+          var icon = this.querySelector('i');
+          var expanded = icon.classList.contains('fa-minus');
+          icon.className = expanded ? 'fas fa-plus' : 'fas fa-minus';
+          var target = this.parentElement;
+          var next = target.nextElementSibling;
+          while (next && next.querySelector('.card-category-list-item')) {
+            var isChild = next.querySelector('.card-category-list-link');
+            if (isChild && next.style.paddingLeft && parseInt(next.style.paddingLeft) > parseInt(target.style.paddingLeft)) {
+              next.style.display = expanded ? 'none' : '';
+              next = next.nextElementSibling;
+            } else break;
+          }
+        });
+      });
+    } catch(e) {}
+  </script>
+  <% } %>
+
+  <% if (config.ASIDE_CARD_TAGS && typeof allTags !== 'undefined' && allTags.length > 0) { %>
+  <div class="card-widget card-tags">
+    <div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div>
+    <div class="card-tag-cloud">
+      <% allTags.slice(0, config.ASIDE_TAGS_LIMIT || 30).forEach(t => { %>
+        <% var tagEnc = encodeURIComponent(t) %>
+        <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"><%= t %></a>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+
+  <% if (config.ASIDE_CARD_ARCHIVES && typeof archives !== 'undefined' && archives.length > 0) { %>
+  <div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
+    </div>
+    <ul class="card-archive-list">
+      <% archives.slice(0, config.ASIDE_ARCHIVES_LIMIT || 8).forEach(a => { %>
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="<%= basePath %>/archives#<%= a.year %>-<%= String(a.month).padStart(2,'0') %>">
+            <span class="card-archive-list-date"><%= a.year %> 年 <%= a.month %> 月</span>
+            <span class="card-archive-list-count"><%= a.count %></span>
+          </a>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+  <% } %>
+
+  <% if (config.ASIDE_CARD_WEBINFO) { %>
+  <div class="card-widget card-webinfo">
+    <div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div>
+    <div class="webinfo">
+      <% if (config.ASIDE_WEBINFO_POST_COUNT) { %>
+      <div class="webinfo-item">
+        <div class="item-name">文章数目 :</div>
+        <div class="item-count"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div>
+      </div>
+      <% } %>
+      <div class="webinfo-item">
+        <div class="item-name">本站总字数 :</div>
+        <div class="item-count"><%= typeof totalWordCount !== 'undefined' ? (totalWordCount/1000).toFixed(1) + 'k' : 0 %></div>
+      </div>
+      <% if (config.ASIDE_WEBINFO_RUNTIME_DATE) { %>
+      <div class="webinfo-item">
+        <div class="item-name">运行时间 :</div>
+        <div class="item-count runtime-days" data-start="<%= config.ASIDE_WEBINFO_RUNTIME_DATE %>">计算中...</div>
+      </div>
+      <% } %>
+    </div>
+  </div>
+  <% } %>
+</div>

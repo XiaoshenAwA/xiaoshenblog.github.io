@@ -114,9 +114,9 @@ const aboutMessage = $('#about-message')
 const aboutSubmit = $('#about-submit')
 
 function showView(id) {
-  $$('.admin-view').forEach(v => v.style.display = 'none')
+  $$('.admin-view').forEach(v => v.classList.remove('active'))
   const el = document.getElementById(id)
-  if (el) el.style.display = id === 'view-edit' || id === 'view-about' ? 'flex' : 'block'
+  if (el) el.classList.add('active')
 }
 
 function showButtons(show) {
@@ -633,6 +633,7 @@ window.editPost = async function (id) {
   $('#edit-title').value = data.title
   $('#edit-content').value = data.content
   $('#edit-tags').value = (data.tags || []).join(', ')
+  $('#edit-category').value = data.category || ''
   $('#edit-cover').value = data.cover || ''
   showView('view-edit')
   updatePreview('edit-content', 'edit-preview')
@@ -643,6 +644,7 @@ $('#edit-form').addEventListener('submit', async e => {
   const id = $('#edit-id').value
   const title = $('#edit-title').value
   const content = $('#edit-content').value
+  const category = $('#edit-category').value || ''
   const tags = $('#edit-tags').value.split(',').map(t => t.trim()).filter(Boolean)
   const cover = $('#edit-cover').value
 
@@ -653,9 +655,9 @@ $('#edit-form').addEventListener('submit', async e => {
 
   let error
   if (id) {
-    ({ error } = await supabase.from('posts').update({ title, content, tags, cover, updated_at: new Date().toISOString() }).eq('id', id))
+    ({ error } = await supabase.from('posts').update({ title, content, tags, cover, category, word_count: content.length, updated_at: new Date().toISOString() }).eq('id', id))
   } else {
-    ({ error } = await supabase.from('posts').insert({ title, content, tags, cover }))
+    ({ error } = await supabase.from('posts').insert({ title, content, tags, cover, category, word_count: content.length }))
   }
 
   $('#edit-submit').disabled = false
@@ -677,6 +679,7 @@ $('#new-post-btn').addEventListener('click', () => {
   $('#edit-title').value = localStorage.getItem('admin-draft-edit-title') || ''
   const draft = localStorage.getItem('admin-draft-edit-content')
   $('#edit-content').value = draft || ''
+  $('#edit-category').value = ''
   $('#edit-tags').value = ''
   $('#edit-cover').value = ''
   $('#edit-submit').textContent = '保存'

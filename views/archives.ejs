@@ -1,0 +1,40 @@
+<%- include('partials/header', { title: '归档' }) %>
+
+  <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
+    <div id="archive">
+      <div class="page-header reveal">
+        <h1><i class="fas fa-archive"></i> 归档</h1>
+        <p>全部文章 - <%= archives.reduce((s, a) => s + a.count, 0) %></p>
+      </div>
+
+      <% if (archives.length === 0) { %>
+        <div class="empty-state reveal">
+          <div class="empty-icon"><i class="fas fa-archive"></i></div>
+          <h3>暂无文章</h3>
+        </div>
+      <% } else { %>
+        <div class="article-sort">
+          <% archives.forEach(a => { %>
+            <div class="article-sort-item year" id="<%= a.year %>-<%= String(a.month).padStart(2,'0') %>"><%= a.year %></div>
+            <% a.posts.forEach(p => { %>
+              <div class="article-sort-item">
+                <a class="article-sort-item-img" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>">
+                  <img src="<%= p.cover || config.DEFAULT_COVER || 'https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png' %>" alt="<%= p.title %>">
+                </a>
+                <div class="article-sort-item-info">
+                  <div class="article-sort-item-time"><i class="far fa-calendar-alt"></i><time datetime="<%= p.created_at %>"><%= formatDate(p.created_at) %></time></div>
+                  <a class="article-sort-item-title" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>"><%= p.title %></a>
+                </div>
+              </div>
+            <% }) %>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="aside-content" id="aside-content">
+      <%- include('partials/sidebar') %>
+    </div>
+  </main>
+
+<%- include('partials/footer') %>

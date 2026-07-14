@@ -191,6 +191,12 @@ const config = {
   ADMIN_SAVE_REDIRECT_DELAY: cfg.admin?.save_redirect_delay ?? 1500,
   ADMIN_CHANGE_PW_REDIRECT_DELAY: cfg.admin?.change_pw_redirect_delay ?? 2000,
 
+  // 侧边栏附属配置
+  SIDEBAR_RECENT_COUNT: cfg.aside?.card_recent_post?.limit ?? 5,
+
+  // 友链
+  FRIEND_LINKS: cfg.friend_links ?? [],
+
   // 社交
   SOCIAL_GITHUB: cfg.social?.github ?? '#',
   SOCIAL_WEIBO: cfg.social?.weibo ?? '#',

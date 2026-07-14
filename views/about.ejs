@@ -1,7 +1,7 @@
 <%- include('partials/header', { title: '关于' }) %>
 
-  <div class="main-layout single-layout">
-    <div class="main-content">
+  <main class="layout hide-aside" id="content-inner">
+    <div id="about">
       <div class="about-page reveal">
         <div class="about-hero">
           <% if (config.AVATAR_IMG) { %>
@@ -9,27 +9,19 @@
           <% } else { %>
             <div class="about-avatar"><i class="fas fa-user-astronaut"></i></div>
           <% } %>
-          <h1>关于我</h1>
-          <p class="about-tagline"><%= config.ABOUT_TAGLINE %></p>
-        </div>
-
-        <div class="about-content card">
-          <h3><i class="fas fa-info-circle"></i> 关于本站</h3>
-          <div class="post-content">
-            <%- aboutHtml %>
+          <h1><%= config.BLOG_AUTHOR %></h1>
+          <p class="about-tagline"><%= config.BLOG_AUTHOR_BIO %></p>
+          <div class="social-links">
+            <% if (config.SOCIAL_GITHUB) { %><a href="<%= config.SOCIAL_GITHUB %>"><i class="fab fa-github"></i></a><% } %>
+            <% if (config.SOCIAL_WEIBO) { %><a href="<%= config.SOCIAL_WEIBO %>"><i class="fab fa-weibo"></i></a><% } %>
+            <% if (config.SOCIAL_TWITTER) { %><a href="<%= config.SOCIAL_TWITTER %>"><i class="fab fa-twitter"></i></a><% } %>
           </div>
         </div>
-
-        <div class="about-content card" style="margin-top:24px">
-          <h3><i class="fas fa-link"></i> 联系方式</h3>
-          <div class="contact-links">
-            <a href="<%= config.SOCIAL_GITHUB %>" class="contact-btn"><i class="fab fa-github"></i> GitHub</a>
-            <a href="<%= config.SOCIAL_WEIBO %>" class="contact-btn"><i class="fab fa-weibo"></i> 微博</a>
-            <a href="<%= config.SOCIAL_TWITTER %>" class="contact-btn"><i class="fab fa-twitter"></i> Twitter</a>
-            <a href="<%= config.SOCIAL_EMAIL %>" class="contact-btn"><i class="fas fa-envelope"></i> Email</a>
-          </div>
+        <div class="about-content card-widget">
+          <%- aboutHtml %>
         </div>
       </div>
     </div>
-  </div>
+  </main>
+
 <%- include('partials/footer') %>

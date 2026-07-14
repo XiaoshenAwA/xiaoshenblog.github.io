@@ -1,7 +1,7 @@
 <%- include('partials/header', { title: post.title }) %>
 
-  <div class="main-layout single-layout<%= !config.ASIDE_ENABLE ? ' no-sidebar' : '' %>">
-    <div class="main-content">
+  <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
+    <div id="post">
       <article class="post-article reveal">
         <header class="post-header">
           <h1 class="post-title"><%= post.title %></h1>
@@ -11,6 +11,9 @@
               <span><i class="far fa-edit"></i> 更新于 <%= formatDate(post.updated_at) %></span>
             <% } %>
             <span><i class="far fa-clock"></i> <%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %> 分钟</span>
+            <% if (post.category) { %>
+            <span><i class="fas fa-inbox"></i> <%= post.category %></span>
+            <% } %>
           </div>
           <% if (post.tags.length > 0) { %>
             <div class="post-tags">
@@ -76,44 +79,16 @@
       </article>
     </div>
 
-    <% if (config.ASIDE_ENABLE) { %>
-    <aside class="sidebar<%= !config.ASIDE_MOBILE ? ' hide-mobile' : '' %>">
-      <div class="widget card reveal">
-        <div class="avatar-box">
-          <% if (config.AVATAR_IMG) { %>
-            <img src="<%= basePath %><%= config.AVATAR_IMG %>" alt="<%= config.BLOG_AUTHOR %>" class="avatar-img<%= config.AVATAR_EFFECT ? ' avatar-effect' : '' %>">
-          <% } else { %>
-            <div class="avatar"><i class="fas fa-user-circle"></i></div>
-          <% } %>
-          <h3><%= config.BLOG_AUTHOR %></h3>
-          <p class="bio"><%= config.BLOG_AUTHOR_BIO %></p>
-          <div class="social-links">
-            <a href="<%= config.SOCIAL_GITHUB %>"><i class="fab fa-github"></i></a>
-            <a href="<%= config.SOCIAL_WEIBO %>"><i class="fab fa-weibo"></i></a>
-            <a href="<%= config.SOCIAL_TWITTER %>"><i class="fab fa-twitter"></i></a>
-          </div>
-        </div>
-      </div>
-      <% if (config.ASIDE_CARD_TAGS && typeof allTags !== 'undefined' && allTags.length > 0) { %>
-        <div class="widget card reveal">
-          <h3 class="widget-title"><i class="fas fa-tags"></i> 标签云</h3>
-          <div class="tag-cloud">
-            <% allTags.forEach(t => { %>
-              <% var tagEnc = encodeURIComponent(t) %>
-              <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="cloud-tag"><%= t %></a>
-            <% }) %>
-          </div>
-        </div>
-      <% } %>
+    <div class="aside-content" id="aside-content">
+      <%- include('partials/sidebar') %>
       <% if (config.TOC_POST) { %>
-      <div class="widget card reveal" id="toc-widget" style="display:none">
-        <h3 class="widget-title"><i class="fas fa-list"></i> 目录</h3>
+      <div class="card-widget" id="toc-widget" style="display:none">
+        <div class="item-headline"><i class="fas fa-list"></i> 目录</div>
         <div class="toc-content" id="toc-content"></div>
       </div>
       <% } %>
-    </aside>
-    <% } %>
-  </div>
+    </div>
+  </main>
 
   <script>
   try {

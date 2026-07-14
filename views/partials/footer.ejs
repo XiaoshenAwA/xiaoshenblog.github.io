@@ -1,25 +1,29 @@
-  <footer class="site-footer">
-    <div class="footer-container">
-      <div class="footer-social">
-        <a href="<%= config.SOCIAL_GITHUB %>" title="GitHub"><i class="fab fa-github"></i></a>
-        <a href="<%= config.SOCIAL_WEIBO %>" title="微博"><i class="fab fa-weibo"></i></a>
-        <a href="<%= config.SOCIAL_TWITTER %>" title="Twitter"><i class="fab fa-twitter"></i></a>
-        <a href="<%= config.SOCIAL_RSS %>" title="RSS"><i class="fas fa-rss"></i></a>
+  </div><!-- #body-wrap -->
+
+  <footer id="footer">
+    <div id="footer-wrap">
+      <div class="copyright">&copy;<%= config.FOOTER_OWNER_SINCE %> By <%= config.BLOG_AUTHOR %></div>
+      <div class="framework-info">
+        <span>框架 </span><a target="_blank" rel="noopener" href="https://expressjs.com">Express</a>
+        <span class="footer-separator">|</span>
+        <span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a>
       </div>
-      <p class="footer-text">
-        <% if (config.FOOTER_OWNER_ENABLE) { %>
-          &copy; <%= config.FOOTER_OWNER_SINCE %> <%= config.BLOG_NAME %>.
-        <% } %>
-        <% if (config.FOOTER_COPYRIGHT) { %>
-          Powered by Express &amp; Supabase.
-        <% } %>
-        <% if (config.FOOTER_CUSTOM_TEXT) { %>
-          <br><%= config.FOOTER_CUSTOM_TEXT %>
-        <% } %>
-        <br>Theme inspired by <strong>Butterfly</strong>
-      </p>
+      <% if (config.FOOTER_CUSTOM_TEXT) { %>
+        <div style="margin-top:8px;font-size:0.82em;color:var(--text-muted)"><%= config.FOOTER_CUSTOM_TEXT %></div>
+      <% } %>
     </div>
   </footer>
+
+  <div id="rightside">
+    <div id="rightside-config-hide">
+      <button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button>
+      <button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button>
+    </div>
+    <div id="rightside-config-show">
+      <button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button>
+      <button id="go-up" type="button" title="回到顶部"><span class="scroll-percent">0</span><i class="fas fa-arrow-up"></i></button>
+    </div>
+  </div>
 
   <script src="<%= basePath %>/assets/main.js?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>"></script>
   <script>
@@ -52,6 +56,19 @@
     } catch(e) {}
 
     try {
+      var rt = document.querySelector('.runtime-days');
+      if (rt) {
+        var startDate = rt.getAttribute('data-start');
+        if (startDate) {
+          var start = new Date(startDate);
+          var now = new Date();
+          var days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+          rt.textContent = days + ' 天';
+        }
+      }
+    } catch(e) {}
+
+    try {
       document.getElementById('menuToggle').addEventListener('click', function() {
         document.getElementById('mobileMenu').classList.toggle('open');
       });
@@ -64,6 +81,16 @@
         var h = document.documentElement.scrollHeight - window.innerHeight;
         var p = h > 0 ? (window.scrollY / h) * 100 : 0;
         bar.style.width = p + '%';
+      });
+    } catch(e) {}
+
+    try {
+      var goUp = document.getElementById('go-up');
+      var scrollPercent = goUp ? goUp.querySelector('.scroll-percent') : null;
+      window.addEventListener('scroll', function() {
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        var p = h > 0 ? Math.round((window.scrollY / h) * 100) : 0;
+        if (scrollPercent) scrollPercent.textContent = p;
       });
     } catch(e) {}
 
@@ -116,6 +143,86 @@
       });
     } catch(e) {}
 
+    /* Right-side buttons */
+    try {
+      document.getElementById('darkmode').addEventListener('click', function() {
+        var c = document.documentElement.getAttribute('data-theme');
+        var n = c === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', n);
+        localStorage.setItem('theme', n);
+      });
+    } catch(e) {}
+
+    try {
+      document.getElementById('hide-aside-btn').addEventListener('click', function() {
+        var layout = document.querySelector('.layout');
+        if (layout) layout.classList.toggle('hide-aside');
+        var hidden = layout ? layout.classList.contains('hide-aside') : false;
+        localStorage.setItem('aside-status', hidden ? 'hide' : 'show');
+      });
+    } catch(e) {}
+
+    try {
+      var asideStatus = localStorage.getItem('aside-status');
+      if (asideStatus === 'hide') {
+        var layout = document.querySelector('.layout');
+        if (layout) layout.classList.add('hide-aside');
+      }
+    } catch(e) {}
+
+    /* Toggle menu (mobile sidebar) */
+    try {
+      var toggleMenu = document.getElementById('toggle-menu');
+      var sidebar = document.getElementById('sidebar');
+      var menuMask = document.getElementById('menu-mask');
+      if (toggleMenu && sidebar && menuMask) {
+        toggleMenu.addEventListener('click', function() {
+          sidebar.classList.toggle('open');
+          menuMask.classList.toggle('open');
+        });
+        menuMask.addEventListener('click', function() {
+          sidebar.classList.remove('open');
+          menuMask.classList.remove('open');
+        });
+      }
+    } catch(e) {}
+
+    /* Dropdown menus on mobile sidebar */
+    try {
+      document.querySelectorAll('#sidebar-menus .menus_item > .site-page.group').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          var child = this.nextElementSibling;
+          if (child) {
+            child.style.display = child.style.display === 'block' ? 'none' : 'block';
+          }
+        });
+      });
+    } catch(e) {}
+
+    /* Scroll-down click goes to content */
+    try {
+      var sd = document.getElementById('scroll-down');
+      if (sd) sd.addEventListener('click', function() {
+        var target = document.getElementById('content-inner');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    } catch(e) {}
+
+    /* Nav scroll effect */
+    try {
+      var nav = document.getElementById('nav');
+      if (nav) {
+        window.addEventListener('scroll', function() {
+          if (window.scrollY > 60) {
+            nav.classList.add('fixed');
+          } else {
+            nav.classList.remove('fixed');
+          }
+        });
+      }
+    } catch(e) {}
+
 <% if (config.PWA_ENABLE) { %>
     try {
       if ('serviceWorker' in navigator) {
@@ -150,6 +257,7 @@
       var input = document.getElementById('searchInput');
       var closeBtn = document.querySelector('.search-close-button');
       var searchBtn = document.getElementById('searchBtn');
+      var navSearchBtn = document.getElementById('navSearchBtn');
       var resultsEl = document.getElementById('local-search-results');
       var statsEl = document.getElementById('local-search-stats');
       if (!overlay || !input) return;
@@ -195,10 +303,9 @@
       }
 
       if (searchBtn) searchBtn.addEventListener('click', openSearch);
-      var navSearchBtn = document.getElementById('navSearchBtn');
       if (navSearchBtn) navSearchBtn.addEventListener('click', openSearch);
-      closeBtn.addEventListener('click', closeSearch);
-      mask.addEventListener('click', closeSearch);
+      if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+      if (mask) mask.addEventListener('click', closeSearch);
 
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && overlay.style.display === 'block') closeSearch();

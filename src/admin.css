@@ -1,11 +1,10 @@
 body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
 [data-theme="dark"] body { background: var(--bg, #1a1a2e); }
-.admin-page { max-width: 1000px; margin: 40px auto; padding: 0 24px; }
+.admin-page { max-width: 1400px; margin: 40px auto; padding: 0 24px; }
 .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .admin-header h1 { font-size: 1.5em; display: flex; align-items: center; gap: 8px; }
 .admin-user { font-size: 0.85em; color: #999; }
 .admin-view { display: none; }
-.admin-view:first-child { display: block; }
 
 .login-box { max-width: 360px; margin: 80px auto; padding: 32px; background: var(--bg-card); border-radius: 16px; box-shadow: var(--shadow); border: 1px solid var(--border); }
 .login-box h2 { text-align: center; margin-bottom: 24px; }
@@ -26,8 +25,8 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag-list .tag-pill { font-size: 0.75em; padding: 1px 8px; }
 
-#view-edit, #view-about { height: calc(100vh - 120px); display: flex; flex-direction: column; min-height: 0; }
-#view-edit .edit-box, #view-about .edit-box { max-width: 800px; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#view-edit.active, #view-about.active { height: calc(100vh - 120px); display: flex; flex-direction: column; min-height: 0; }
+#view-edit .edit-box, #view-about .edit-box { max-width: 1200px; flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #view-edit .edit-box form, #view-about .edit-box form { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #view-edit .edit-box .editor-wrap, #view-about .edit-box .editor-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #view-edit .edit-box .editor-container, #view-about .edit-box .editor-container { flex: 1; min-height: 0; height: 0; }
@@ -190,3 +189,10 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
 .btn-sm { padding: 6px 14px; font-size: 0.85em; border-radius: 8px; }
 
 .loading { text-align: center; padding: 40px; color: #999; }
+
+/* Butterfly-themed admin styles */
+.admin-page .admin-header h1 i { color: var(--accent); }
+.admin-page .admin-view > .btn { margin-bottom: 8px; }
+.admin-page .post-item-actions .btn { font-size: 0.85em; padding: 6px 14px; }
+.admin-page .post-item-info .muted i { margin-right: 4px; }
+.admin-page .login-box h2 i { color: var(--accent); }

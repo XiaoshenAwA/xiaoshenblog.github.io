@@ -1,0 +1,62 @@
+<%- include('partials/header', { title: '分类' }) %>
+
+  <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
+    <div id="category">
+      <div class="page-header reveal">
+        <h1><i class="fas fa-folder-open"></i> 分类</h1>
+        <p>共 <%= categoryTree.filter(function(c) { return c.level === 0; }).length %> 个大类</p>
+      </div>
+
+      <% if (categoryTree.length === 0) { %>
+        <div class="empty-state reveal">
+          <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
+          <h3>暂无分类</h3>
+          <p>还没有为文章添加分类标签</p>
+        </div>
+      <% } else { %>
+        <div class="card-widget" style="padding:24px">
+          <ul class="card-category-list" id="cat-page-list">
+            <% categoryTree.forEach(function(c) { %>
+              <li class="card-category-list-item" style="padding-left:<%= c.level * 24 %>px;padding-top:6px;padding-bottom:6px">
+                <% var hasChild = categoryTree.some(function(x) { return x.path.indexOf(c.path + '/') === 0; }); %>
+                <% if (hasChild) { %><span class="cat-toggle-page" data-path="<%= c.path %>" style="cursor:pointer;display:inline-block;width:18px;text-align:center;font-size:0.8em;color:var(--accent);margin-right:4px"><i class="fas fa-plus"></i></span><% } else { %><span style="display:inline-block;width:18px;margin-right:4px"></span><% } %>
+                <a class="card-category-list-link" href="<%= basePath %>/?cat=<%= encodeURIComponent(c.path) %>" style="display:inline-flex;gap:6px;font-size:<%= c.level === 0 ? '1.1em' : '0.95em' %>;font-weight:<%= c.level === 0 ? '600' : '400' %>">
+                  <span><%= c.name %></span>
+                  <span class="card-category-list-count"><%= c.count %></span>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="aside-content" id="aside-content">
+      <%- include('partials/sidebar') %>
+    </div>
+  </main>
+
+  <script>
+    try {
+      document.querySelectorAll('.cat-toggle-page').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var path = this.getAttribute('data-path');
+          var icon = this.querySelector('i');
+          var expanded = icon.classList.contains('fa-minus');
+          icon.className = expanded ? 'fas fa-plus' : 'fas fa-minus';
+          var target = this.parentElement;
+          var next = target.nextElementSibling;
+          while (next && next.classList.contains('card-category-list-item')) {
+            var childLink = next.querySelector('.card-category-list-link');
+            if (childLink && next.style.paddingLeft && parseInt(next.style.paddingLeft) > parseInt(target.style.paddingLeft)) {
+              next.style.display = expanded ? 'none' : '';
+              next = next.nextElementSibling;
+            } else break;
+          }
+        });
+      });
+    } catch(e) {}
+  </script>
+
+<%- include('partials/footer') %>

@@ -1,43 +1,11 @@
 <%- include('partials/header') %>
 
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-content">
-      <h1 class="hero-title"><%= config.BLOG_NAME %></h1>
-      <p class="hero-subtitle" id="heroSubtitle"><%= config.INDEX_SUBTITLE_ENABLE && config.INDEX_SUBTITLE_SUB.length > 0 ? '' : config.BLOG_SUBTITLE %></p>
-      <% if (config.INDEX_SUBTITLE_ENABLE && config.INDEX_SUBTITLE_SUB.length > 0) { %>
-      <script>
-        var subtitleStrings = <%- JSON.stringify(config.INDEX_SUBTITLE_SUB) %>;
-        var subtitleEl = document.getElementById('heroSubtitle');
-        var subCharIdx = 0, subStrIdx = 0, subDeleting = false;
-        var subSpeed = <%= config.INDEX_SUBTITLE_TYPE_SPEED %>, subBack = <%= config.INDEX_SUBTITLE_BACK_SPEED %>, subPause = <%= config.INDEX_SUBTITLE_PAUSE_TIME %>;
-        function subType() {
-          var cur = subtitleStrings[subStrIdx];
-          if (subDeleting) {
-            subtitleEl.textContent = cur.substring(0, subCharIdx--) + '|';
-            if (subCharIdx < 0) { subDeleting = false; subStrIdx = (subStrIdx + 1) % subtitleStrings.length; subCharIdx = 0; setTimeout(subType, 500); return; }
-            setTimeout(subType, subBack);
-          } else {
-            subtitleEl.textContent = cur.substring(0, ++subCharIdx) + '|';
-            if (subCharIdx === cur.length) { subDeleting = true; setTimeout(subType, subPause); return; }
-            setTimeout(subType, subSpeed);
-          }
-        }
-        function subStart() { subType(); }
-        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', subStart);
-        else subStart();
-      </script>
-      <% } %>
-      <button id="searchBtn" class="hero-search-btn"><i class="fas fa-search"></i></button>
-    </div>
-  </section>
-
-  <div class="main-layout<%= !config.ASIDE_ENABLE ? ' no-sidebar' : '' %>">
-    <div class="main-content">
+  <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
+    <div class="recent-posts nc" id="recent-posts">
       <% if (tag) { %>
         <div class="tag-filter-bar reveal">
           <span class="tag-filter-label"><i class="fas fa-tag"></i> 标签：</span>
-          <span class="tag-pill active"><%= tag %></span>
+          <span class="tag-pill active"><i class="fas fa-tag"></i> <%= tag %></span>
           <a href="<%= basePath %>/<%= isStatic ? '' : '' %>" class="tag-clear"><i class="fas fa-times"></i> 清除筛选</a>
         </div>
       <% } %>
@@ -50,92 +18,67 @@
           <a href="<%= basePath %>/editor" class="btn btn-primary"><i class="fas fa-pen"></i> 开始写作</a>
         </div>
       <% } else { %>
-        <div class="articles-grid">
+        <div class="recent-post-items">
           <% posts.forEach((post, i) => { %>
-            <article class="article-card reveal" style="animation-delay:<%= (i*0.08) %>s">
-              <% var imgUrl = post.cover || config.DEFAULT_COVER; %>
-              <% if (imgUrl) { %>
-                <div class="article-cover" style="background-image:url('<%= imgUrl %>')"></div>
-              <% } %>
-              <div class="article-body">
-                <div class="article-meta">
-                  <span><i class="far fa-calendar-alt"></i> <%= formatDate(post.created_at) %></span>
-                  <% post.tags.forEach(t => { %>
+            <% var coverLeft = i % 2 === 0; %>
+            <article class="recent-post-item reveal" style="animation-delay:<%= (i*0.08) %>s">
+              <div class="post_cover <%= coverLeft ? 'left' : 'right' %>">
+                <a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>">
+                  <img class="post-bg" src="<%= post.cover || config.DEFAULT_COVER || 'https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png' %>" alt="<%= post.title %>">
+                </a>
+              </div>
+              <div class="recent-post-info">
+                <a class="article-title" href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>"><%= post.title %></a>
+                <div class="article-meta-wrap">
+                  <span class="post-meta-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span class="article-meta-label">发表于</span>
+                    <time datetime="<%= post.created_at %>"><%= formatDate(post.created_at) %></time>
+                  </span>
+                  <% if (post.category) { %>
+                  <span class="article-meta">
+                    <span class="article-meta-separator">|</span>
+                    <i class="fas fa-inbox"></i>
+                    <a class="article-meta__categories" href="<%= basePath %>/?cat=<%= encodeURIComponent(post.category) %>"><%= post.category %></a>
+                  </span>
+                  <% } %>
+                  <% post.tags.slice(0, 2).forEach(t => { %>
                     <% var tagEnc = encodeURIComponent(t) %>
-                    <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="article-tag"><i class="fas fa-tag"></i> <%= t %></a>
+                    <span class="article-meta">
+                      <span class="article-meta-separator">|</span>
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"><%= t %></a>
+                    </span>
                   <% }) %>
                 </div>
-                <h2 class="article-title"><a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>"><%= post.title %></a></h2>
-                <p class="article-excerpt"><%= post.excerptText %></p>
-                <a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" class="read-more-btn">
-                  阅读全文 <i class="fas fa-arrow-right"></i>
-                </a>
+                <div class="content"><%= post.excerptText %></div>
               </div>
             </article>
           <% }) %>
         </div>
 
         <% if (totalPages > 1) { %>
-          <div class="pagination reveal">
-            <% if (page > 1) { %>
-              <a href="<%= basePath %><%= isStatic ? '/page/' + (page-1) + '/' : '/?page=' + (page-1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn">
-                <i class="fas fa-chevron-left"></i>
-              </a>
-            <% } %>
-            <% for (let p = 1; p <= totalPages; p++) { %>
-              <a href="<%= basePath %><%= isStatic ? '/page/' + p + '/' : '/?page=' + p %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>"
-                 class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
-            <% } %>
-            <% if (page < totalPages) { %>
-              <a href="<%= basePath %><%= isStatic ? '/page/' + (page+1) + '/' : '/?page=' + (page+1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn">
-                <i class="fas fa-chevron-right"></i>
-              </a>
-            <% } %>
-          </div>
+          <nav id="pagination">
+            <div class="pagination">
+              <% if (page > 1) { %>
+                <a href="<%= basePath %><%= isStatic ? '/page/' + (page-1) + '/' : '/?page=' + (page-1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn extend prev" rel="prev"><i class="fas fa-chevron-left fa-fw"></i></a>
+              <% } %>
+              <% for (let p = 1; p <= totalPages; p++) { %>
+                <a href="<%= basePath %><%= isStatic ? '/page/' + p + '/' : '/?page=' + p %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>"
+                   class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
+              <% } %>
+              <% if (page < totalPages) { %>
+                <a href="<%= basePath %><%= isStatic ? '/page/' + (page+1) + '/' : '/?page=' + (page+1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn extend next" rel="next"><i class="fas fa-chevron-right fa-fw"></i></a>
+              <% } %>
+            </div>
+          </nav>
         <% } %>
       <% } %>
     </div>
 
-    <% if (config.ASIDE_ENABLE) { %>
-    <aside class="sidebar<%= !config.ASIDE_MOBILE ? ' hide-mobile' : '' %>">
-      <div class="widget card reveal">
-        <div class="avatar-box">
-          <% if (config.AVATAR_IMG) { %>
-            <img src="<%= basePath %><%= config.AVATAR_IMG %>" alt="<%= config.BLOG_AUTHOR %>" class="avatar-img<%= config.AVATAR_EFFECT ? ' avatar-effect' : '' %>">
-          <% } else { %>
-            <div class="avatar"><i class="fas fa-user-circle"></i></div>
-          <% } %>
-          <h3><%= config.BLOG_AUTHOR %></h3>
-          <p class="bio"><%= config.BLOG_AUTHOR_BIO %></p>
-          <div class="social-links">
-            <a href="<%= config.SOCIAL_GITHUB %>"><i class="fab fa-github"></i></a>
-            <a href="<%= config.SOCIAL_WEIBO %>"><i class="fab fa-weibo"></i></a>
-            <a href="<%= config.SOCIAL_TWITTER %>"><i class="fab fa-twitter"></i></a>
-          </div>
-        </div>
-      </div>
-      <% if (config.ASIDE_CARD_WEBINFO) { %>
-      <div class="widget card reveal">
-        <h3 class="widget-title"><i class="fas fa-chart-simple"></i> 站点统计</h3>
-        <ul class="stats-list">
-          <li><span>文章</span><span><%= typeof total !== 'undefined' ? total : posts.length %></span></li>
-        </ul>
-      </div>
-      <% } %>
-      <% if (config.ASIDE_CARD_TAGS && typeof allTags !== 'undefined' && allTags.length > 0) { %>
-        <div class="widget card reveal">
-          <h3 class="widget-title"><i class="fas fa-tags"></i> 标签云</h3>
-          <div class="tag-cloud">
-            <% allTags.forEach(t => { %>
-              <% var tagEnc = encodeURIComponent(t) %>
-              <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="cloud-tag"><%= t %></a>
-            <% }) %>
-          </div>
-        </div>
-      <% } %>
-    </aside>
-    <% } %>
-  </div>
-
+    <div class="aside-content" id="aside-content">
+      <%- include('partials/sidebar') %>
+    </div>
+  </main>
 
 <%- include('partials/footer') %>

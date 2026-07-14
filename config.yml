@@ -91,9 +91,18 @@ nav:
     - label: "首页"
       path: "/"
       icon: "fas fa-home"
+    - label: "分类"
+      path: "/categories"
+      icon: "fas fa-folder-open"
+    - label: "归档"
+      path: "/archives"
+      icon: "fas fa-archive"
     - label: "关于"
       path: "/about"
       icon: "fas fa-user"
+    - label: "友链"
+      path: "/friends"
+      icon: "fas fa-link"
     - label: "后台管理"
       path: "/admin"
       icon: "fas fa-cog"
@@ -209,7 +218,7 @@ theme:
       # 强调色（主题色），用于按钮、链接、选中状态等
       accent: "#3498db"
       # 强调色的浅色变体，用于悬停背景、标签底色等
-      accent_light: "rgba(230,126,34,0.1)"
+      accent_light: "rgba(52,152,219,0.12)"
       # 卡片和模块的默认阴影
       shadow: "0 2px 12px rgba(0,0,0,0.06)"
       # 鼠标悬停时的增强阴影
@@ -231,7 +240,7 @@ theme:
       # 强调色（深色模式）
       accent: "#5dade2"
       # 强调色浅色变体（深色模式）
-      accent_light: "rgba(240,160,80,0.15)"
+      accent_light: "rgba(93,173,226,0.15)"
       # 卡片阴影（深色模式）
       shadow: "0 2px 12px rgba(0,0,0,0.3)"
       # 悬停阴影（深色模式）
@@ -579,3 +588,14 @@ about:
   tagline: "一名热爱技术的开发者"
   # 关于页面详细内容所在的 Markdown 文件路径。支持使用 Markdown 语法编写。
   content_file: "views/about_content.md"
+
+# ============================================================
+#  友链设置
+# ============================================================
+
+friend_links:
+  - name: "示例博客"
+    link: "https://example.com"
+    avatar: "https://example.com/avatar.png"
+    description: "一个示例博客"
+  # 添加更多友链，每项包含 name（名称）、link（链接）、avatar（头像URL）、description（简介）

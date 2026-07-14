@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
-const { getAllTags, getAllPosts } = require('./db');
+const { getAllTags, getAllPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getPostCount } = require('./db');
 const config = require('./config');
 const { render: renderMd, excerpt, init } = require('./markdown');
 const dist = path.join(__dirname, 'dist');
@@ -39,6 +39,13 @@ async function build() {
   const allTags = await getAllTags();
   const allPosts = await getAllPosts();
   const totalPages = Math.ceil(allPosts.length / config.PAGE_SIZE) || 1;
+  const allCategories = await getAllCategories();
+  const categoryTree = await getCategoryTree();
+  const archives = await getArchives();
+  const recentPosts = await getRecentPosts(config.SIDEBAR_RECENT_COUNT || 5);
+  const totalWordCount = await getTotalWordCount();
+  const postCount = allPosts.length;
+  const sidebarData = { allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount, friends: config.FRIEND_LINKS || [] };
 
   function formatDate(d) {
     if (!d) return '';
@@ -68,7 +75,7 @@ async function build() {
     for (let page = 1; page <= totalPages; page++) {
     const offset = (page - 1) * config.PAGE_SIZE;
     const posts = await preparePosts(allPosts.slice(offset, offset + config.PAGE_SIZE));
-    const data = { posts, page, totalPages, total: allPosts.length, tag: '', allTags };
+    const data = { posts, page, totalPages, total: allPosts.length, tag: '', cat: '', ...sidebarData };
     if (page === 1) await render('index.ejs', data, 'index.html');
     if (totalPages > 1) await render('index.ejs', data, `page/${page}/index.html`);
   }
@@ -80,7 +87,7 @@ async function build() {
     for (let page = 1; page <= tPages; page++) {
       const offset = (page - 1) * config.PAGE_SIZE;
       const posts = allFiltered.slice(offset, offset + config.PAGE_SIZE);
-      const data = { posts, page, totalPages: tPages, tag, allTags };
+      const data = { posts, page, totalPages: tPages, tag, cat: '', ...sidebarData };
       if (page === 1) {
         await render('index.ejs', data, `tag/${encodeURIComponent(tag)}/index.html`);
       } else {
@@ -95,13 +102,36 @@ async function build() {
     const contentHtml = await renderMd(post.content);
     const prevPost = i > 0 ? allPosts[i - 1] : null;
     const nextPost = i < allPosts.length - 1 ? allPosts[i + 1] : null;
-    await render('show.ejs', { post: { ...post, contentHtml }, allTags, prevPost, nextPost }, `posts/${post.id}/index.html`);
+    await render('show.ejs', { post: { ...post, contentHtml }, ...sidebarData, prevPost, nextPost }, `posts/${post.id}/index.html`);
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u5173\u4E8E\u9875\u9762...');
   const aboutContent = fs.readFileSync(path.join(__dirname, config.ABOUT_CONTENT_FILE || 'views/about_content.md'), 'utf-8');
   const aboutHtml = await renderMd(aboutContent);
-  await render('about.ejs', { allTags, postCount: allPosts.length, aboutHtml }, 'about/index.html');
+  await render('about.ejs', { ...sidebarData, aboutHtml }, 'about/index.html');
+
+  console.log('\u6B63\u5728\u751F\u6210\u5206\u7C7B\u9875\u9762...');
+  await render('categories.ejs', { ...sidebarData }, 'categories/index.html');
+
+  console.log('\u6B63\u5728\u751F\u6210\u5F52\u6863\u9875\u9762...');
+  await render('archives.ejs', { ...sidebarData }, 'archives/index.html');
+
+  console.log('\u6B63\u5728\u751F\u6210\u6807\u7B7E\u96C6\u9875\u9762...');
+  const allTagCounts = [];
+  const countMap = {};
+  for (const p of allPosts) {
+    for (const t of p.tags) {
+      countMap[t] = (countMap[t] || 0) + 1;
+    }
+  }
+  for (const [name, cnt] of Object.entries(countMap)) {
+    allTagCounts.push({ name, count: cnt });
+  }
+  allTagCounts.sort((a, b) => b.count - a.count);
+  await render('tags.ejs', { ...sidebarData, allTagCounts }, 'tags/index.html');
+
+  console.log('\u6B63\u5728\u751F\u6210\u53CB\u94FE\u9875\u9762...');
+  await render('friends.ejs', { ...sidebarData }, 'friends/index.html');
 
   if (config.SEARCH_ENABLE) {
     console.log('\u6B63\u5728\u751F\u6210\u641C\u7D22\u7D22\u5F15...');

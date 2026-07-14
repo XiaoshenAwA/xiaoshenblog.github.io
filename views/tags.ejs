@@ -1,0 +1,32 @@
+<%- include('partials/header', { title: '标签' }) %>
+
+  <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
+    <div id="tag">
+      <div class="page-header reveal">
+        <h1><i class="fas fa-tags"></i> 标签</h1>
+        <p>共 <%= allTagCounts.length %> 个标签</p>
+      </div>
+
+      <% if (allTagCounts.length === 0) { %>
+        <div class="empty-state reveal">
+          <div class="empty-icon"><i class="fas fa-tags"></i></div>
+          <h3>暂无标签</h3>
+        </div>
+      <% } else { %>
+        <div class="card-tag-cloud tags-page-cloud reveal">
+          <% allTagCounts.forEach(t => { %>
+            <% var tagEnc = encodeURIComponent(t.name) %>
+            <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" style="font-size:<%= Math.min(1.8, 0.8 + t.count * 0.15) %>em">
+              <%= t.name %>
+            </a>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="aside-content" id="aside-content">
+      <%- include('partials/sidebar') %>
+    </div>
+  </main>
+
+<%- include('partials/footer') %>
