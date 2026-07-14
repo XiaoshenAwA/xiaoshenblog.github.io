@@ -4,15 +4,35 @@
     <div class="hero-bg"></div>
     <div class="hero-content">
       <h1 class="hero-title"><%= config.BLOG_NAME %></h1>
-      <p class="hero-subtitle"><%= config.BLOG_SUBTITLE %></p>
-      <div class="hero-search">
-        <input type="text" id="searchInput" placeholder="搜索文章..." onkeyup="if(event.key==='Enter')search()">
-        <button onclick="search()"><i class="fas fa-search"></i></button>
-      </div>
+      <p class="hero-subtitle" id="heroSubtitle"><%= config.INDEX_SUBTITLE_ENABLE && config.INDEX_SUBTITLE_SUB.length > 0 ? '' : config.BLOG_SUBTITLE %></p>
+      <% if (config.INDEX_SUBTITLE_ENABLE && config.INDEX_SUBTITLE_SUB.length > 0) { %>
+      <script>
+        var subtitleStrings = <%- JSON.stringify(config.INDEX_SUBTITLE_SUB) %>;
+        var subtitleEl = document.getElementById('heroSubtitle');
+        var subCharIdx = 0, subStrIdx = 0, subDeleting = false;
+        var subSpeed = <%= config.INDEX_SUBTITLE_TYPE_SPEED %>, subBack = <%= config.INDEX_SUBTITLE_BACK_SPEED %>, subPause = <%= config.INDEX_SUBTITLE_PAUSE_TIME %>;
+        function subType() {
+          var cur = subtitleStrings[subStrIdx];
+          if (subDeleting) {
+            subtitleEl.textContent = cur.substring(0, subCharIdx--) + '|';
+            if (subCharIdx < 0) { subDeleting = false; subStrIdx = (subStrIdx + 1) % subtitleStrings.length; subCharIdx = 0; setTimeout(subType, 500); return; }
+            setTimeout(subType, subBack);
+          } else {
+            subtitleEl.textContent = cur.substring(0, ++subCharIdx) + '|';
+            if (subCharIdx === cur.length) { subDeleting = true; setTimeout(subType, subPause); return; }
+            setTimeout(subType, subSpeed);
+          }
+        }
+        function subStart() { subType(); }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', subStart);
+        else subStart();
+      </script>
+      <% } %>
+      <button id="searchBtn" class="hero-search-btn"><i class="fas fa-search"></i></button>
     </div>
   </section>
 
-  <div class="main-layout">
+  <div class="main-layout<%= !config.ASIDE_ENABLE ? ' no-sidebar' : '' %>">
     <div class="main-content">
       <% if (tag) { %>
         <div class="tag-filter-bar reveal">
@@ -33,12 +53,13 @@
         <div class="articles-grid">
           <% posts.forEach((post, i) => { %>
             <article class="article-card reveal" style="animation-delay:<%= (i*0.08) %>s">
-              <% if (post.cover) { %>
-                <div class="article-cover" style="background-image:url('<%= post.cover %>')"></div>
+              <% var imgUrl = post.cover || config.DEFAULT_COVER; %>
+              <% if (imgUrl) { %>
+                <div class="article-cover" style="background-image:url('<%= imgUrl %>')"></div>
               <% } %>
               <div class="article-body">
                 <div class="article-meta">
-                  <span><i class="far fa-calendar-alt"></i> <%= post.created_at %></span>
+                  <span><i class="far fa-calendar-alt"></i> <%= formatDate(post.created_at) %></span>
                   <% post.tags.forEach(t => { %>
                     <% var tagEnc = encodeURIComponent(t) %>
                     <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="article-tag"><i class="fas fa-tag"></i> <%= t %></a>
@@ -75,10 +96,15 @@
       <% } %>
     </div>
 
-    <aside class="sidebar">
+    <% if (config.ASIDE_ENABLE) { %>
+    <aside class="sidebar<%= !config.ASIDE_MOBILE ? ' hide-mobile' : '' %>">
       <div class="widget card reveal">
         <div class="avatar-box">
-          <div class="avatar"><i class="fas fa-user-circle"></i></div>
+          <% if (config.AVATAR_IMG) { %>
+            <img src="<%= basePath %><%= config.AVATAR_IMG %>" alt="<%= config.BLOG_AUTHOR %>" class="avatar-img<%= config.AVATAR_EFFECT ? ' avatar-effect' : '' %>">
+          <% } else { %>
+            <div class="avatar"><i class="fas fa-user-circle"></i></div>
+          <% } %>
           <h3><%= config.BLOG_AUTHOR %></h3>
           <p class="bio"><%= config.BLOG_AUTHOR_BIO %></p>
           <div class="social-links">
@@ -88,13 +114,15 @@
           </div>
         </div>
       </div>
+      <% if (config.ASIDE_CARD_WEBINFO) { %>
       <div class="widget card reveal">
         <h3 class="widget-title"><i class="fas fa-chart-simple"></i> 站点统计</h3>
         <ul class="stats-list">
-          <li><span>文章</span><span><%= posts.length %></span></li>
+          <li><span>文章</span><span><%= typeof total !== 'undefined' ? total : posts.length %></span></li>
         </ul>
       </div>
-      <% if (typeof allTags !== 'undefined' && allTags.length > 0) { %>
+      <% } %>
+      <% if (config.ASIDE_CARD_TAGS && typeof allTags !== 'undefined' && allTags.length > 0) { %>
         <div class="widget card reveal">
           <h3 class="widget-title"><i class="fas fa-tags"></i> 标签云</h3>
           <div class="tag-cloud">
@@ -106,13 +134,8 @@
         </div>
       <% } %>
     </aside>
+    <% } %>
   </div>
 
-<% var searchBase = isStatic ? (basePath + '/tag/') : (basePath + '/?tag='); %>
-<script>
-function search() {
-  const q = document.getElementById('searchInput').value.trim();
-  if (q) window.location.href = '<%= searchBase %>' + encodeURIComponent(q) + '<%= isStatic ? "/" : "" %>';
-}
-</script>
+
 <%- include('partials/footer') %>

@@ -176,19 +176,37 @@ async function init() {
     const closeIdx = afterPre.lastIndexOf(closePre);
     const innerCode = closeIdx >= 0 ? afterPre.slice(0, closeIdx) : afterPre;
 
-    const toolsHtml = '<div class="highlight-tools">'
-      + '<div class="mac-style">'
-      + '<span class="mac-close"></span>'
-      + '<span class="mac-minimize"></span>'
-      + '<span class="mac-maximize"></span>'
-      + '</div>'
-      + '<span class="code-lang">' + langName + '</span>'
-      + '<i class="copy-btn" title="复制">复制</i>'
-      + '</div>';
+    var toolsParts = '';
+    if (config.CB_MACSTYLE) {
+      toolsParts += '<div class="mac-style">'
+        + '<span class="mac-close"></span>'
+        + '<span class="mac-minimize"></span>'
+        + '<span class="mac-maximize"></span>'
+        + '</div>';
+    }
+    if (config.CB_LANGUAGE && langName) {
+      toolsParts += '<span class="code-lang">' + langName + '</span>';
+    }
+    if (config.CB_SHRINK) {
+      toolsParts += '<i class="shrink-btn" title="展开/折叠">展开</i>';
+    }
+    if (config.CB_FULLPAGE) {
+      toolsParts += '<i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i>';
+    }
+    if (config.CB_COPY) {
+      toolsParts += '<i class="copy-btn" title="复制">复制</i>';
+    }
+    var toolsHtml = toolsParts ? '<div class="highlight-tools">' + toolsParts + '</div>' : '';
+
+    var wrapClass = 'code-wrap';
+    if (config.CB_WORD_WRAP) wrapClass += ' code-wrap-on';
+    if (config.CB_SHRINK) wrapClass += ' code-shrink';
+    var heightStyle = '';
+    if (config.CB_HEIGHT_LIMIT) heightStyle = ' style="max-height:' + config.CB_HEIGHT_LIMIT + 'px;overflow-y:auto"';
 
     return '<figure class="highlight" style="' + preStyle + '">'
       + toolsHtml
-      + '<pre class="' + preClass + '"' + (otherAttrs ? ' ' + otherAttrs : '') + '>' + innerCode + '</pre>'
+      + '<pre class="' + wrapClass + '"' + heightStyle + (otherAttrs ? ' ' + otherAttrs : '') + '>' + innerCode + '</pre>'
       + '</figure>';
   };
 

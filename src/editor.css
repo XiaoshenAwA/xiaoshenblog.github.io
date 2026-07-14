@@ -86,10 +86,9 @@
   background: transparent;
   color: var(--text);
   outline: none;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  white-space: pre;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 #editor-preview {
   flex: 1;

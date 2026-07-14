@@ -6,6 +6,8 @@ import { createClient } from '@supabase/supabase-js'
 import markdownit from 'markdown-it'
 import markdownItContainer from 'markdown-it-container'
 import { full as markdownitEmoji } from 'markdown-it-emoji'
+import markdownitMark from 'markdown-it-mark'
+import markdownitInsDel from 'markdown-it-ins-del'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -114,7 +116,7 @@ const aboutSubmit = $('#about-submit')
 function showView(id) {
   $$('.admin-view').forEach(v => v.style.display = 'none')
   const el = document.getElementById(id)
-  if (el) el.style.display = 'block'
+  if (el) el.style.display = id === 'view-edit' || id === 'view-about' ? 'flex' : 'block'
 }
 
 function showButtons(show) {
@@ -144,6 +146,7 @@ $('#login-form').addEventListener('submit', async e => {
   if (error) {
     $('#login-error').textContent = '登录失败: ' + error.message
   } else {
+    try { sessionStorage.setItem('admin', 'true') } catch(e) {}
     checkAuth()
   }
 })
@@ -153,6 +156,7 @@ logoutBtn.addEventListener('click', async () => {
   Object.keys(localStorage).forEach(key => {
     if (key.startsWith('sb-')) localStorage.removeItem(key)
   })
+  try { sessionStorage.removeItem('admin') } catch(e) {}
   location.reload()
 })
 
@@ -192,8 +196,8 @@ changePwForm.addEventListener('submit', async e => {
     changePwMessage.style.display = 'block'
     return
   }
-  if (newPw.length < 6) {
-    changePwMessage.textContent = '密码至少6位'
+  if (newPw.length < (cfg.ADMIN_MIN_PASSWORD_LENGTH || 6)) {
+    changePwMessage.textContent = '密码至少' + (cfg.ADMIN_MIN_PASSWORD_LENGTH || 6) + '位'
     changePwMessage.className = 'message-msg error'
     changePwMessage.style.display = 'block'
     return
@@ -316,6 +320,8 @@ document.querySelectorAll('.editor-toolbar .toolbar-btn[data-md]').forEach(btn =
 // Live Markdown preview
 const md = markdownit({ html: true, linkify: true })
 md.use(markdownitEmoji)
+md.use(markdownitMark)
+md.use(markdownitInsDel)
 addMathPlugin(md)
 
 function makeContainer(md, name, icon, defaultTitle) {
@@ -378,7 +384,7 @@ function updateGutter(textareaId) {
   const gutter = document.querySelector('.editor-gutter[data-for="' + textareaId + '"]')
   if (ta && gutter) {
     const lines = ta.value.split('\n')
-    gutter.innerHTML = Array.from({ length: lines.length }, (_, i) => i + 1).join('<br>')
+    gutter.textContent = Array.from({ length: lines.length }, (_, i) => i + 1).join('\n')
   }
 }
 

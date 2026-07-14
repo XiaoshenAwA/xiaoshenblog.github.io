@@ -26,7 +26,12 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag-list .tag-pill { font-size: 0.75em; padding: 1px 8px; }
 
-.edit-box { max-width: 800px; }
+#view-edit, #view-about { height: calc(100vh - 120px); display: flex; flex-direction: column; min-height: 0; }
+#view-edit .edit-box, #view-about .edit-box { max-width: 800px; flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#view-edit .edit-box form, #view-about .edit-box form { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#view-edit .edit-box .editor-wrap, #view-about .edit-box .editor-wrap { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#view-edit .edit-box .editor-container, #view-about .edit-box .editor-container { flex: 1; min-height: 0; height: 0; }
+#view-edit .editor-input-wrap, #view-about .editor-input-wrap { min-height: 0; }
 .edit-box .form-group { margin-bottom: 16px; }
 .edit-box label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 0.92em; color: var(--text-secondary); }
 .edit-box input:not([type]), .edit-box input[type=text]:not(#edit-title), .edit-box textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95em; background: var(--input-bg); color: var(--text); font-family: inherit; }
@@ -79,6 +84,7 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 .editor-wrap .editor-pane + .editor-pane {
   border-left: 1px solid var(--border);
@@ -87,7 +93,6 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
   display: flex;
   flex: 1;
   overflow: hidden;
-  min-height: 400px;
 }
 .editor-wrap .editor-pane .editor-gutter {
   padding: 16px 8px 16px 10px;
@@ -115,14 +120,12 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
   tab-size: 2;
   resize: none;
   overflow-y: auto;
-  overflow-x: hidden;
-  min-height: 400px;
+  overflow-x: auto;
   background: transparent;
   color: var(--text);
   outline: none;
   box-sizing: border-box;
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  white-space: pre;
 }
 .editor-wrap .editor-pane .post-content {
   flex: 1;
@@ -130,7 +133,6 @@ body { background: var(--bg, #f5f5f5); margin: 0; min-height: 100vh; }
   padding: 16px 20px;
   font-size: 0.95em;
   line-height: 1.75;
-  min-height: 400px;
   box-sizing: border-box;
 }
 .editor-wrap .editor-pane .post-content p:last-child { margin-bottom: 0; }

@@ -30,6 +30,7 @@ const config = {
   BASE_PATH: env('BASE_PATH', cfg.deploy?.base_path ?? ''),
   STATIC_BASE_PATH: cfg.deploy?.static_base_path ?? '/xiaoshenblog.github.io',
   DEPLOY_HOOK_URL: env('DEPLOY_HOOK_URL', cfg.deploy?.deploy_hook_url ?? ''),
+  DEPLOY_BRANCH: cfg.deploy?.github_pages?.branch ?? 'gh-pages',
   IS_STATIC: env('STATIC_BUILD') === 'true',
 
   // 博客信息
@@ -40,6 +41,130 @@ const config = {
   PAGE_SIZE: cfg.blog?.page_size ?? 5,
   EXCERPT_LENGTH: cfg.blog?.excerpt_length ?? 200,
   READING_SPEED: cfg.blog?.reading_speed ?? 500,
+
+  // 导航
+  NAV: cfg.nav ?? {},
+  NAV_LOGO: cfg.nav?.logo ?? '',
+  NAV_DISPLAY_TITLE: cfg.nav?.display_title !== false,
+  NAV_FIXED: cfg.nav?.fixed === true,
+  NAV_MENU: cfg.nav?.menu ?? [],
+
+  // 图片
+  IMAGES: cfg.images ?? {},
+  FAVICON: cfg.images?.favicon ?? '/img/favicon.png',
+  AVATAR_IMG: cfg.images?.avatar?.img ?? '',
+  AVATAR_EFFECT: cfg.images?.avatar?.effect === true,
+  DEFAULT_COVER: cfg.images?.default_cover ?? '',
+  DISABLE_TOP_IMG: cfg.images?.disable_top_img === true,
+  DEFAULT_TOP_IMG: cfg.images?.default_top_img ?? '',
+  INDEX_IMG: cfg.images?.index_img ?? '',
+
+  // 代码块
+  CODE_BLOCKS: cfg.code_blocks ?? {},
+  CB_MACSTYLE: cfg.code_blocks?.macStyle !== false,
+  CB_HEIGHT_LIMIT: cfg.code_blocks?.height_limit ?? false,
+  CB_WORD_WRAP: cfg.code_blocks?.word_wrap === true,
+  CB_SHRINK: cfg.code_blocks?.shrink === true,
+  CB_FULLPAGE: cfg.code_blocks?.fullpage === true,
+  CB_COPY: cfg.code_blocks?.copy !== false,
+  CB_LANGUAGE: cfg.code_blocks?.language !== false,
+
+  // 页脚
+  FOOTER: cfg.footer ?? {},
+  FOOTER_OWNER_ENABLE: cfg.footer?.owner?.enable !== false,
+  FOOTER_OWNER_SINCE: cfg.footer?.owner?.since ?? 2026,
+  FOOTER_COPYRIGHT: cfg.footer?.copyright !== false,
+  FOOTER_CUSTOM_TEXT: cfg.footer?.custom_text ?? '',
+
+  // 字体
+  FONT: cfg.font ?? {},
+  FONT_GLOBAL_SIZE: cfg.font?.global_font_size ?? '',
+  FONT_CODE_SIZE: cfg.font?.code_font_size ?? '',
+  FONT_BODY: cfg.theme?.fonts?.body ?? "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+  FONT_CODE: cfg.theme?.fonts?.code ?? "'Fira Code', monospace",
+
+  // 美化
+  BEAUTIFY: cfg.beautify ?? {},
+  ROUNDED_CORNERS: cfg.beautify?.rounded_corners_ui !== false,
+  PRELOADER_ENABLE: cfg.beautify?.preloader?.enable === true,
+
+  // 文章元信息
+  POST_META: cfg.post_meta ?? {},
+
+  // 首页布局
+  INDEX_CONFIG: cfg.index ?? {},
+  INDEX_LAYOUT: cfg.index?.layout ?? 1,
+  INDEX_EXCERPT_METHOD: cfg.index?.excerpt?.method ?? 3,
+  INDEX_EXCERPT_LENGTH: cfg.index?.excerpt?.length ?? 200,
+  INDEX_SUBTITLE_ENABLE: cfg.index?.subtitle?.enable === true,
+  INDEX_SUBTITLE_EFFECT: cfg.index?.subtitle?.effect === true,
+  INDEX_SUBTITLE_SUB: cfg.index?.subtitle?.sub ?? [],
+  INDEX_SUBTITLE_TYPE_SPEED: cfg.index?.subtitle?.type_speed ?? 80,
+  INDEX_SUBTITLE_BACK_SPEED: cfg.index?.subtitle?.back_speed ?? 40,
+  INDEX_SUBTITLE_PAUSE_TIME: cfg.index?.subtitle?.pause_time ?? 2000,
+
+  // 目录
+  TOC_POST: cfg.toc?.post !== false,
+  TOC_NUMBER: cfg.toc?.number !== false,
+  TOC_EXPAND: cfg.toc?.expand === true,
+  TOC_STYLE_SIMPLE: cfg.toc?.style_simple === true,
+
+  // 侧边栏
+  ASIDE_ENABLE: cfg.aside?.enable !== false,
+  ASIDE_MOBILE: cfg.aside?.mobile !== false,
+  ASIDE_POSITION: cfg.aside?.position ?? 'right',
+  ASIDE_CARD_AUTHOR: cfg.aside?.card_author?.enable !== false,
+  ASIDE_CARD_ANNOUNCEMENT: cfg.aside?.card_announcement?.enable === true,
+  ASIDE_ANNOUNCEMENT_CONTENT: cfg.aside?.card_announcement?.content ?? '',
+  ASIDE_CARD_RECENT_POST: cfg.aside?.card_recent_post?.enable === true,
+  ASIDE_RECENT_POST_LIMIT: cfg.aside?.card_recent_post?.limit ?? 5,
+  ASIDE_CARD_CATEGORIES: cfg.aside?.card_categories?.enable === true,
+  ASIDE_CATEGORIES_LIMIT: cfg.aside?.card_categories?.limit ?? 8,
+  ASIDE_CARD_TAGS: cfg.aside?.card_tags?.enable !== false,
+  ASIDE_TAGS_LIMIT: cfg.aside?.card_tags?.limit ?? 40,
+  ASIDE_TAGS_COLOR: cfg.aside?.card_tags?.color === true,
+  ASIDE_TAGS_ORDERBY: cfg.aside?.card_tags?.orderby ?? 'random',
+  ASIDE_CARD_ARCHIVES: cfg.aside?.card_archives?.enable === true,
+  ASIDE_ARCHIVES_TYPE: cfg.aside?.card_archives?.type ?? 'monthly',
+  ASIDE_ARCHIVES_FORMAT: cfg.aside?.card_archives?.format ?? 'MMMM YYYY',
+  ASIDE_ARCHIVES_LIMIT: cfg.aside?.card_archives?.limit ?? 8,
+  ASIDE_ARCHIVES_ORDER: cfg.aside?.card_archives?.order ?? -1,
+  ASIDE_CARD_WEBINFO: cfg.aside?.card_webinfo?.enable !== false,
+  ASIDE_WEBINFO_POST_COUNT: cfg.aside?.card_webinfo?.post_count !== false,
+  ASIDE_WEBINFO_RUNTIME_DATE: cfg.aside?.card_webinfo?.runtime_date ?? '',
+
+  // 暗色模式
+  DARKMODE_ENABLE: cfg.darkmode?.enable !== false,
+  DARKMODE_BUTTON: cfg.darkmode?.button !== false,
+  DARKMODE_AUTO: cfg.darkmode?.autoChangeMode ?? false,
+  DARKMODE_START: cfg.darkmode?.start ?? 18,
+  DARKMODE_END: cfg.darkmode?.end ?? 6,
+
+  // 评论
+  COMMENTS_USE: cfg.comments?.use ?? '',
+  GISCUS_REPO: cfg.comments?.giscus?.repo ?? '',
+  GISCUS_REPO_ID: cfg.comments?.giscus?.repo_id ?? '',
+  GISCUS_CATEGORY: cfg.comments?.giscus?.category ?? '',
+  GISCUS_CATEGORY_ID: cfg.comments?.giscus?.category_id ?? '',
+  GISCUS_LIGHT_THEME: cfg.comments?.giscus?.light_theme ?? 'light',
+  GISCUS_DARK_THEME: cfg.comments?.giscus?.dark_theme ?? 'dark',
+
+  // 搜索
+  SEARCH_ENABLE: cfg.search?.enable === true,
+  SEARCH_PLACEHOLDER: cfg.search?.placeholder ?? '搜索文章...',
+
+  // PWA
+  PWA_ENABLE: cfg.pwa?.enable === true,
+  PWA_MANIFEST: cfg.pwa?.manifest ?? '/manifest.json',
+  PWA_APPLE_TOUCH_ICON: cfg.pwa?.apple_touch_icon ?? '/img/icon.png',
+  PWA_FAVICON_32: cfg.pwa?.favicon_32_32 ?? '/img/favicon-32.png',
+  PWA_FAVICON_16: cfg.pwa?.favicon_16_16 ?? '/img/favicon-16.png',
+
+  // Open Graph
+  OG_ENABLE: cfg.open_graph?.enable !== false,
+  OG_TWITTER_CARD: cfg.open_graph?.twitter_card ?? 'summary_large_image',
+  OG_TWITTER_ID: cfg.open_graph?.twitter_id ?? '',
+  OG_FB_APP_ID: cfg.open_graph?.fb_app_id ?? '',
 
   // 主题
   THEME: cfg.theme ?? {},

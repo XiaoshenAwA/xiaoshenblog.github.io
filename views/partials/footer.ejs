@@ -7,21 +7,40 @@
         <a href="<%= config.SOCIAL_RSS %>" title="RSS"><i class="fas fa-rss"></i></a>
       </div>
       <p class="footer-text">
-        &copy; 2026 <%= config.BLOG_NAME %>. Powered by Express &amp; Supabase.
+        <% if (config.FOOTER_OWNER_ENABLE) { %>
+          &copy; <%= config.FOOTER_OWNER_SINCE %> <%= config.BLOG_NAME %>.
+        <% } %>
+        <% if (config.FOOTER_COPYRIGHT) { %>
+          Powered by Express &amp; Supabase.
+        <% } %>
+        <% if (config.FOOTER_CUSTOM_TEXT) { %>
+          <br><%= config.FOOTER_CUSTOM_TEXT %>
+        <% } %>
         <br>Theme inspired by <strong>Butterfly</strong>
       </p>
     </div>
   </footer>
 
-  <script src="<%= basePath %>/assets/main.js" onerror="this.onerror=null;console.warn('Vite bundle not found')"></script>
+  <script src="<%= basePath %>/assets/main.js?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>"></script>
   <script>
     try {
+      var h = document.documentElement;
+      <% if (config.DARKMODE_ENABLE) { %>
+      var s = localStorage.getItem('theme');
+      if (s) { h.setAttribute('data-theme', s); } else {
+        <% if (config.DARKMODE_AUTO === 1) { %>
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) h.setAttribute('data-theme', 'dark');
+        <% } else if (config.DARKMODE_AUTO === 2) { %>
+        var hr = (new Date()).getHours(); var start = <%= config.DARKMODE_START %>; var end = <%= config.DARKMODE_END %>;
+        if (start > end) { if (hr >= start || hr < end) h.setAttribute('data-theme', 'dark'); }
+        else { if (hr >= start && hr < end) h.setAttribute('data-theme', 'dark'); }
+        <% } %>
+      }
+      <% } %>
       var t = document.getElementById('themeToggle');
       if (t) {
-        var h = document.documentElement;
         var i = t.querySelector('i');
-        var s = localStorage.getItem('theme');
-        if (s) { h.setAttribute('data-theme', s); i.className = s === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; }
+        if (h.getAttribute('data-theme') === 'dark') i.className = 'fas fa-sun';
         t.addEventListener('click', function() {
           var c = h.getAttribute('data-theme');
           var n = c === 'dark' ? 'light' : 'dark';
@@ -66,6 +85,135 @@
         });
       });
     } catch(e) {}
+
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.shrink-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        if (!fig) return;
+        var pre = fig.querySelector('pre.code-wrap');
+        if (!pre) return;
+        pre.classList.toggle('code-shrink');
+        pre.classList.toggle('code-expanded');
+        if (pre.classList.contains('code-expanded')) {
+          btn.textContent = '折叠';
+        } else {
+          btn.textContent = '展开';
+        }
+      });
+    } catch(e) {}
+
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.fullpage-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        if (!fig) return;
+        fig.classList.toggle('code-fullpage');
+        var icon = fig.querySelector('.fullpage-btn i');
+        if (icon) icon.className = fig.classList.contains('code-fullpage') ? 'fas fa-compress' : 'fas fa-expand';
+      });
+    } catch(e) {}
+
+<% if (config.PWA_ENABLE) { %>
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('<%= basePath %>/sw.js');
+      }
+    } catch(e) {}
+    <% } %>
   </script>
+
+  <% if (config.SEARCH_ENABLE) { %>
+  <div id="search-mask" class="search-mask"></div>
+  <div id="local-search" class="local-search">
+    <div class="search-dialog">
+      <nav class="search-nav">
+        <span class="search-dialog-title"><i class="fas fa-search"></i> 搜索</span>
+        <button class="search-close-button"><i class="fas fa-times"></i></button>
+      </nav>
+      <div class="local-search-input">
+        <input type="text" id="searchInput" placeholder="<%= config.SEARCH_PLACEHOLDER %>" autocomplete="off">
+      </div>
+      <hr>
+      <div id="local-search-results" class="search-result-list"></div>
+      <div id="local-search-stats" class="search-stats"></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script>
+    (function() {
+      var fuse = null;
+      var overlay = document.getElementById('local-search');
+      var mask = document.getElementById('search-mask');
+      var input = document.getElementById('searchInput');
+      var closeBtn = document.querySelector('.search-close-button');
+      var searchBtn = document.getElementById('searchBtn');
+      var resultsEl = document.getElementById('local-search-results');
+      var statsEl = document.getElementById('local-search-stats');
+      if (!overlay || !input) return;
+
+      function loadIndex(cb) {
+        if (fuse) { cb(); return; }
+        fetch('<%= basePath %>/search.json').then(function(r) { return r.json(); }).then(function(d) {
+          fuse = new Fuse(d, { keys: ['title', 'content', 'tags'], threshold: 0.4, includeScore: true });
+          cb();
+        })['catch'](function() {});
+      }
+
+      function doSearch(q) {
+        if (!q || q.length < 2) { resultsEl.innerHTML = ''; statsEl.textContent = ''; return; }
+        loadIndex(function() {
+          var res = fuse.search(q).slice(0, 20).map(function(m) { return m.item; });
+          if (res.length === 0) {
+            resultsEl.innerHTML = '<div class="search-no-result">未找到相关内容</div>';
+            statsEl.textContent = '0 个结果';
+          } else {
+            resultsEl.innerHTML = '<ol class="search-result-list">' + res.map(function(r) {
+              return '<li class="search-result-item"><a href="<%= basePath %>' + r.url + '" class="search-result-item-link">' +
+                '<span class="search-result-title">' + r.title + '</span>' +
+                '<span class="search-result-excerpt">' + r.content.substring(0, 120) + '</span></a></li>';
+            }).join('') + '</ol>';
+            statsEl.textContent = res.length + ' 个结果';
+          }
+        });
+      }
+
+      function openSearch() {
+        overlay.style.display = 'block';
+        mask.style.display = 'block';
+        setTimeout(function() { input.focus(); }, 100);
+      }
+
+      function closeSearch() {
+        overlay.style.display = 'none';
+        mask.style.display = 'none';
+        input.value = '';
+        resultsEl.innerHTML = '';
+        statsEl.textContent = '';
+      }
+
+      if (searchBtn) searchBtn.addEventListener('click', openSearch);
+      var navSearchBtn = document.getElementById('navSearchBtn');
+      if (navSearchBtn) navSearchBtn.addEventListener('click', openSearch);
+      closeBtn.addEventListener('click', closeSearch);
+      mask.addEventListener('click', closeSearch);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.style.display === 'block') closeSearch();
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+        if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,textarea')) { e.preventDefault(); openSearch(); }
+      });
+
+      input.addEventListener('input', function() {
+        clearTimeout(this.searchTimer);
+        var q = this.value.trim();
+        this.searchTimer = setTimeout(function() { doSearch(q); }, 200);
+      });
+      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(this.value.trim()); });
+    })();
+  </script>
+  <% } %>
 </body>
 </html>

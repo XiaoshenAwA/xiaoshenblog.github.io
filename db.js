@@ -2,12 +2,20 @@ const { createClient } = require('@supabase/supabase-js');
 const config = require('./config');
 
 let supabase = null;
+let supabaseAdmin = null;
 
 function getDb() {
   if (!supabase) {
     supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
   }
   return supabase;
+}
+
+function getAdminDb() {
+  if (!supabaseAdmin) {
+    supabaseAdmin = createClient(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY || config.SUPABASE_ANON_KEY);
+  }
+  return supabaseAdmin;
 }
 
 const table = () => config.DB_TABLE;
@@ -61,8 +69,19 @@ async function getPost(id) {
   return data ? rowToPost(data) : null;
 }
 
-async function createPost({ title, content, tags, cover }) {
+async function getAdjacentPosts(id) {
   const db = getDb();
+  const { data: allPosts } = await db.from(table()).select('id, title').order('created_at', { ascending: false });
+  if (!allPosts || allPosts.length === 0) return { prev: null, next: null };
+  const idx = allPosts.findIndex(p => p.id === id);
+  return {
+    prev: idx > 0 ? allPosts[idx - 1] : null,
+    next: idx < allPosts.length - 1 ? allPosts[idx + 1] : null
+  };
+}
+
+async function createPost({ title, content, tags, cover }) {
+  const db = getAdminDb();
   const tagsArr = tags ? tags.split(',').filter(Boolean).map(t => t.trim()) : [];
   const { data } = await db.from(table()).insert({
     title, content, tags: tagsArr, cover: cover || ''
@@ -71,7 +90,7 @@ async function createPost({ title, content, tags, cover }) {
 }
 
 async function updatePost(id, { title, content, tags, cover }) {
-  const db = getDb();
+  const db = getAdminDb();
   const tagsArr = tags ? tags.split(',').filter(Boolean).map(t => t.trim()) : [];
   await db.from(table()).update({
     title, content, tags: tagsArr, cover: cover || '',
@@ -80,7 +99,7 @@ async function updatePost(id, { title, content, tags, cover }) {
 }
 
 async function deletePost(id) {
-  const db = getDb();
+  const db = getAdminDb();
   await db.from(table()).delete().eq('id', id);
 }
 
@@ -90,4 +109,4 @@ async function getPostCount() {
   return count || 0;
 }
 
-module.exports = { getDb, getAllTags, getPostsPage, getAllPosts, getPost, createPost, updatePost, deletePost, getPostCount, rowToPost };
+module.exports = { getDb, getAllTags, getPostsPage, getAllPosts, getPost, getAdjacentPosts, createPost, updatePost, deletePost, getPostCount, rowToPost };

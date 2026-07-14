@@ -1,181 +1,581 @@
 # ============================================================
-#  MyBlog 博客配置文件
-#  修改此文件后重启服务即可生效
-#  字符串值请用引号包裹，布尔值用 true/false
+#  MyBlog 博客全局配置
+#  修改后重启服务即可生效。
+#  基础类型说明：
+#    - 字符串请用双引号包裹，如 "value"
+#    - 布尔值用 true / false
+#    - 数字直接写，如 3000
+#  环境变量覆盖：同名的环境变量会优先于本文件中的值。
 # ============================================================
 
-# ──── 服务器设置 ────
+# ============================================================
+#  服务器设置
+# ============================================================
+
 server:
-  # 监听端口（默认 3000）
+  # 监听端口号。修改后需重启服务。
   port: 3000
 
-# ──── 数据库 (Supabase) ────
+# ============================================================
+#  数据库 (Supabase)
+# ============================================================
+
 database:
-  # Supabase 项目 URL（从项目 Settings → API 获取）
+  # Supabase 项目 URL。从 Supabase 项目控制台 Settings → API → Project URL 获取。
   url: "https://eacieurozwzligrxnyos.supabase.co"
-  # 匿名公钥（anon public key，从项目 Settings → API 获取）
+  # 匿名公钥（anon public key）。从 Settings → API → anon public 获取。
+  # 此密钥暴露给前端是安全的，因为 Supabase 通过 Row Level Security 控制权限。
   anon_key: "sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P"
-  # 服务端密钥（管理操作需要，请妥善保管）
+  # 服务端密钥（service_role key）。拥有完全管理权限，请妥善保管，不要泄露。
+  # 此密钥只在服务端使用，不会暴露给前端。
   service_key: ""
-  # 文章表名
+  # 文章数据表名。如果使用不同的表名，请同步修改此处。
   table: "posts"
 
-# ──── 博客信息 ────
-blog:
-  # 站点名称（显示在标题栏和 Logo）
-  name: "MyBlog"
-  # 首页 Hero 副标题
-  subtitle: "114514"
-  # 侧栏作者信息
-  author: "博主"
-  author_bio: "热爱技术，享受生活"
+# ============================================================
+#  博客基本信息
+# ============================================================
 
-  # 每页显示文章数
+blog:
+  # 站点名称。显示在浏览器标题栏、导航栏 Logo 处及页脚版权信息中。
+  name: "测试博客"
+  # 首页副标题。显示在 Hero 区域的站点名称下方。
+  subtitle: "正在测试功能中..."
+  # 侧边栏作者卡片中显示的作者名称。
+  author: "博主"
+  # 作者简介。显示在侧边栏作者头像下方。
+  author_bio: "热爱技术，享受生活"
+  # 首页每页显示的文章数量。
   page_size: 5
-  # 文章摘要截断长度（字符数）
+  # 文章摘要截断长度（字符数）。超出部分将被截断并追加 "..."。
   excerpt_length: 200
-  # 预估阅读时间计算：字符数 ÷ 该值 = 分钟数
+  # 预估阅读时间的计算基准（字符/分钟）。
+  # 公式：文章总字符数 ÷ 该值 = 阅读分钟数。
   reading_speed: 500
 
-# ──── 部署设置 ────
-deploy:
-  # 部署路径前缀（子目录部署时填写，如 "/blog"，根目录留空）
-  base_path: ""
-  # 静态构建时的路径前缀（GitHub Pages 子目录部署时填写）
-  static_base_path: "/xiaoshenblog.github.io"
-  # Cloudflare Pages 自动部署 Webhook URL（保存文章后触发）
-  # 留空表示不触发自动部署
-  deploy_hook_url: ""
+# ============================================================
+#  部署设置
+# ============================================================
 
-  # GitHub Pages 部署（运行 npm run deploy 时生效）
+deploy:
+  # 部署路径前缀。若部署在子目录（如 https://example.com/blog/），则填写 "/blog"。
+  # 部署在根目录时留空即可。
+  base_path: ""
+  # 静态构建时的路径前缀。用于 GitHub Pages 子目录部署场景。
+  # 例如仓库名为 xiaoshenblog.github.io，则填写 "/xiaoshenblog.github.io"。
+  static_base_path: "/xiaoshenblog.github.io"
+  # Cloudflare Pages 自动部署 Webhook URL。
+  # 在后台保存文章后会自动 POST 请求此 URL 触发 Cloudflare Pages 重新部署。
+  # 留空表示不触发自动部署。
+  deploy_hook_url: ""
+  # GitHub Pages 部署相关设置（运行 npm run deploy 时生效）。
   github_pages:
-    # 部署分支
+    # 部署到 GitHub Pages 时使用的分支名称。
     branch: "gh-pages"
 
-# ──── 主题外观 ────
-theme:
-  # 颜色（十六进制，可带 alpha 通道）
-  colors:
-    # ---- 浅色模式 ----
-    light:
-      # 页面背景色
-      bg: "#f5f5f5"
-      # 卡片/模块背景色
-      bg_card: "#ffffff"
-      # 主文字颜色
-      text: "#2c3e50"
-      # 次要文字颜色
-      text_secondary: "#666666"
-      # 弱化文字颜色
-      text_muted: "#999999"
-      # 边框颜色
-      border: "rgba(0,0,0,0.08)"
-      # 强调色（主题色，用于按钮、链接等）
-      accent: "#e67e22"
-      # 强调色浅色变体（悬停背景等）
-      accent_light: "rgba(230,126,34,0.1)"
-      # 卡片阴影
-      shadow: "0 2px 12px rgba(0,0,0,0.06)"
-      # 悬停阴影
-      shadow_hover: "0 12px 32px rgba(0,0,0,0.1)"
+# ============================================================
+#  导航栏设置
+# ============================================================
 
-    # ---- 深色模式 ----
+nav:
+  # 导航栏 Logo 图片路径。填写图片文件路径（如 /img/logo.png）。
+  # 留空则使用 FontAwesome 图标（feather-alt）作为视觉标识。
+  logo: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
+  # 是否在导航栏中显示站点名称（blog.name）。
+  display_title: true
+  # 是否固定导航栏。启用后导航栏将始终悬浮在页面顶部。
+  fixed: false
+  # 导航菜单项列表。每一项包含 label（显示名称）、path（链接路径）、icon（FontAwesome 图标类名）。
+  # 可自由增删改，支持下拉菜单（未实现，仅为预留格式）。
+  menu:
+    - label: "首页"
+      path: "/"
+      icon: "fas fa-home"
+    - label: "关于"
+      path: "/about"
+      icon: "fas fa-user"
+    - label: "后台管理"
+      path: "/admin"
+      icon: "fas fa-cog"
+    - label: "编辑器"
+      path: "/editor"
+      icon: "fas fa-pen"
+
+# ============================================================
+#  图片资源
+# ============================================================
+
+images:
+  # 网站 Favicon 图标路径。显示在浏览器标签页上。
+  favicon: "/img/favicon.png"
+  # 头像设置
+  avatar:
+    # 头像图片路径。留空则使用 FontAwesome 图标占位。
+    img: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
+    # 头像旋转动画效果。启用后头像会持续缓慢旋转。
+    effect: true
+  # 文章默认封面图 URL。当某篇文章未设置封面时，使用此图片作为默认封面。
+  default_cover: "https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png"
+  # 是否全局禁用所有页面的顶部图（banner 区域）。
+  disable_top_img: false
+  # 默认顶部图。当各页面未单独设置顶部图时，使用此图片作为默认值。
+  default_top_img: "https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png"
+  # 首页（index page）专用的顶部图。仅对首页生效。
+  index_img: "https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png"
+
+# ============================================================
+#  代码块设置
+# ============================================================
+
+code_blocks:
+  # 是否显示 macOS 风格的红黄绿三色圆点装饰。显示在代码块工具栏左侧。
+  macStyle: true
+  # 代码块最大高度（单位：px）。超出部分将被隐藏并显示滚动条。
+  # 设置为 false 表示不限制高度。
+  height_limit: false
+  # 是否启用代码自动换行。启用后长行会自动折行显示，而不是水平滚动。
+  word_wrap: true
+  # 是否默认折叠代码块。启用后代码块仅显示前几行，底部有渐变遮罩提示。
+  shrink: true
+  # 是否在工具栏中显示全屏按钮。点击可将代码块全屏显示。
+  fullpage: true
+  # 是否显示代码复制按钮。启用后鼠标悬停时显示复制按钮。
+  copy: true
+  # 是否显示代码语言标签。启用后在工具栏中显示当前代码块的语言名称。
+  language: true
+
+# ============================================================
+#  页脚设置
+# ============================================================
+
+footer:
+  # 站点所有者信息
+  owner:
+    # 是否在页脚显示版权信息（© 年份 站点名称）。
+    enable: true
+    # 博客起始年份。显示为 "© 2026 MyBlog" 中的年份。
+    since: 2026
+  # 是否显示框架版权信息（"Powered by Express & Supabase"）。
+  copyright: true
+  # 页脚自定义 HTML 文本。显示在版权信息下方，可用于放置备案号等。
+  # 例如：custom_text: "京ICP备xxxxxxxx号"
+  custom_text: ""
+
+# ============================================================
+#  字体设置
+# ============================================================
+
+font:
+  # 正文字体大小（单位：px）。留空则使用浏览器默认字号（通常为 16px）。
+  global_font_size: ""
+  # 代码字体大小（单位：px）。留空则使用 14px。
+  code_font_size: ""
+
+# ============================================================
+#  美化与动效
+# ============================================================
+
+beautify:
+  # 是否启用全局圆角样式。关闭后所有 UI 元素的圆角将变为直角。
+  rounded_corners_ui: true
+  # 页面加载动画设置
+  preloader:
+    # 是否启用页面加载动画。启用后页面加载完成前会显示旋转动画。
+    enable: true
+
+# ============================================================
+#  主题外观
+#  颜色值支持：十六进制（#fff）、rgba()、hsla()
+#  布局尺寸均以像素（px）为单位
+# ============================================================
+
+theme:
+  # 颜色方案（分别配置浅色和深色模式）
+  colors:
+    # ---- 浅色模式（light）颜色定义 ----
+    light:
+      # 页面全局背景色
+      bg: "#f5f5f5"
+      # 卡片、文章等模块的背景色
+      bg_card: "#ffffff"
+      # 主文字颜色（正文、标题）
+      text: "#2c3e50"
+      # 次要文字颜色（辅助信息、描述文字）
+      text_secondary: "#666666"
+      # 弱化文字颜色（占位符、元信息）
+      text_muted: "#999999"
+      # 边框和分隔线颜色
+      border: "rgba(0,0,0,0.08)"
+      # 强调色（主题色），用于按钮、链接、选中状态等
+      accent: "#3498db"
+      # 强调色的浅色变体，用于悬停背景、标签底色等
+      accent_light: "rgba(230,126,34,0.1)"
+      # 卡片和模块的默认阴影
+      shadow: "0 2px 12px rgba(0,0,0,0.06)"
+      # 鼠标悬停时的增强阴影
+      shadow_hover: "0 12px 32px rgba(0,0,0,0.1)"
+    # ---- 深色模式（dark）颜色定义 ----
     dark:
+      # 页面全局背景色（深色模式）
       bg: "#1a1a2e"
+      # 卡片背景色（深色模式）
       bg_card: "#16213e"
+      # 主文字颜色（深色模式）
       text: "#e0e0e0"
+      # 次要文字颜色（深色模式）
       text_secondary: "#b0b0b0"
+      # 弱化文字颜色（深色模式）
       text_muted: "#888888"
+      # 边框颜色（深色模式）
       border: "rgba(255,255,255,0.08)"
-      accent: "#f0a050"
+      # 强调色（深色模式）
+      accent: "#5dade2"
+      # 强调色浅色变体（深色模式）
       accent_light: "rgba(240,160,80,0.15)"
+      # 卡片阴影（深色模式）
       shadow: "0 2px 12px rgba(0,0,0,0.3)"
+      # 悬停阴影（深色模式）
       shadow_hover: "0 12px 32px rgba(0,0,0,0.4)"
 
   # 布局尺寸
   layout:
-    # 内容区最大宽度（px）
+    # 内容区域最大宽度（px）。页面主体内容不超过此宽度。
     max_width: 1200
-    # 侧栏宽度（px）
+    # 侧边栏宽度（px），适用于首页等双栏布局页面。
     sidebar_width: 300
-    # 文章页侧栏宽度（px）
+    # 文章页侧边栏宽度（px），文章详情页的侧边栏独立设置。
     post_sidebar_width: 280
-    # 顶部导航栏高度（px）
+    # 顶部导航栏高度（px）。
     header_height: 60
-    # Hero 区域高度（px）
+    # Hero 区域高度（px），即首页顶部大图区域的高度。
     hero_height: 420
-    # 文章封面图高度（px）
+    # 文章封面图高度（px），首页文章卡片中的封面图片高度。
     cover_height: 220
 
-  # 字体
+  # 字体设置
   fonts:
-    # 正文字体栈
+    # 正文字体栈（font-family）。按优先级依次列出，用逗号分隔。
     body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
-    # 代码字体
+    # 代码字体。用于 <code>、<pre> 等元素。
     code: "'Fira Code', monospace"
 
-  # Hero 背景渐变
+  # Hero 区域背景渐变。支持 CSS 渐变语法。
   hero_gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)"
 
-  # 默认主题（light / dark）
+  # 默认主题模式。light = 浅色模式，dark = 深色模式。
   default_theme: "light"
 
-# ──── Markdown 渲染 ────
+# ============================================================
+#  文章元信息显示
+# ============================================================
+
+post_meta:
+  # ---- 首页（文章列表）的元信息显示设置 ----
+  page:
+    # 日期显示类型。created = 创建日期，updated = 更新日期，both = 两者都显示。
+    date_type: created
+    # 日期格式。date = 具体日期（如 2026-07-14），relative = 相对时间（如 3天前）。
+    date_format: date
+    # 是否在首页文章卡片中显示标签。
+    tags: true
+    # 是否在首页文章卡片中显示分类。（当前未实现分类功能，预留配置项）
+    categories: false
+  # ---- 文章详情页的元信息显示设置 ----
+  post:
+    # 元信息在文章页中的对齐方式。left = 左对齐，center = 居中对齐。
+    position: left
+    # 日期显示类型。created / updated / both。
+    date_type: both
+    # 是否在文章页中显示标签列表。
+    tags: true
+
+# ============================================================
+#  首页布局
+# ============================================================
+
+index:
+  # 文章卡片布局模式。
+  # 1 = 左图右文（封面在左侧，文字在右侧）
+  # 4 = 上图下文（封面在上方，文字在下方）
+  layout: 1
+  # 文章摘要设置
+  excerpt:
+    # 摘要截取方式。1 = 使用文章 description（预留字段），2 = description 优先，无则自动截取，3 = 自动截取正文前 N 字。
+    method: 3
+    # 自动截取时的最大字符数。
+    length: 200
+  # 首页副标题打字机效果
+  subtitle:
+    # 是否启用打字机副标题（替代 blog.subtitle）。
+    enable: true
+    # 是否启用打字机逐字打印动画效果。
+    effect: true
+    # 打字速度（毫秒/字符）。值越小越快。
+    type_speed: 80
+    # 删除速度（毫秒/字符）。值越小越快。
+    back_speed: 40
+    # 打完一句后的停顿时间（毫秒）。
+    pause_time: 2000
+    # 副标题文本列表。每行一条，打字机会依次打印。
+    sub:
+      - "优秀的人总是孤独的"
+      - "学习可以演戏，但人生不会和你演戏"
+      # - "一行文字"
+      # - "另一行文字"
+
+# ============================================================
+#  文章目录（TOC）
+# ============================================================
+
+toc:
+  # 是否在文章详情页侧边栏显示目录。
+  post: true
+  # 是否在目录项前显示数字序号。
+  number: true
+  # 目录是否默认展开。false 表示只显示第一级标题，点击展开子级。
+  expand: false
+  # 是否使用精简目录样式（无背景、无缩进线等）。
+  style_simple: false
+
+# ============================================================
+#  侧边栏设置
+# ============================================================
+
+aside:
+  # 是否启用侧边栏。
+  enable: true
+  # 是否在移动端显示侧边栏。
+  mobile: true
+  # 侧边栏位置。left = 左侧，right = 右侧。
+  position: right
+
+  # 作者信息卡片
+  card_author:
+    # 是否显示作者信息卡片。开启后显示头像、名称、简介、社交链接。
+    enable: true
+
+  # 公告卡片
+  card_announcement:
+    # 是否显示公告卡片。
+    enable: true
+    # 公告内容文字。
+    content: "这是我的博客"
+
+  # 最新文章卡片
+  card_recent_post:
+    # 是否显示最新文章列表。
+    enable: true
+    # 显示的最新文章数量。设置为 0 则显示全部。
+    limit: 5
+
+  # 分类卡片（当前未实现分类功能，预留配置项）
+  card_categories:
+    enable: true
+    limit: 8
+
+  # 标签云卡片
+  card_tags:
+    # 是否显示标签云卡片。
+    enable: true
+    # 显示的最大标签数量。设置为 0 则显示全部。
+    limit: 40
+    # 是否启用标签颜色。启用后不同标签显示不同颜色。
+    color: false
+    # 标签排序方式。random = 随机排序，name = 按名称字母排序，length = 按标签下文章数量排序。
+    orderby: random
+
+  # 文章归档卡片
+  card_archives:
+    # 是否显示归档卡片。
+    enable: true
+    # 归档分组方式。monthly = 按月归档，yearly = 按年归档。
+    type: monthly
+    # 归档日期格式。参考 moment.js 格式语法。
+    # MMMM = 完整月份名，YYYY = 四位数年份。
+    format: "MMMM YYYY"
+    # 显示的归档条目数量。0 = 显示全部。
+    limit: 8
+    # 排序方向。1 = 升序（旧到新），-1 = 降序（新到旧）。
+    order: -1
+
+  # 站点信息卡片
+  card_webinfo:
+    # 是否显示站点信息卡片（文章总数、运行时长等）。
+    enable: true
+    # 是否显示文章总数。
+    post_count: true
+    # 站点运行起始日期。填写后显示站点已运行天数。
+    # 格式示例："07/14/2026 00:00:00"（月/日/年 时:分:秒）
+    # 留空则不显示运行时长。
+    runtime_date: ""
+
+# ============================================================
+#  暗色模式
+# ============================================================
+
+darkmode:
+  # 是否启用暗色模式功能。关闭后将始终使用浅色主题。
+  enable: true
+  # 是否在导航栏显示暗色/浅色切换按钮。
+  button: true
+  # 自动切换模式。
+  # false = 不自动切换，由用户手动控制。
+  # 1 = 跟随操作系统设置（prefers-color-scheme）。
+  # 2 = 按固定时间段切换。
+  autoChangeMode: 1
+  # 自动切换为暗色模式的起始小时（0-23）。仅 autoChangeMode = 2 时生效。
+  start: 18
+  # 自动切换为暗色模式的结束小时（0-23）。仅 autoChangeMode = 2 时生效。
+  # 例如 start:18, end:6 表示 18:00 到次日 6:00 为暗色模式。
+  end: 6
+
+# ============================================================
+#  Markdown 渲染设置
+# ============================================================
+
 markdown:
-  # 是否允许 HTML 标签
+  # 是否允许 Markdown 内容中包含原始 HTML 标签。关闭后将转义所有 HTML。
   html: true
-  # 是否自动将 URL 转为可点击链接
+  # 是否将纯文本 URL 自动转换为可点击的链接。
   linkify: true
-  # 是否启用排版美化（如智能引号）
+  # 是否启用排版美化（智能引号、长破折号、省略号等）。
   typographer: true
 
-  # 代码高亮
+  # 代码高亮设置
   highlight:
-    # 引擎：shiki / highlight.js
+    # 高亮引擎。shiki = 基于语法树的现代高亮器，支持深色模式双主题。
+    # highlight.js 为备选静态高亮器，当前未实现。
     engine: "shiki"
-    # Shiki 主题名（浅色 / 深色）
+    # Shiki 主题名（分别配置浅色和深色模式下的主题）。
     themes:
+      # 浅色模式下的 Shiki 主题名。可选：github-light, vitesse-light, material-lighter 等。
       light: "github-light"
+      # 深色模式下的 Shiki 主题名。可选：github-dark, vitesse-dark, material-palenight 等。
       dark: "github-dark"
 
-  # 数学公式
+  # LaTeX 数学公式设置
   math:
-    # 内联公式定界符（默认 $...$）
+    # 内联公式定界符。默认 $...$，例如 $E=mc^2$。
     inline_delimiter: "$"
-    # 块级公式定界符（默认 $$...$$）
+    # 块级公式定界符。默认 $$...$$，例如 $$ \sum_{i=1}^n i $$。
     block_delimiter: "$$"
-    # KaTeX 渲染出错时显示的颜色
+    # 公式渲染出错时显示的错误文字颜色。
     error_color: "#cc0000"
 
-# ──── 编辑器设置 ────
+# ============================================================
+#  评论系统 (Giscus)
+#  基于 GitHub Discussions 的评论系统，零后端，无需额外部署。
+#  配置前请确保已在 GitHub 上安装 Giscus App 并启用 Discussions。
+# ============================================================
+
+comments:
+  # 使用的评论系统名称。目前仅支持 "giscus"。
+  # 留空表示不启用评论功能。
+  use: "giscus"
+  # Giscus 具体配置
+  giscus:
+    # GitHub 仓库名，格式：owner/repo。必须与 Giscus App 安装的仓库一致。
+    repo: "XiaoshenAwA/xiaoshenblog.github.io"
+    # GitHub 仓库 ID。在 GitHub GraphQL API 中获取，或使用 giscus.app 网站生成。
+    repo_id: "R_kgDOTWm7Wg"
+    # Discussions 分类名称。将在仓库 Discussions 中创建对应分类。
+    category: "General"
+    # Discussions 分类 ID。与 repo_id 一样在 giscus.app 获取。
+    category_id: "DIC_kwDOTWm7Ws4DBKQB"
+    # 浅色模式下的 Giscus 主题名。对照 Giscus 文档可选主题。
+    light_theme: "light"
+    # 深色模式下的 Giscus 主题名。
+    dark_theme: "dark"
+
+# ============================================================
+#  搜索设置
+# ============================================================
+
+search:
+  # 是否启用本地搜索。启用后首页搜索框将实时搜索文章标题和内容。
+  enable: true
+  # 搜索输入框的占位提示文字。
+  placeholder: "搜索文章..."
+
+# ============================================================
+#  PWA（渐进式 Web 应用）
+#  启用后用户可将网站添加到桌面，获得类似原生应用的体验。
+# ============================================================
+
+pwa:
+  # 是否启用 PWA 支持。
+  enable: true
+  # Web App Manifest 文件路径。
+  manifest: "/manifest.json"
+  # Apple 触摸图标（iOS 添加到桌面时显示的图标）。
+  apple_touch_icon: "/img/icon.png"
+  # 32x32 尺寸的 Favicon。
+  favicon_32_32: "/img/favicon-32.png"
+  # 16x16 尺寸的 Favicon。
+  favicon_16_16: "/img/favicon-16.png"
+
+# ============================================================
+#  Open Graph 社交分享
+#  控制社交媒体（Twitter、Facebook、微信等）分享链接时显示的卡片信息。
+# ============================================================
+
+open_graph:
+  # 是否启用 Open Graph meta 标签。
+  enable: true
+  # Twitter 卡片类型。summary = 小图卡片，summary_large_image = 大图卡片。
+  twitter_card: "summary_large_image"
+  # Twitter 站点 ID（@username）。留空则不显示。
+  twitter_id: ""
+  # Facebook App ID。用于 Facebook 分享分析。留空则不显示。
+  fb_app_id: ""
+
+# ============================================================
+#  Markdown 编辑器设置
+# ============================================================
+
 editor:
-  # 缩进模式：tab / spaces2 / spaces4 / spaces8
+  # 编辑器缩进方式。tab = 制表符，spaces2 = 2空格，spaces4 = 4空格，spaces8 = 8空格。
   indent_mode: "tab"
-  # 下载 .md 文件时的文件名
+  # 点击下载按钮时生成的 .md 文件名。
   download_filename: "document.md"
-  # 草稿本地存储 key 前缀
+  # 草稿本地存储 key 的前缀。用于区分不同编辑器的本地存储数据。
   draft_prefix: "editor-draft"
 
-# ──── 后台管理 ────
+# ============================================================
+#  后台管理设置
+# ============================================================
+
 admin:
-  # 用户密码最小长度
+  # 管理员密码的最小长度（字符数）。
   min_password_length: 6
-  # 保存成功后自动跳转延迟（毫秒）
+  # 保存文章成功后自动跳转回文章列表的延迟时间（毫秒）。
   save_redirect_delay: 1500
-  # 修改密码后自动跳转延迟（毫秒）
+  # 修改密码成功后自动跳转回后台的延迟时间（毫秒）。
   change_pw_redirect_delay: 2000
 
-# ──── 页脚社交链接 ────
+# ============================================================
+#  社交链接
+#  显示在页脚和侧边栏。
+# ============================================================
+
 social:
+  # GitHub 个人主页链接。
   github: "https://github.com/XiaoshenAwA"
+  # 微博个人主页链接。
   weibo: "#"
+  # Twitter/X 个人主页链接。
   twitter: "#"
+  # RSS 订阅链接。
   rss: "#"
+  # 联系邮箱（mailto: 链接）。
   email: "#"
 
-# ──── about 页 ────
+# ============================================================
+#  关于页面
+# ============================================================
+
 about:
-  # about 页面副标题
+  # 关于页面 Hero 区域显示的副标题。
   tagline: "一名热爱技术的开发者"
-  # about 内容存放路径
+  # 关于页面详细内容所在的 Markdown 文件路径。支持使用 Markdown 语法编写。
   content_file: "views/about_content.md"

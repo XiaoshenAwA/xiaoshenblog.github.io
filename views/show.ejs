@@ -1,14 +1,14 @@
 <%- include('partials/header', { title: post.title }) %>
 
-  <div class="main-layout single-layout">
+  <div class="main-layout single-layout<%= !config.ASIDE_ENABLE ? ' no-sidebar' : '' %>">
     <div class="main-content">
       <article class="post-article reveal">
         <header class="post-header">
           <h1 class="post-title"><%= post.title %></h1>
           <div class="post-meta-bar">
-            <span><i class="far fa-calendar-alt"></i> <%= post.created_at %></span>
+            <span><i class="far fa-calendar-alt"></i> <%= formatDate(post.created_at) %></span>
             <% if (post.updated_at !== post.created_at) { %>
-              <span><i class="far fa-edit"></i> 更新于 <%= post.updated_at %></span>
+              <span><i class="far fa-edit"></i> 更新于 <%= formatDate(post.updated_at) %></span>
             <% } %>
             <span><i class="far fa-clock"></i> <%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %> 分钟</span>
           </div>
@@ -24,20 +24,67 @@
         <div class="post-content"><%- post.contentHtml %></div>
         <div class="post-actions">
           <% if (!isStatic) { %>
+          <div id="admin-actions" style="display:none">
             <a href="<%= basePath %>/posts/<%= post.id %>/edit" class="btn btn-primary"><i class="fas fa-edit"></i> 编辑</a>
-            <form action="<%= basePath %>/posts/<%= post.id %>?_method=DELETE" method="POST" style="display:inline">
-              <button type="submit" class="btn btn-danger" onclick="return confirm('确定删除？')"><i class="fas fa-trash"></i> 删除</button>
-            </form>
+            <a href="#" class="btn btn-danger" onclick="if(confirm('确定删除？')){var f=document.getElementById('df');f.action=this.getAttribute('data-action');f.submit()}return false" data-action="<%= basePath %>/posts/<%= post.id %>?_method=DELETE"><i class="fas fa-trash"></i> 删除</a>
+            <form id="df" method="POST" style="display:none"></form>
+          </div>
           <% } %>
-          <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
         </div>
+
+        <div class="post-nav">
+          <% if (prevPost) { %>
+          <a href="<%= basePath %>/posts/<%= prevPost.id %>/" class="post-nav-item post-nav-prev">
+            <span class="post-nav-label"><i class="fas fa-arrow-left"></i> 上一篇</span>
+            <span class="post-nav-title"><%= prevPost.title %></span>
+          </a>
+          <% } else { %>
+          <div></div>
+          <% } %>
+          <% if (nextPost) { %>
+          <a href="<%= basePath %>/posts/<%= nextPost.id %>/" class="post-nav-item post-nav-next">
+            <span class="post-nav-label">下一篇 <i class="fas fa-arrow-right"></i></span>
+            <span class="post-nav-title"><%= nextPost.title %></span>
+          </a>
+          <% } %>
+        </div>
+
+        <a href="<%= basePath %>/" class="btn btn-outline" style="margin-top:20px"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <script>
+        try { if (sessionStorage.getItem('admin')) document.getElementById('admin-actions').style.display = ''; } catch(e){}
+        </script>
+
+        <% if (config.COMMENTS_USE === 'giscus' && config.GISCUS_REPO) { %>
+        <div class="post-comments">
+          <script src="https://giscus.app/client.js"
+            data-repo="<%= config.GISCUS_REPO %>"
+            data-repo-id="<%= config.GISCUS_REPO_ID %>"
+            data-category="<%= config.GISCUS_CATEGORY %>"
+            data-category-id="<%= config.GISCUS_CATEGORY_ID %>"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="<%= config.GISCUS_LIGHT_THEME %>"
+            data-lang="zh-CN"
+            crossorigin="anonymous"
+            async>
+          </script>
+        </div>
+        <% } %>
       </article>
     </div>
 
-    <aside class="sidebar">
+    <% if (config.ASIDE_ENABLE) { %>
+    <aside class="sidebar<%= !config.ASIDE_MOBILE ? ' hide-mobile' : '' %>">
       <div class="widget card reveal">
         <div class="avatar-box">
-          <div class="avatar"><i class="fas fa-user-circle"></i></div>
+          <% if (config.AVATAR_IMG) { %>
+            <img src="<%= basePath %><%= config.AVATAR_IMG %>" alt="<%= config.BLOG_AUTHOR %>" class="avatar-img<%= config.AVATAR_EFFECT ? ' avatar-effect' : '' %>">
+          <% } else { %>
+            <div class="avatar"><i class="fas fa-user-circle"></i></div>
+          <% } %>
           <h3><%= config.BLOG_AUTHOR %></h3>
           <p class="bio"><%= config.BLOG_AUTHOR_BIO %></p>
           <div class="social-links">
@@ -47,7 +94,7 @@
           </div>
         </div>
       </div>
-      <% if (typeof allTags !== 'undefined' && allTags.length > 0) { %>
+      <% if (config.ASIDE_CARD_TAGS && typeof allTags !== 'undefined' && allTags.length > 0) { %>
         <div class="widget card reveal">
           <h3 class="widget-title"><i class="fas fa-tags"></i> 标签云</h3>
           <div class="tag-cloud">
@@ -58,6 +105,42 @@
           </div>
         </div>
       <% } %>
+      <% if (config.TOC_POST) { %>
+      <div class="widget card reveal" id="toc-widget" style="display:none">
+        <h3 class="widget-title"><i class="fas fa-list"></i> 目录</h3>
+        <div class="toc-content" id="toc-content"></div>
+      </div>
+      <% } %>
     </aside>
+    <% } %>
   </div>
+
+  <script>
+  try {
+    var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+    var toc = document.getElementById('toc-content');
+    var tocWidget = document.getElementById('toc-widget');
+    if (toc && headings.length > 0) {
+      <%
+        var tocExpandClass = '';
+        if (config.TOC_EXPAND) tocExpandClass = ' toc-expand';
+      %>
+      toc.className += '<%= tocExpandClass %>';
+      headings.forEach(function(h, i) {
+        if (!h.id) h.id = 'heading-' + i;
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        <% if (config.TOC_NUMBER) { %>
+        a.textContent = (i + 1) + '. ' + h.textContent;
+        <% } else { %>
+        a.textContent = h.textContent;
+        <% } %>
+        a.className = 'toc-link toc-link-' + h.tagName.toLowerCase();
+        toc.appendChild(a);
+      });
+      tocWidget.style.display = '';
+    }
+  } catch(e) {}
+  </script>
+
 <%- include('partials/footer') %>

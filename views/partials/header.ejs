@@ -4,29 +4,126 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof title !== 'undefined' && title ? title + ' | ' : '' %><%= config.BLOG_NAME %></title>
-  <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
+  <% if (config.FAVICON) { %>
+  <link rel="icon" href="<%= basePath %><%= config.FAVICON %>">
+  <% } %>
+  <% if (config.PWA_FAVICON_32) { %><link rel="icon" type="image/png" sizes="32x32" href="<%= basePath %><%= config.PWA_FAVICON_32 %>"><% } %>
+  <% if (config.PWA_FAVICON_16) { %><link rel="icon" type="image/png" sizes="16x16" href="<%= basePath %><%= config.PWA_FAVICON_16 %>"><% } %>
+  <% if (config.PWA_ENABLE) { %>
+  <link rel="manifest" href="<%= basePath %><%= config.PWA_MANIFEST %>">
+  <link rel="apple-touch-icon" href="<%= basePath %><%= config.PWA_APPLE_TOUCH_ICON %>">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="<%= config.BLOG_NAME %>">
+  <% } %>
+  <% if (config.OG_ENABLE) { %>
+  <meta property="og:title" content="<%= typeof title !== 'undefined' && title ? title : config.BLOG_NAME %>">
+  <meta property="og:site_name" content="<%= config.BLOG_NAME %>">
+  <meta property="og:type" content="<%= typeof title !== 'undefined' && title ? 'article' : 'website' %>">
+  <meta property="og:url" content="<%= basePath %>/">
+  <meta name="twitter:card" content="<%= config.OG_TWITTER_CARD %>">
+  <% if (config.OG_TWITTER_ID) { %><meta name="twitter:site" content="<%= config.OG_TWITTER_ID %>"><% } %>
+  <% if (config.OG_FB_APP_ID) { %><meta property="fb:app_id" content="<%= config.OG_FB_APP_ID %>"><% } %>
+  <% if (config.INDEX_IMG) { %><meta property="og:image" content="<%= basePath %><%= config.INDEX_IMG %>"><% } %>
+  <% } %>
+  <link rel="stylesheet" href="<%= basePath %>/assets/main.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
+
+  <style>
+    :root {
+      --bg: <%= config.THEME?.colors?.light?.bg || '#f5f5f5' %>;
+      --bg-card: <%= config.THEME?.colors?.light?.bg_card || '#ffffff' %>;
+      --text: <%= config.THEME?.colors?.light?.text || '#2c3e50' %>;
+      --text-secondary: <%= config.THEME?.colors?.light?.text_secondary || '#666666' %>;
+      --text-muted: <%= config.THEME?.colors?.light?.text_muted || '#999999' %>;
+      --border: <%= config.THEME?.colors?.light?.border || 'rgba(0,0,0,0.08)' %>;
+      --accent: <%= config.THEME?.colors?.light?.accent || '#e67e22' %>;
+      --accent-light: <%= config.THEME?.colors?.light?.accent_light || 'rgba(230,126,34,0.1)' %>;
+      --shadow: <%= config.THEME?.colors?.light?.shadow || '0 2px 12px rgba(0,0,0,0.06)' %>;
+      --shadow-hover: <%= config.THEME?.colors?.light?.shadow_hover || '0 12px 32px rgba(0,0,0,0.1)' %>;
+      --hero-gradient: <%= config.THEME?.hero_gradient || 'linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)' %>;
+      --max-width: <%= config.THEME?.layout?.max_width || 1200 %>px;
+      --sidebar-width: <%= config.THEME?.layout?.sidebar_width || 300 %>px;
+      --post-sidebar-width: <%= config.THEME?.layout?.post_sidebar_width || 280 %>px;
+      --header-height: <%= config.THEME?.layout?.header_height || 60 %>px;
+      --hero-height: <%= config.THEME?.layout?.hero_height || 420 %>px;
+      --cover-height: <%= config.THEME?.layout?.cover_height || 220 %>px;
+      --font-body: <%= config.FONT_BODY %>;
+      --font-code: <%= config.FONT_CODE %>;
+      <% if (config.FONT_GLOBAL_SIZE) { %>--font-size-global: <%= config.FONT_GLOBAL_SIZE %>px;<% } %>
+      <% if (config.FONT_CODE_SIZE) { %>--font-size-code: <%= config.FONT_CODE_SIZE %>px;<% } %>
+      <% if (!config.ROUNDED_CORNERS) { %>--radius: 0px; --radius-sm: 0px; --radius-lg: 0px;<% } %>
+    }
+    [data-theme="dark"] {
+      --bg: <%= config.THEME?.colors?.dark?.bg || '#1a1a2e' %>;
+      --bg-card: <%= config.THEME?.colors?.dark?.bg_card || '#16213e' %>;
+      --text: <%= config.THEME?.colors?.dark?.text || '#e0e0e0' %>;
+      --text-secondary: <%= config.THEME?.colors?.dark?.text_secondary || '#b0b0b0' %>;
+      --text-muted: <%= config.THEME?.colors?.dark?.text_muted || '#888888' %>;
+      --border: <%= config.THEME?.colors?.dark?.border || 'rgba(255,255,255,0.08)' %>;
+      --accent: <%= config.THEME?.colors?.dark?.accent || '#f0a050' %>;
+      --accent-light: <%= config.THEME?.colors?.dark?.accent_light || 'rgba(240,160,80,0.15)' %>;
+      --shadow: <%= config.THEME?.colors?.dark?.shadow || '0 2px 12px rgba(0,0,0,0.3)' %>;
+      --shadow-hover: <%= config.THEME?.colors?.dark?.shadow_hover || '0 12px 32px rgba(0,0,0,0.4)' %>;
+    }
+  </style>
+
+  <% if (config.PRELOADER_ENABLE) { %>
+  <style>
+    #preloader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s;
+    }
+    #preloader.hide { opacity: 0; pointer-events: none; }
+    .preloader-icon {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <% } %>
 </head>
 <body>
+  <% if (config.PRELOADER_ENABLE) { %>
+  <div id="preloader"><div class="preloader-icon"></div></div>
+  <script>window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)setTimeout(function(){p.classList.add('hide')},300)})</script>
+  <% } %>
+
   <div class="progress-bar" id="progressBar"></div>
 
-  <header class="site-header">
+  <header class="site-header<%= config.NAV_FIXED ? ' fixed' : '' %>">
     <div class="header-container">
-      <a href="<%= basePath %>/" class="site-logo"><i class="fas fa-feather-alt"></i> <%= config.BLOG_NAME %></a>
+      <a href="<%= basePath %>/" class="site-logo">
+        <% if (config.NAV_LOGO) { %>
+          <img src="<%= basePath %><%= config.NAV_LOGO %>" alt="<%= config.BLOG_NAME %>" class="site-logo-img">
+        <% } else { %>
+          <i class="fas fa-feather-alt"></i>
+        <% } %>
+        <% if (config.NAV_DISPLAY_TITLE) { %><%= config.BLOG_NAME %><% } %>
+      </a>
       <nav class="site-nav">
-        <a href="<%= basePath %>/"><i class="fas fa-home"></i> <span>首页</span></a>
-        <a href="<%= basePath %>/editor"><i class="fas fa-pen"></i> <span>Markdown 编辑器</span></a>
-        <a href="<%= basePath %>/about"><i class="fas fa-user"></i> <span>关于</span></a>
+        <% (config.NAV_MENU || []).forEach(function(item) { %>
+          <a href="<%= basePath %><%= item.path %>"><i class="<%= item.icon %>"></i> <span><%= item.label %></span></a>
+        <% }) %>
+        <% if (config.SEARCH_ENABLE) { %>
+        <button class="nav-search-btn" id="navSearchBtn" title="搜索"><i class="fas fa-search"></i></button>
+        <% } %>
+        <% if (config.DARKMODE_BUTTON) { %>
         <button class="theme-toggle" id="themeToggle" title="切换主题">
           <i class="fas fa-moon"></i>
         </button>
+        <% } %>
       </nav>
       <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
     </div>
   </header>
 
   <div class="mobile-menu" id="mobileMenu">
-    <a href="<%= basePath %>/"><i class="fas fa-home"></i> 首页</a>
-    <a href="<%= basePath %>/editor"><i class="fas fa-pen"></i> Markdown 编辑器</a>
-    <a href="<%= basePath %>/about"><i class="fas fa-user"></i> 关于</a>
+    <% (config.NAV_MENU || []).forEach(function(item) { %>
+      <a href="<%= basePath %><%= item.path %>"><i class="<%= item.icon %>"></i> <%= item.label %></a>
+    <% }) %>
   </div>

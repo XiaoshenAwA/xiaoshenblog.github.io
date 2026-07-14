@@ -5,6 +5,8 @@ import 'katex/dist/katex.min.css'
 import markdownit from 'markdown-it'
 import markdownItContainer from 'markdown-it-container'
 import { full as markdownitEmoji } from 'markdown-it-emoji'
+import markdownitMark from 'markdown-it-mark'
+import markdownitInsDel from 'markdown-it-ins-del'
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
@@ -43,6 +45,8 @@ function renderMath(str, displayMode) {
 
 const md = markdownit({ html: true, linkify: true })
 md.use(markdownitEmoji)
+md.use(markdownitMark)
+md.use(markdownitInsDel)
 
 // inline math: $...$
 md.inline.ruler.before('escape', 'math_inline', (state, silent) => {
@@ -164,7 +168,7 @@ const gutter = document.getElementById('editor-gutter')
 
 function updateLineNumbers() {
   const lines = textarea.value.split('\n')
-  gutter.innerHTML = Array.from({ length: lines.length }, (_, i) => i + 1).join('<br>')
+  gutter.textContent = Array.from({ length: lines.length }, (_, i) => i + 1).join('\n')
 }
 
 function syncGutterScroll() { gutter.scrollTop = textarea.scrollTop }

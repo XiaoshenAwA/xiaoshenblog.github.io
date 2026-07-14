@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const { getAllTags, getPostsPage, getPost, createPost, updatePost, deletePost, getPostCount } = require('../db');
+const { getAllTags, getPostsPage, getPost, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts } = require('../db');
 const config = require('../config');
 const { render, excerpt } = require('../markdown');
 
@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
       p.excerptText = await excerpt(p.content, config.EXCERPT_LENGTH);
     }
 
-    res.render('index', { posts, page, totalPages, tag, allTags, basePath: config.BASE_PATH, config, isStatic: false });
+    res.render('index', { posts, page, totalPages, total, tag, allTags, basePath: config.BASE_PATH, config, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
@@ -34,7 +34,8 @@ router.get('/posts/:id', async (req, res) => {
     if (!post) return res.status(404).send('文章未找到');
     post.contentHtml = await render(post.content);
     const allTags = await getAllTags();
-    res.render('show', { post, allTags, basePath: config.BASE_PATH, config, isStatic: false });
+    const { prev, next } = await getAdjacentPosts(post.id);
+    res.render('show', { post, allTags, prevPost: prev, nextPost: next, basePath: config.BASE_PATH, config, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
@@ -82,7 +83,7 @@ router.put('/posts/:id', async (req, res) => {
   }
 });
 
-const aboutFilePath = path.join(__dirname, '..', 'views', 'about_content.md');
+const aboutFilePath = path.join(__dirname, '..', config.ABOUT_CONTENT_FILE || 'views/about_content.md');
 
 router.get('/about/raw', (req, res) => {
   try {
@@ -101,6 +102,22 @@ router.post('/about', (req, res) => {
     res.send('ok');
   } catch (e) {
     res.status(500).send('保存失败');
+  }
+});
+
+router.get('/search.json', async (req, res) => {
+  try {
+    const posts = await getAllPosts();
+    const index = posts.map(p => ({
+      id: p.id,
+      title: p.title,
+      content: (p.content || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
+      url: config.BASE_PATH + '/posts/' + p.id + '/',
+      tags: p.tags || []
+    }));
+    res.json(index);
+  } catch (e) {
+    res.status(500).json({ error: '搜索索引生成失败' });
   }
 });
 

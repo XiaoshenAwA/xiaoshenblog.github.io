@@ -40,10 +40,17 @@ async function build() {
   const allPosts = await getAllPosts();
   const totalPages = Math.ceil(allPosts.length / config.PAGE_SIZE) || 1;
 
+  function formatDate(d) {
+    if (!d) return '';
+    var dt = new Date(d);
+    var y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), day = String(dt.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + day;
+  }
+
   async function render(template, data, outPath) {
     const html = await ejs.renderFile(
       path.join(__dirname, 'views', template),
-      { ...data, basePath, isStatic, config },
+      { ...data, basePath, isStatic, config, formatDate },
       { views: [path.join(__dirname, 'views')] }
     );
     writeFile(path.join(dist, outPath), html);
@@ -61,7 +68,7 @@ async function build() {
     for (let page = 1; page <= totalPages; page++) {
     const offset = (page - 1) * config.PAGE_SIZE;
     const posts = await preparePosts(allPosts.slice(offset, offset + config.PAGE_SIZE));
-    const data = { posts, page, totalPages, tag: '', allTags };
+    const data = { posts, page, totalPages, total: allPosts.length, tag: '', allTags };
     if (page === 1) await render('index.ejs', data, 'index.html');
     if (totalPages > 1) await render('index.ejs', data, `page/${page}/index.html`);
   }
@@ -83,15 +90,34 @@ async function build() {
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u6587\u7AE0\u9875\u9762...');
-  for (const post of allPosts) {
+  for (let i = 0; i < allPosts.length; i++) {
+    const post = allPosts[i];
     const contentHtml = await renderMd(post.content);
-    await render('show.ejs', { post: { ...post, contentHtml }, allTags }, `posts/${post.id}/index.html`);
+    const prevPost = i > 0 ? allPosts[i - 1] : null;
+    const nextPost = i < allPosts.length - 1 ? allPosts[i + 1] : null;
+    await render('show.ejs', { post: { ...post, contentHtml }, allTags, prevPost, nextPost }, `posts/${post.id}/index.html`);
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u5173\u4E8E\u9875\u9762...');
-  const aboutContent = fs.readFileSync(path.join(__dirname, 'views', 'about_content.md'), 'utf-8');
+  const aboutContent = fs.readFileSync(path.join(__dirname, config.ABOUT_CONTENT_FILE || 'views/about_content.md'), 'utf-8');
   const aboutHtml = await renderMd(aboutContent);
   await render('about.ejs', { allTags, postCount: allPosts.length, aboutHtml }, 'about/index.html');
+
+  if (config.SEARCH_ENABLE) {
+    console.log('\u6B63\u5728\u751F\u6210\u641C\u7D22\u7D22\u5F15...');
+    const searchIndex = [];
+    for (const post of allPosts) {
+      const text = post.content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      searchIndex.push({
+        id: post.id,
+        title: post.title,
+        content: text.substring(0, 500),
+        url: basePath + '/posts/' + post.id + '/',
+        tags: post.tags
+      });
+    }
+    writeFile(path.join(dist, 'search.json'), JSON.stringify(searchIndex));
+  }
 
   console.log('\u6B63\u5728\u751F\u6210\u540E\u53F0\u7BA1\u7406\u9875\u9762...');
   await render('admin.ejs', { allTags: [], postCount: 0, title: '\u540E\u53F0\u7BA1\u7406' }, 'admin/index.html');
