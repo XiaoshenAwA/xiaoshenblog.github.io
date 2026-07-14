@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 const { getAllTags, getPostsPage, getPost, createPost, updatePost, deletePost, getPostCount } = require('../db');
 const { BASE_PATH, PAGE_SIZE } = require('../config');
 const { render, excerpt } = require('../markdown');
@@ -84,7 +86,9 @@ router.get('/about', async (req, res) => {
   try {
     const allTags = await getAllTags();
     const postCount = await getPostCount();
-    res.render('about', { allTags, postCount, basePath: BASE_PATH, isStatic: false });
+    const aboutContent = fs.readFileSync(path.join(__dirname, '..', 'views', 'about_content.md'), 'utf-8');
+    const aboutHtml = await render(aboutContent);
+    res.render('about', { allTags, postCount, aboutHtml, basePath: BASE_PATH, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
