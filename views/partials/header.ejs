@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN" data-theme="<%= config.THEME_DEFAULT %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof title !== 'undefined' && title ? title + ' | ' : '' %>MyBlog</title>
+  <title><%= typeof title !== 'undefined' && title ? title + ' | ' : '' %><%= config.BLOG_NAME %></title>
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 </head>
@@ -12,7 +12,7 @@
 
   <header class="site-header">
     <div class="header-container">
-      <a href="<%= basePath %>/" class="site-logo"><i class="fas fa-feather-alt"></i> MyBlog</a>
+      <a href="<%= basePath %>/" class="site-logo"><i class="fas fa-feather-alt"></i> <%= config.BLOG_NAME %></a>
       <nav class="site-nav">
         <a href="<%= basePath %>/"><i class="fas fa-home"></i> <span>首页</span></a>
         <a href="<%= basePath %>/editor"><i class="fas fa-pen"></i> <span>Markdown 编辑器</span></a>

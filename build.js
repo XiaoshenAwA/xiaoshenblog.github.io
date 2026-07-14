@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { getAllTags, getAllPosts } = require('./db');
-const { PAGE_SIZE, BASE_PATH } = require('./config');
+const config = require('./config');
 const { render: renderMd, excerpt, init } = require('./markdown');
 const dist = path.join(__dirname, 'dist');
 
@@ -29,7 +29,7 @@ function copyDirSync(src, dest) {
 }
 
 async function build() {
-  const basePath = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : BASE_PATH;
+  const basePath = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : config.BASE_PATH;
   const isStatic = true;
 
   console.log('\u6B63\u5728\u6E05\u7406 dist \u76EE\u5F55...');
@@ -38,12 +38,12 @@ async function build() {
 
   const allTags = await getAllTags();
   const allPosts = await getAllPosts();
-  const totalPages = Math.ceil(allPosts.length / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(allPosts.length / config.PAGE_SIZE) || 1;
 
   async function render(template, data, outPath) {
     const html = await ejs.renderFile(
       path.join(__dirname, 'views', template),
-      { ...data, basePath, isStatic },
+      { ...data, basePath, isStatic, config },
       { views: [path.join(__dirname, 'views')] }
     );
     writeFile(path.join(dist, outPath), html);
@@ -52,15 +52,15 @@ async function build() {
   async function preparePosts(posts) {
     const result = [];
     for (const p of posts) {
-      result.push({ ...p, excerptText: await excerpt(p.content, 200) });
+      result.push({ ...p, excerptText: await excerpt(p.content, config.EXCERPT_LENGTH) });
     }
     return result;
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u9996\u9875...');
-  for (let page = 1; page <= totalPages; page++) {
-    const offset = (page - 1) * PAGE_SIZE;
-    const posts = await preparePosts(allPosts.slice(offset, offset + PAGE_SIZE));
+    for (let page = 1; page <= totalPages; page++) {
+    const offset = (page - 1) * config.PAGE_SIZE;
+    const posts = await preparePosts(allPosts.slice(offset, offset + config.PAGE_SIZE));
     const data = { posts, page, totalPages, tag: '', allTags };
     if (page === 1) await render('index.ejs', data, 'index.html');
     if (totalPages > 1) await render('index.ejs', data, `page/${page}/index.html`);
@@ -69,10 +69,10 @@ async function build() {
   console.log('\u6B63\u5728\u751F\u6210\u6807\u7B7E\u9875\u9762...');
   for (const tag of allTags) {
     const allFiltered = await preparePosts(allPosts.filter(p => p.tags.includes(tag)));
-    const tPages = Math.ceil(allFiltered.length / PAGE_SIZE) || 1;
+    const tPages = Math.ceil(allFiltered.length / config.PAGE_SIZE) || 1;
     for (let page = 1; page <= tPages; page++) {
-      const offset = (page - 1) * PAGE_SIZE;
-      const posts = allFiltered.slice(offset, offset + PAGE_SIZE);
+      const offset = (page - 1) * config.PAGE_SIZE;
+      const posts = allFiltered.slice(offset, offset + config.PAGE_SIZE);
       const data = { posts, page, totalPages: tPages, tag, allTags };
       if (page === 1) {
         await render('index.ejs', data, `tag/${encodeURIComponent(tag)}/index.html`);

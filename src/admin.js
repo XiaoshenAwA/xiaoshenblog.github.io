@@ -83,13 +83,16 @@ function addMathPlugin(md) {
   md.renderer.rules.math_display = (tokens, idx) => renderMath(tokens[idx].content, true)
 }
 
-const SUPABASE_URL = 'https://eacieurozwzligrxnyos.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P'
+const cfg = window.__CONFIG__ || {}
+const SUPABASE_URL = cfg.SUPABASE_URL || 'https://eacieurozwzligrxnyos.supabase.co'
+const SUPABASE_ANON_KEY = cfg.SUPABASE_ANON_KEY || 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P'
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-const DEPLOY_HOOK_URL = 'https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/aeddd3fe-52ad-45c1-9b29-4b0093c2168b'
+const DEPLOY_HOOK_URL = cfg.DEPLOY_HOOK_URL || ''
+const SAVE_REDIRECT_DELAY = cfg.ADMIN_SAVE_REDIRECT_DELAY || 1500
+const CHANGE_PW_REDIRECT_DELAY = cfg.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000
 
 function triggerDeploy() {
-  fetch(DEPLOY_HOOK_URL, { method: 'POST' }).catch(() => {})
+  if (DEPLOY_HOOK_URL) fetch(DEPLOY_HOOK_URL, { method: 'POST' }).catch(() => {})
 }
 
 const $ = s => document.querySelector(s)
@@ -217,10 +220,9 @@ changePwForm.addEventListener('submit', async e => {
   changePwMessage.style.display = 'block'
   changePwForm.reset()
 
-  // Automatically return to posts list after 2 seconds
   setTimeout(() => {
     cancelChangePw()
-  }, 2000)
+  }, CHANGE_PW_REDIRECT_DELAY)
 })
 
 // About editing
@@ -274,7 +276,7 @@ aboutForm.addEventListener('submit', async e => {
     aboutMessage.textContent = '保存成功！'
     aboutMessage.className = 'message-msg success'
     aboutMessage.style.display = 'block'
-    setTimeout(cancelAbout, 1500)
+    setTimeout(cancelAbout, SAVE_REDIRECT_DELAY)
   } catch (err) {
     aboutMessage.textContent = '保存失败: ' + err.message
     aboutMessage.className = 'message-msg error'
@@ -452,7 +454,7 @@ document.addEventListener('keydown', e => {
 })
 
 const INDENT_MODES = ['tab', 'spaces2', 'spaces4', 'spaces8']
-let indentMode = localStorage.getItem('editor-indent-mode') || 'tab'
+let indentMode = localStorage.getItem('editor-indent-mode') || cfg.EDITOR_INDENT_MODE || 'tab'
 
 function getIndent() {
   if (indentMode === 'tab') return '\t'

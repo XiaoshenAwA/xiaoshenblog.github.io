@@ -40,5 +40,12 @@
     </div>
   </div>
 </div>
+<script>
+window.__CONFIG__ = {
+  EDITOR_DOWNLOAD_FILENAME: '<%= config.EDITOR_DOWNLOAD_FILENAME %>',
+  EDITOR_DRAFT_PREFIX: '<%= config.EDITOR_DRAFT_PREFIX %>',
+  EDITOR_INDENT_MODE: '<%= config.EDITOR_INDENT_MODE %>'
+};
+</script>
 <script type="module" src="<%= basePath %>/assets/editor.js" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
 <%- include('partials/footer') %>

@@ -1,8 +1,9 @@
 const katex = require('katex');
+const config = require('./config');
 
 const katexOptions = {
   throwOnError: false,
-  errorColor: '#cc0000',
+  errorColor: config.MD_KATEX_ERROR_COLOR,
   strict: false
 };
 
@@ -55,7 +56,7 @@ async function init() {
       'r', 'perl', 'lua', 'haskell', 'elixir',
       'clojure', 'powershell', 'latex', 'tex'
     ],
-    themes: ['github-light', 'github-dark']
+    themes: [config.MD_SHIKI_THEME_LIGHT, config.MD_SHIKI_THEME_DARK]
   });
 
   const MarkdownIt = require('markdown-it');
@@ -66,9 +67,9 @@ async function init() {
   const { default: markdownItContainer } = await import('markdown-it-container');
 
   md = new MarkdownIt({
-    html: true,
-    linkify: true,
-    typographer: true
+    html: config.MD_HTML,
+    linkify: config.MD_LINKIFY,
+    typographer: config.MD_TYPOGRAPHER
   });
 
   md.use(markdownItEmoji);
@@ -136,7 +137,7 @@ async function init() {
   makeContainer('details', '<i class="fas fa-chevron-right"></i>', '详情');
 
   md.use(await fromHighlighter(highlighter, {
-    themes: { light: 'github-light', dark: 'github-dark' },
+    themes: { light: config.MD_SHIKI_THEME_LIGHT, dark: config.MD_SHIKI_THEME_DARK },
     defaultColor: false,
     transformers: [
       transformerMetaHighlight(),
@@ -192,10 +193,10 @@ async function init() {
   };
 
   md.use(markdownItMath, {
-    inlineOpen: '$',
-    inlineClose: '$',
-    blockOpen: '$$',
-    blockClose: '$$',
+    inlineOpen: config.MD_MATH_INLINE,
+    inlineClose: config.MD_MATH_INLINE,
+    blockOpen: config.MD_MATH_BLOCK,
+    blockClose: config.MD_MATH_BLOCK,
     inlineRenderer: (str) => {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: false });

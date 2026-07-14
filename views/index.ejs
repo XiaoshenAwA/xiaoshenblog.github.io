@@ -3,8 +3,8 @@
   <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-content">
-      <h1 class="hero-title">MyBlog</h1>
-      <p class="hero-subtitle">记录生活，分享思考</p>
+      <h1 class="hero-title"><%= config.BLOG_NAME %></h1>
+      <p class="hero-subtitle"><%= config.BLOG_SUBTITLE %></p>
       <div class="hero-search">
         <input type="text" id="searchInput" placeholder="搜索文章..." onkeyup="if(event.key==='Enter')search()">
         <button onclick="search()"><i class="fas fa-search"></i></button>
@@ -79,12 +79,12 @@
       <div class="widget card reveal">
         <div class="avatar-box">
           <div class="avatar"><i class="fas fa-user-circle"></i></div>
-          <h3>博主</h3>
-          <p class="bio">热爱技术，享受生活</p>
+          <h3><%= config.BLOG_AUTHOR %></h3>
+          <p class="bio"><%= config.BLOG_AUTHOR_BIO %></p>
           <div class="social-links">
-            <a href="#"><i class="fab fa-github"></i></a>
-            <a href="#"><i class="fab fa-weibo"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="<%= config.SOCIAL_GITHUB %>"><i class="fab fa-github"></i></a>
+            <a href="<%= config.SOCIAL_WEIBO %>"><i class="fab fa-weibo"></i></a>
+            <a href="<%= config.SOCIAL_TWITTER %>"><i class="fab fa-twitter"></i></a>
           </div>
         </div>
       </div>

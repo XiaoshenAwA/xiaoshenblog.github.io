@@ -1,14 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = require('./config');
+const config = require('./config');
 
 let supabase = null;
 
 function getDb() {
   if (!supabase) {
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
   }
   return supabase;
 }
+
+const table = () => config.DB_TABLE;
 
 function rowToPost(row) {
   return {
@@ -24,7 +26,7 @@ function rowToPost(row) {
 
 async function getAllTags() {
   const db = getDb();
-  const { data } = await db.from('posts').select('tags');
+  const { data } = await db.from(table()).select('tags');
   const allTags = new Set();
   if (data) {
     for (const row of data) {
@@ -38,7 +40,7 @@ async function getAllTags() {
 
 async function getPostsPage(page = 1, tag = '', pageSize = 5) {
   const db = getDb();
-  let query = db.from('posts').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+  let query = db.from(table()).select('*', { count: 'exact' }).order('created_at', { ascending: false });
   if (tag) {
     query = query.contains('tags', [tag]);
   }
@@ -49,20 +51,20 @@ async function getPostsPage(page = 1, tag = '', pageSize = 5) {
 
 async function getAllPosts() {
   const db = getDb();
-  const { data } = await db.from('posts').select('*').order('created_at', { ascending: false });
+  const { data } = await db.from(table()).select('*').order('created_at', { ascending: false });
   return (data || []).map(rowToPost);
 }
 
 async function getPost(id) {
   const db = getDb();
-  const { data } = await db.from('posts').select('*').eq('id', id).single();
+  const { data } = await db.from(table()).select('*').eq('id', id).single();
   return data ? rowToPost(data) : null;
 }
 
 async function createPost({ title, content, tags, cover }) {
   const db = getDb();
   const tagsArr = tags ? tags.split(',').filter(Boolean).map(t => t.trim()) : [];
-  const { data } = await db.from('posts').insert({
+  const { data } = await db.from(table()).insert({
     title, content, tags: tagsArr, cover: cover || ''
   }).select('id').single();
   return data?.id;
@@ -71,7 +73,7 @@ async function createPost({ title, content, tags, cover }) {
 async function updatePost(id, { title, content, tags, cover }) {
   const db = getDb();
   const tagsArr = tags ? tags.split(',').filter(Boolean).map(t => t.trim()) : [];
-  await db.from('posts').update({
+  await db.from(table()).update({
     title, content, tags: tagsArr, cover: cover || '',
     updated_at: new Date().toISOString()
   }).eq('id', id);
@@ -79,12 +81,12 @@ async function updatePost(id, { title, content, tags, cover }) {
 
 async function deletePost(id) {
   const db = getDb();
-  await db.from('posts').delete().eq('id', id);
+  await db.from(table()).delete().eq('id', id);
 }
 
 async function getPostCount() {
   const db = getDb();
-  const { count } = await db.from('posts').select('*', { count: 'exact', head: true });
+  const { count } = await db.from(table()).select('*', { count: 'exact', head: true });
   return count || 0;
 }
 

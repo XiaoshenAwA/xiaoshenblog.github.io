@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>后台管理 | MyBlog</title>
+  <title>后台管理 | <%= config.BLOG_NAME %></title>
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/admin.css">
@@ -117,11 +117,11 @@
       <form id="change-pw-form">
         <div class="form-group">
           <label>新密码</label>
-          <input type="password" id="new-password" required placeholder="输入新密码" minlength="6">
+          <input type="password" id="new-password" required placeholder="输入新密码" minlength="<%= config.ADMIN_MIN_PASSWORD_LENGTH %>">
         </div>
         <div class="form-group">
           <label>确认新密码</label>
-          <input type="password" id="confirm-password" required placeholder="再次输入新密码" minlength="6">
+          <input type="password" id="confirm-password" required placeholder="再次输入新密码" minlength="<%= config.ADMIN_MIN_PASSWORD_LENGTH %>">
         </div>
         <div id="change-pw-message" class="message-msg" style="display:none;"></div>
         <div class="form-actions">
@@ -181,6 +181,15 @@
   </div>
 </div>
 
+<script>
+window.__CONFIG__ = {
+  SUPABASE_URL: '<%= config.SUPABASE_URL %>',
+  SUPABASE_ANON_KEY: '<%= config.SUPABASE_ANON_KEY %>',
+  DEPLOY_HOOK_URL: '<%= config.DEPLOY_HOOK_URL %>',
+  ADMIN_SAVE_REDIRECT_DELAY: <%= config.ADMIN_SAVE_REDIRECT_DELAY || 1500 %>,
+  ADMIN_CHANGE_PW_REDIRECT_DELAY: <%= config.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000 %>
+};
+</script>
 <script type="module" src="<%= basePath %>/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
 </body>
 </html>

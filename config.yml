@@ -1,0 +1,181 @@
+# ============================================================
+#  MyBlog 博客配置文件
+#  修改此文件后重启服务即可生效
+#  字符串值请用引号包裹，布尔值用 true/false
+# ============================================================
+
+# ──── 服务器设置 ────
+server:
+  # 监听端口（默认 3000）
+  port: 3000
+
+# ──── 数据库 (Supabase) ────
+database:
+  # Supabase 项目 URL（从项目 Settings → API 获取）
+  url: "https://eacieurozwzligrxnyos.supabase.co"
+  # 匿名公钥（anon public key，从项目 Settings → API 获取）
+  anon_key: "sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P"
+  # 服务端密钥（管理操作需要，请妥善保管）
+  service_key: ""
+  # 文章表名
+  table: "posts"
+
+# ──── 博客信息 ────
+blog:
+  # 站点名称（显示在标题栏和 Logo）
+  name: "MyBlog"
+  # 首页 Hero 副标题
+  subtitle: "114514"
+  # 侧栏作者信息
+  author: "博主"
+  author_bio: "热爱技术，享受生活"
+
+  # 每页显示文章数
+  page_size: 5
+  # 文章摘要截断长度（字符数）
+  excerpt_length: 200
+  # 预估阅读时间计算：字符数 ÷ 该值 = 分钟数
+  reading_speed: 500
+
+# ──── 部署设置 ────
+deploy:
+  # 部署路径前缀（子目录部署时填写，如 "/blog"，根目录留空）
+  base_path: ""
+  # 静态构建时的路径前缀（GitHub Pages 子目录部署时填写）
+  static_base_path: "/xiaoshenblog.github.io"
+  # Cloudflare Pages 自动部署 Webhook URL（保存文章后触发）
+  # 留空表示不触发自动部署
+  deploy_hook_url: ""
+
+  # GitHub Pages 部署（运行 npm run deploy 时生效）
+  github_pages:
+    # 部署分支
+    branch: "gh-pages"
+
+# ──── 主题外观 ────
+theme:
+  # 颜色（十六进制，可带 alpha 通道）
+  colors:
+    # ---- 浅色模式 ----
+    light:
+      # 页面背景色
+      bg: "#f5f5f5"
+      # 卡片/模块背景色
+      bg_card: "#ffffff"
+      # 主文字颜色
+      text: "#2c3e50"
+      # 次要文字颜色
+      text_secondary: "#666666"
+      # 弱化文字颜色
+      text_muted: "#999999"
+      # 边框颜色
+      border: "rgba(0,0,0,0.08)"
+      # 强调色（主题色，用于按钮、链接等）
+      accent: "#e67e22"
+      # 强调色浅色变体（悬停背景等）
+      accent_light: "rgba(230,126,34,0.1)"
+      # 卡片阴影
+      shadow: "0 2px 12px rgba(0,0,0,0.06)"
+      # 悬停阴影
+      shadow_hover: "0 12px 32px rgba(0,0,0,0.1)"
+
+    # ---- 深色模式 ----
+    dark:
+      bg: "#1a1a2e"
+      bg_card: "#16213e"
+      text: "#e0e0e0"
+      text_secondary: "#b0b0b0"
+      text_muted: "#888888"
+      border: "rgba(255,255,255,0.08)"
+      accent: "#f0a050"
+      accent_light: "rgba(240,160,80,0.15)"
+      shadow: "0 2px 12px rgba(0,0,0,0.3)"
+      shadow_hover: "0 12px 32px rgba(0,0,0,0.4)"
+
+  # 布局尺寸
+  layout:
+    # 内容区最大宽度（px）
+    max_width: 1200
+    # 侧栏宽度（px）
+    sidebar_width: 300
+    # 文章页侧栏宽度（px）
+    post_sidebar_width: 280
+    # 顶部导航栏高度（px）
+    header_height: 60
+    # Hero 区域高度（px）
+    hero_height: 420
+    # 文章封面图高度（px）
+    cover_height: 220
+
+  # 字体
+  fonts:
+    # 正文字体栈
+    body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif"
+    # 代码字体
+    code: "'Fira Code', monospace"
+
+  # Hero 背景渐变
+  hero_gradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)"
+
+  # 默认主题（light / dark）
+  default_theme: "light"
+
+# ──── Markdown 渲染 ────
+markdown:
+  # 是否允许 HTML 标签
+  html: true
+  # 是否自动将 URL 转为可点击链接
+  linkify: true
+  # 是否启用排版美化（如智能引号）
+  typographer: true
+
+  # 代码高亮
+  highlight:
+    # 引擎：shiki / highlight.js
+    engine: "shiki"
+    # Shiki 主题名（浅色 / 深色）
+    themes:
+      light: "github-light"
+      dark: "github-dark"
+
+  # 数学公式
+  math:
+    # 内联公式定界符（默认 $...$）
+    inline_delimiter: "$"
+    # 块级公式定界符（默认 $$...$$）
+    block_delimiter: "$$"
+    # KaTeX 渲染出错时显示的颜色
+    error_color: "#cc0000"
+
+# ──── 编辑器设置 ────
+editor:
+  # 缩进模式：tab / spaces2 / spaces4 / spaces8
+  indent_mode: "tab"
+  # 下载 .md 文件时的文件名
+  download_filename: "document.md"
+  # 草稿本地存储 key 前缀
+  draft_prefix: "editor-draft"
+
+# ──── 后台管理 ────
+admin:
+  # 用户密码最小长度
+  min_password_length: 6
+  # 保存成功后自动跳转延迟（毫秒）
+  save_redirect_delay: 1500
+  # 修改密码后自动跳转延迟（毫秒）
+  change_pw_redirect_delay: 2000
+
+# ──── 页脚社交链接 ────
+social:
+  github: "https://github.com/XiaoshenAwA"
+  weibo: "#"
+  twitter: "#"
+  rss: "#"
+  email: "#"
+
+# ──── about 页 ────
+about:
+  # about 页面副标题
+  tagline: "一名热爱技术的开发者"
+  # about 内容存放路径
+  content_file: "views/about_content.md"

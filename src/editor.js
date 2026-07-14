@@ -155,7 +155,8 @@ makeAdmonition(md, 'error', '<i class="fas fa-circle-xmark"></i>', '错误')
 makeAdmonition(md, 'danger', '<i class="fas fa-ban"></i>', '危险')
 makeContainer(md, 'details', '<i class="fas fa-chevron-right"></i>', '详情')
 
-const STORAGE_KEY = 'editor-draft'
+const cfg = window.__CONFIG__ || {}
+const STORAGE_KEY = cfg.EDITOR_DRAFT_PREFIX || 'editor-draft'
 
 const textarea = document.getElementById('editor-input')
 const preview = document.getElementById('editor-preview')
@@ -185,7 +186,7 @@ const saved = localStorage.getItem(STORAGE_KEY)
 if (saved) textarea.value = saved
 
 const INDENT_MODES = ['tab', 'spaces2', 'spaces4', 'spaces8']
-let indentMode = localStorage.getItem('editor-indent-mode') || 'tab'
+let indentMode = localStorage.getItem('editor-indent-mode') || cfg.EDITOR_INDENT_MODE || 'tab'
 
 function getIndent() {
   if (indentMode === 'tab') return '\t'
@@ -351,7 +352,7 @@ document.getElementById('editor-download').addEventListener('click', () => {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = 'document.md'
+  a.download = cfg.EDITOR_DOWNLOAD_FILENAME || 'document.md'
   a.click()
   URL.revokeObjectURL(url)
 })
