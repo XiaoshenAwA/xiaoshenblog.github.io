@@ -407,6 +407,22 @@ hr { margin: 14px auto; border: none; border-top: 1px solid #eee; }
 
 .post-header { margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid var(--border); }
 
+#page-header.not-home-page #post-info {
+  left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: var(--max-width);
+  padding: 0 24px 30px;
+}
+#page-header.not-home-page #post-info .post-title { color: #fff; }
+#page-header.not-home-page #post-info #post-meta { font-size: 0.9em; opacity: 0.9; }
+#page-header.not-home-page #post-info #post-meta .meta-firstline,
+#page-header.not-home-page #post-info #post-meta .meta-secondline {
+  display: flex; flex-wrap: wrap; align-items: center;
+}
+#page-header.not-home-page #post-info #post-meta .meta-firstline { margin-bottom: 4px; }
+#page-header.not-home-page #post-info #post-meta .post-meta-separator { color: rgba(255,255,255,0.5); margin: 0 6px; }
+#page-header.not-home-page #post-info #post-meta .post-meta-icon { margin-right: 2px; }
+#page-header.not-home-page #post-info #post-meta .post-meta-label { opacity: 0.85; }
+
 .post-title {
   font-size: 2em; font-weight: 700; line-height: 1.4;
   margin-bottom: 16px; color: var(--text);

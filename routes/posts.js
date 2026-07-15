@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const { getAllTags, getPostsPage, getPost, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount } = require('../db');
+const { getAllTags, getPostsPage, getPost, getPostAdmin, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, getManagedCategoriesFlat } = require('../db');
 const config = require('../config');
 const { render, excerpt } = require('../markdown');
 
@@ -69,7 +69,7 @@ router.delete('/posts/:id', async (req, res) => {
 
 router.get('/posts/:id/edit', async (req, res) => {
   try {
-    const post = await getPost(req.params.id);
+    const post = await getPostAdmin(req.params.id);
     if (!post) return res.status(404).send(config.locale?.post?.not_found || '文章未找到');
     post.tagsStr = post.tags.join(',');
     const allCategories = await getAllCategories();
@@ -136,7 +136,9 @@ async function getSidebarData() {
   const archives = await getArchives();
   const postCount = await getPostCount();
   const totalWordCount = await getTotalWordCount();
-  return { allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount };
+  const siteStats = await getSiteStats();
+  const lastUpdateTime = await getLastPostUpdateTime();
+  return { allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount, visitorCount: siteStats.visitor_count, totalViews: siteStats.total_views, lastUpdateTime };
 }
 
 router.get('/about', async (req, res) => {
@@ -156,6 +158,23 @@ router.get('/categories', async (req, res) => {
     res.render('categories', { ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
+  }
+});
+
+router.get(/\/categories\/(.+)/, async (req, res) => {
+  try {
+    const catPath = decodeURIComponent(req.params[0] || '').replace(/\/+$/, '');
+    if (!catPath) { res.redirect(config.BASE_PATH + '/categories'); return; }
+    const page = parseInt(req.query.page) || 1;
+    const { posts, total } = await getPostsPage(page, '', config.PAGE_SIZE, catPath);
+    const totalPages = Math.ceil(total / config.PAGE_SIZE) || 1;
+    const sidebar = await getSidebarData();
+    for (const p of posts) {
+      p.excerptText = await excerpt(p.content, config.EXCERPT_LENGTH);
+    }
+    res.render('index', { posts, page, totalPages, total, tag: '', cat: catPath, ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'category' });
+  } catch (e) {
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
@@ -194,7 +213,110 @@ router.get('/tags', async (req, res) => {
     allTagCounts.sort((a, b) => b.count - a.count);
     res.render('tags', { ...sidebar, allTagCounts, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
+  }
+});
+
+router.post('/api/stats/visit', async (req, res) => {
+  try {
+    const count = await incrementVisitorCount();
+    res.json({ success: true, count });
+  } catch (e) {
+    res.status(500).json({ success: false, error: '统计访客失败' });
+  }
+});
+
+router.post('/api/stats/view/:id', async (req, res) => {
+  try {
+    const count = await incrementViewCount(req.params.id);
+    res.json({ success: true, count });
+  } catch (e) {
+    res.status(500).json({ success: false, error: '统计浏览量失败' });
+  }
+});
+
+// ============ Managed Tags API ============
+
+router.get('/api/admin/tags', async (req, res) => {
+  try {
+    const tags = await getManagedTags();
+    res.json(tags);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/admin/tags', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: '标签名不能为空' });
+    const tag = await createManagedTag(name);
+    res.json(tag);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.delete('/api/admin/tags/:id', async (req, res) => {
+  try {
+    await deleteManagedTag(req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/api/admin/tags/:id', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: '标签名不能为空' });
+    await renameManagedTag(req.params.id, name);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ Managed Categories API ============
+
+router.get('/api/admin/categories', async (req, res) => {
+  try {
+    const tree = await getManagedCategories();
+    const flat = await getManagedCategoriesFlat();
+    res.json({ tree, flat });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/admin/categories', async (req, res) => {
+  try {
+    const { name, parent_id } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: '分类名不能为空' });
+    const cat = await createManagedCategory(name, parent_id || null);
+    res.json(cat);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.delete('/api/admin/categories/:id', async (req, res) => {
+  try {
+    await deleteManagedCategory(req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.put('/api/admin/categories/:id', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ error: '分类名不能为空' });
+    await renameManagedCategory(req.params.id, name);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

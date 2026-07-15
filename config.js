@@ -134,6 +134,9 @@ const config = {
   ASIDE_ARCHIVES_ORDER: cfg.aside?.card_archives?.order ?? -1,
   ASIDE_CARD_WEBINFO: cfg.aside?.card_webinfo?.enable !== false,
   ASIDE_WEBINFO_POST_COUNT: cfg.aside?.card_webinfo?.post_count !== false,
+  ASIDE_WEBINFO_VISITOR_COUNT: cfg.aside?.card_webinfo?.visitor_count !== false,
+  ASIDE_WEBINFO_TOTAL_VIEWS: cfg.aside?.card_webinfo?.total_views !== false,
+  ASIDE_WEBINFO_LAST_UPDATE: cfg.aside?.card_webinfo?.last_update !== false,
   ASIDE_WEBINFO_RUNTIME_DATE: cfg.aside?.card_webinfo?.runtime_date ?? '',
 
   // 暗色模式

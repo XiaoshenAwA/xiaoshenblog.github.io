@@ -1,11 +1,7 @@
-<%- include('partials/header', { title: locale.categories?.title || '分类' }) %>
+<%- include('partials/header', { title: locale.categories?.title || '分类', subtitle: (locale.categories?.subtitle_prefix || '共 ') + categoryTree.filter(function(c) { return c.level === 0; }).length + ' ' + (locale.categories?.subtitle_suffix || '个大类') }) %>
 
   <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
     <div id="category">
-      <div class="page-header reveal">
-        <h1><i class="fas fa-folder-open"></i> <%= locale.categories?.title || '分类' %></h1>
-        <p>共 <%= categoryTree.filter(function(c) { return c.level === 0; }).length %> <%= locale.categories?.subtitle_suffix || '个大类' %></p>
-      </div>
 
       <% if (categoryTree.length === 0) { %>
         <div class="empty-state reveal">
@@ -17,10 +13,10 @@
         <div class="card-widget" style="padding:24px">
           <ul class="card-category-list" id="cat-page-list">
             <% categoryTree.forEach(function(c) { %>
-              <li class="card-category-list-item" style="padding-left:<%= c.level * 24 %>px;padding-top:6px;padding-bottom:6px">
+              <li class="card-category-list-item" data-level="<%= c.level %>" style="padding-left:<%= c.level * 24 %>px;padding-top:6px;padding-bottom:6px<%= c.level > 0 ? ';display:none' : '' %>">
                 <% var hasChild = categoryTree.some(function(x) { return x.path.indexOf(c.path + '/') === 0; }); %>
-                <% if (hasChild) { %><span class="cat-toggle-page" data-path="<%= c.path %>" style="cursor:pointer;display:inline-block;width:18px;text-align:center;font-size:0.8em;color:var(--accent);margin-right:4px"><i class="fas fa-plus"></i></span><% } else { %><span style="display:inline-block;width:18px;margin-right:4px"></span><% } %>
-                <a class="card-category-list-link" href="<%= basePath %>/?cat=<%= encodeURIComponent(c.path) %>" style="display:inline-flex;gap:6px;font-size:<%= c.level === 0 ? '1.1em' : '0.95em' %>;font-weight:<%= c.level === 0 ? '600' : '400' %>">
+                <% if (hasChild) { %><span class="cat-toggle-page" data-path="<%= c.path %>" style="cursor:pointer;display:inline-block;width:18px;text-align:center;font-size:0.8em;color:var(--accent);margin-right:4px"><i class="fas fa-chevron-right"></i></span><% } else { %><span style="display:inline-block;width:18px;margin-right:4px"></span><% } %>
+                <a class="card-category-list-link" href="<%= basePath %>/categories/<%= c.path.split('/').map(function(s){return encodeURIComponent(s)}).join('/') %>/" style="font-size:<%= c.level === 0 ? '1.1em' : '0.95em' %>;font-weight:<%= c.level === 0 ? '600' : '400' %>">
                   <span><%= c.name %></span>
                   <span class="card-category-list-count"><%= c.count %></span>
                 </a>
@@ -41,15 +37,15 @@
       document.querySelectorAll('.cat-toggle-page').forEach(function(el) {
         el.addEventListener('click', function(e) {
           e.stopPropagation();
-          var path = this.getAttribute('data-path');
-          var icon = this.querySelector('i');
-          var expanded = icon.classList.contains('fa-minus');
-          icon.className = expanded ? 'fas fa-plus' : 'fas fa-minus';
-          var target = this.parentElement;
-          var next = target.nextElementSibling;
+          var icon = el.querySelector('i');
+          var expanded = icon.classList.contains('fa-chevron-down');
+          icon.className = expanded ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
+          var parentLi = el.parentElement;
+          var targetLevel = parseInt(parentLi.getAttribute('data-level'));
+          var next = parentLi.nextElementSibling;
           while (next && next.classList.contains('card-category-list-item')) {
-            var childLink = next.querySelector('.card-category-list-link');
-            if (childLink && next.style.paddingLeft && parseInt(next.style.paddingLeft) > parseInt(target.style.paddingLeft)) {
+            var childLevel = parseInt(next.getAttribute('data-level'));
+            if (childLevel > targetLevel) {
               next.style.display = expanded ? 'none' : '';
               next = next.nextElementSibling;
             } else break;

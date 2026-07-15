@@ -57,15 +57,16 @@
       <a class="card-more-btn" href="<%= basePath %>/categories/" title="查看更多"><i class="fas fa-angle-right"></i></a>
     </div>
     <ul class="card-category-list" id="aside-cat-list">
-      <% function renderCatTree(nodes, maxNodes) { var count = 0; nodes.forEach(function(c) { if (maxNodes > 0 && count >= maxNodes) return; count++; var hasChild = categoryTree.some(function(x) { return x.path.indexOf(c.path + '/') === 0; }); %>
-        <li class="card-category-list-item" style="padding-left:<%= c.level * 16 %>px">
-          <% if (hasChild) { %><span class="cat-toggle" data-path="<%= c.path %>" style="cursor:pointer;display:inline-block;width:16px;text-align:center;font-size:0.75em;color:var(--accent);margin-right:4px"><i class="fas fa-plus"></i></span><% } else { %><span style="display:inline-block;width:16px;margin-right:4px"></span><% } %>
-          <a class="card-category-list-link" href="<%= basePath %>/?cat=<%= encodeURIComponent(c.path) %>" style="display:inline-flex;gap:4px">
+      <% categoryTree.forEach(function(c) { %>
+        <li class="card-category-list-item" data-level="<%= c.level %>" style="padding-left:<%= c.level * 16 %>px<%= c.level > 0 ? ';display:none' : '' %>">
+          <% var hasChild = categoryTree.some(function(x) { return x.path.indexOf(c.path + '/') === 0; }); %>
+          <% if (hasChild) { %><span class="cat-toggle" data-path="<%= c.path %>" style="cursor:pointer;display:inline-block;width:16px;text-align:center;font-size:0.75em;color:var(--accent);margin-right:4px"><i class="fas fa-chevron-right"></i></span><% } else { %><span style="display:inline-block;width:16px;margin-right:4px"></span><% } %>
+          <a class="card-category-list-link" href="<%= basePath %>/categories/<%= c.path.split('/').map(function(s){return encodeURIComponent(s)}).join('/') %>/">
             <span class="card-category-list-name"><%= c.name %></span>
             <span class="card-category-list-count"><%= c.count %></span>
           </a>
         </li>
-      <% }); } renderCatTree(categoryTree.filter(function(c) { return c.level === 0; }), config.ASIDE_CATEGORIES_LIMIT || 8); %>
+      <% }); %>
     </ul>
     <div style="margin-top:8px;text-align:center">
       <a href="<%= basePath %>/categories/" style="font-size:0.85em;color:var(--text-muted)"><i class="fas fa-folder-plus"></i> <%= locale.categories?.all_categories || '所有分类' %></a>
@@ -76,15 +77,15 @@
       document.querySelectorAll('.cat-toggle').forEach(function(el) {
         el.addEventListener('click', function(e) {
           e.stopPropagation();
-          var path = this.getAttribute('data-path');
-          var icon = this.querySelector('i');
-          var expanded = icon.classList.contains('fa-minus');
-          icon.className = expanded ? 'fas fa-plus' : 'fas fa-minus';
-          var target = this.parentElement;
-          var next = target.nextElementSibling;
-          while (next && next.querySelector('.card-category-list-item')) {
-            var isChild = next.querySelector('.card-category-list-link');
-            if (isChild && next.style.paddingLeft && parseInt(next.style.paddingLeft) > parseInt(target.style.paddingLeft)) {
+          var icon = el.querySelector('i');
+          var expanded = icon.classList.contains('fa-chevron-down');
+          icon.className = expanded ? 'fas fa-chevron-right' : 'fas fa-chevron-down';
+          var parentLi = el.parentElement;
+          var targetLevel = parseInt(parentLi.getAttribute('data-level'));
+          var next = parentLi.nextElementSibling;
+          while (next && next.classList.contains('card-category-list-item')) {
+            var childLevel = parseInt(next.getAttribute('data-level'));
+            if (childLevel > targetLevel) {
               next.style.display = expanded ? 'none' : '';
               next = next.nextElementSibling;
             } else break;
@@ -136,14 +137,32 @@
         <div class="item-count"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div>
       </div>
       <% } %>
-      <div class="webinfo-item">
-        <div class="item-name"><%= locale.sidebar?.webinfo_word_count || '本站总字数 :' %></div>
-        <div class="item-count"><%= typeof totalWordCount !== 'undefined' ? (totalWordCount/1000).toFixed(1) + 'k' : 0 %></div>
-      </div>
       <% if (config.ASIDE_WEBINFO_RUNTIME_DATE) { %>
       <div class="webinfo-item">
         <div class="item-name"><%= locale.sidebar?.webinfo_runtime || '运行时间 :' %></div>
         <div class="item-count runtime-days" data-start="<%= config.ASIDE_WEBINFO_RUNTIME_DATE %>"><%= locale.sidebar?.webinfo_runtime_loading || '计算中...' %></div>
+      </div>
+      <% } %>
+      <div class="webinfo-item">
+        <div class="item-name"><%= locale.sidebar?.webinfo_word_count || '本站总字数 :' %></div>
+        <div class="item-count"><%= typeof totalWordCount !== 'undefined' ? (totalWordCount/1000).toFixed(1) + 'k' : 0 %></div>
+      </div>
+      <% if (config.ASIDE_WEBINFO_VISITOR_COUNT) { %>
+      <div class="webinfo-item">
+        <div class="item-name"><%= locale.sidebar?.webinfo_visitor_count || '本站访客数 :' %></div>
+        <div class="item-count"><%= typeof visitorCount !== 'undefined' ? visitorCount : 0 %></div>
+      </div>
+      <% } %>
+      <% if (config.ASIDE_WEBINFO_TOTAL_VIEWS) { %>
+      <div class="webinfo-item">
+        <div class="item-name"><%= locale.sidebar?.webinfo_total_views || '本站总浏览量 :' %></div>
+        <div class="item-count"><%= typeof totalViews !== 'undefined' ? totalViews : 0 %></div>
+      </div>
+      <% } %>
+      <% if (config.ASIDE_WEBINFO_LAST_UPDATE) { %>
+      <div class="webinfo-item">
+        <div class="item-name"><%= locale.sidebar?.webinfo_last_update || '最后更新时间 :' %></div>
+        <div class="item-count last-update-time" data-time="<%= typeof lastUpdateTime !== 'undefined' && lastUpdateTime ? lastUpdateTime : '' %>"><%= locale.sidebar?.webinfo_last_update_loading || '计算中...' %></div>
       </div>
       <% } %>
     </div>

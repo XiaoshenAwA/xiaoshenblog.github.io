@@ -14,7 +14,7 @@
 
 server:
   # 监听端口号。修改后需重启服务。
-  port: 3000
+  port: 3002
 
 # ============================================================
 #  站点基础设置
@@ -47,7 +47,7 @@ database:
 
 blog:
   # 站点名称。显示在浏览器标题栏、导航栏 Logo 处及页脚版权信息中。
-  name: "测试博客"
+  name: "博客"
   # 首页副标题。显示在 Hero 区域的站点名称下方。
   subtitle: "正在测试功能中..."
   # 侧边栏作者卡片中显示的作者名称。
@@ -98,6 +98,8 @@ locale:
     published_at: "发表于"
     updated_at: "更新于"
     reading_time_unit: "分钟"
+    word_count_label: "总字数"
+    reading_time: "阅读时长"
     toc_title: "目录"
     prev_post: "上一篇"
     next_post: "下一篇"
@@ -131,7 +133,7 @@ locale:
 
   # ---- 友链页 ----
   friends:
-    title: "友情链接"
+    title: "友链"
     subtitle: "各位大佬们的博客"
     empty_title: "暂无友链"
     empty_text: "在 config.yml 的 friend_links 中添加友链"
@@ -481,8 +483,8 @@ post_meta:
     date_format: date
     # 是否在首页文章卡片中显示标签。
     tags: true
-    # 是否在首页文章卡片中显示分类。（当前未实现分类功能，预留配置项）
-    categories: false
+    # 是否在首页文章卡片中显示分类。
+    categories: true
   # ---- 文章详情页的元信息显示设置 ----
   post:
     # 元信息在文章页中的对齐方式。left = 左对齐，center = 居中对齐。
@@ -607,6 +609,12 @@ aside:
     enable: true
     # 是否显示文章总数。
     post_count: true
+    # 是否显示访客数。
+    visitor_count: true
+    # 是否显示总浏览量。
+    total_views: true
+    # 是否显示最后更新时间。
+    last_update: true
     # 站点运行起始日期。填写后显示站点已运行天数。
     # 格式示例："07/14/2026 00:00:00"（月/日/年 时:分:秒）
     # 留空则不显示运行时长。
@@ -808,17 +816,18 @@ admin:
 #  显示在页脚和侧边栏。
 # ============================================================
 
+# fack bug
 social:
   # GitHub 个人主页链接。
   github: "https://github.com/XiaoshenAwA"
   # 微博个人主页链接。
-  weibo: "#"
+  # weibo: "#"
   # Twitter/X 个人主页链接。
-  twitter: "#"
+  twitter: "https://x.com/XiaoshenAwA"
   # RSS 订阅链接。
-  rss: "#"
+  # rss: "#"
   # 联系邮箱（mailto: 链接）。
-  email: "#"
+  # email: "#"
 
 # ============================================================
 #  关于页面
@@ -835,8 +844,8 @@ about:
 # ============================================================
 
 friend_links:
-  - name: "示例博客"
-    link: "https://example.com"
-    avatar: "https://example.com/avatar.png"
-    description: "一个示例博客"
+  - name: "zym2013的博客"
+    link: "https://zym2013.amlg.top"
+    avatar: "https://zym2013.amlg.top/icon.webp"
+    description: "zym 的博客"
   # 添加更多友链，每项包含 name（名称）、link（链接）、avatar（头像URL）、description（简介）

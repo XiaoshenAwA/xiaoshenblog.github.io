@@ -148,7 +148,18 @@ $('#login-form').addEventListener('submit', async e => {
     $('#login-error').textContent = L.login_failed_prefix || '登录失败: ' + error.message
   } else {
     try { sessionStorage.setItem('admin', 'true') } catch(e) {}
-    checkAuth()
+$('#search-clear').addEventListener('click', () => {
+  $('#post-search').value = ''
+  $('.search-bar').classList.remove('has-value')
+  filterPosts()
+})
+
+$('#post-search').addEventListener('input', () => {
+  $('.search-bar').classList.toggle('has-value', $('#post-search').value.length > 0)
+  filterPosts()
+})
+
+checkAuth()
   }
 })
 
@@ -590,6 +601,12 @@ setTimeout(() => {
       setupAutoClose(ta, upd)
     }
   })
+  const pubToggle = document.getElementById('edit-published')
+  if (pubToggle) {
+    pubToggle.addEventListener('change', function() {
+      document.getElementById('edit-published-label').textContent = this.checked ? '公开' : '不公开'
+    })
+  }
   const titleInput = document.getElementById('edit-title')
   if (titleInput) {
     titleInput.value = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') || ''
@@ -600,23 +617,25 @@ setTimeout(() => {
   updateIndentBtns()
 }, 0)
 
-async function loadPosts() {
-  $('#posts-loading').style.display = 'block'
+let allPosts = []
+
+function renderPosts(posts) {
   $('#posts-list').innerHTML = ''
-  const { data, error } = await supabase.from(DB_TABLE).select('*').order('created_at', { ascending: false })
-  $('#posts-loading').style.display = 'none'
-  if (error) { $('#posts-error').textContent = (L.load_failed_prefix || '加载失败: ') + error.message; return }
-  if (!data || data.length === 0) {
-    $('#posts-list').innerHTML = '<p class="muted">' + (L.no_posts || '暂无文章') + '</p>'
+  const empty = $('#posts-empty')
+  if (!posts || posts.length === 0) {
+    empty.style.display = 'block'
     return
   }
-  for (const post of data) {
+  empty.style.display = 'none'
+  for (const post of posts) {
     const d = document.createElement('div')
     d.className = 'post-item'
+    const isPublished = post.published !== false
     d.innerHTML = `
       <div class="post-item-info">
         <strong>${post.title}</strong>
         <span class="muted">${new Date(post.created_at).toLocaleString('zh-CN')}</span>
+        <span class="post-item-status"><span class="status-dot ${isPublished ? 'published' : 'private'}"></span>${isPublished ? '公开' : '不公开'}</span>
         <span class="tag-list">${(post.tags || []).map(t => '<span class="tag-pill">' + t + '</span>').join('')}</span>
       </div>
       <div class="post-item-actions">
@@ -625,6 +644,33 @@ async function loadPosts() {
       </div>`
     $('#posts-list').appendChild(d)
   }
+}
+
+function filterPosts() {
+  const q = ($('#post-search').value || '').trim().toLowerCase()
+  if (!q) { renderPosts(allPosts); return }
+  const filtered = allPosts.filter(p => {
+    const title = (p.title || '').toLowerCase()
+    const tags = (p.tags || []).join(' ').toLowerCase()
+    const category = (p.category || '').toLowerCase()
+    return title.includes(q) || tags.includes(q) || category.includes(q)
+  })
+  renderPosts(filtered)
+}
+
+async function loadPosts() {
+  $('#posts-loading').style.display = 'block'
+  $('#posts-list').innerHTML = ''
+  $('#posts-empty').style.display = 'none'
+  const { data, error } = await supabase.from(DB_TABLE).select('*').order('created_at', { ascending: false })
+  $('#posts-loading').style.display = 'none'
+  if (error) { $('#posts-error').textContent = (L.load_failed_prefix || '加载失败: ') + error.message; return }
+  allPosts = data || []
+  if (allPosts.length === 0) {
+    $('#posts-list').innerHTML = '<p class="muted">' + (L.no_posts || '暂无文章') + '</p>'
+    return
+  }
+  renderPosts(allPosts)
 }
 
 window.editPost = async function (id) {
@@ -636,6 +682,8 @@ window.editPost = async function (id) {
   $('#edit-tags').value = (data.tags || []).join(', ')
   $('#edit-category').value = data.category || ''
   $('#edit-cover').value = data.cover || ''
+  $('#edit-published').checked = data.published !== false
+  $('#edit-published-label').textContent = data.published !== false ? '公开' : '不公开'
   showView('view-edit')
   updatePreview('edit-content', 'edit-preview')
 }
@@ -648,6 +696,7 @@ $('#edit-form').addEventListener('submit', async e => {
   const category = $('#edit-category').value || ''
   const tags = $('#edit-tags').value.split(',').map(t => t.trim()).filter(Boolean)
   const cover = $('#edit-cover').value
+  const published = $('#edit-published').checked
 
   if (!title || !content) { $('#edit-error').textContent = L.empty_content_error || '标题和内容不能为空'; return }
   $('#edit-error').textContent = ''
@@ -656,9 +705,9 @@ $('#edit-form').addEventListener('submit', async e => {
 
   let error
   if (id) {
-    ({ error } = await supabase.from(DB_TABLE).update({ title, content, tags, cover, category, word_count: content.length, updated_at: new Date().toISOString() }).eq('id', id))
+    ({ error } = await supabase.from(DB_TABLE).update({ title, content, tags, cover, category, published, word_count: content.length, updated_at: new Date().toISOString() }).eq('id', id))
   } else {
-    ({ error } = await supabase.from(DB_TABLE).insert({ title, content, tags, cover, category, word_count: content.length }))
+    ({ error } = await supabase.from(DB_TABLE).insert({ title, content, tags, cover, category, published, word_count: content.length }))
   }
 
   $('#edit-submit').disabled = false
@@ -683,9 +732,16 @@ $('#new-post-btn').addEventListener('click', () => {
   $('#edit-category').value = ''
   $('#edit-tags').value = ''
   $('#edit-cover').value = ''
+  $('#edit-published').checked = true
+  $('#edit-published-label').textContent = '公开'
   $('#edit-submit').textContent = L.save_button || '保存'
+  selectedCategoryPath = ''
+  selectedTags = []
+  updateCategoryDisplay()
+  updateTagsDisplay()
   showView('view-edit')
   updatePreview('edit-content', 'edit-preview')
+  setTimeout(loadPickerData, 100)
 })
 
 window.cancelEdit = function () {
@@ -698,6 +754,626 @@ window.deletePost = async function (id) {
   if (error) { alert((L.delete_failed_prefix || '删除失败: ') + error.message); return }
   loadPosts()
   triggerDeploy()
+}
+
+// ============ Tag Management ============
+
+function showTagManageMsg(text, type) {
+  const el = $('#tags-manage-message')
+  el.textContent = text
+  el.className = 'message-msg ' + type
+  el.style.display = 'block'
+  setTimeout(() => { el.style.display = 'none' }, 3000)
+}
+
+async function loadManagedTags() {
+  $('#tags-manage-loading').style.display = 'block'
+  $('#tags-manage-list').innerHTML = ''
+  try {
+    const res = await fetch('/api/admin/tags')
+    const tags = await res.json()
+    $('#tags-manage-loading').style.display = 'none'
+    if (!tags.length) {
+      $('#tags-manage-list').innerHTML = '<p class="muted" style="text-align:center;padding:40px">暂无标签</p>'
+      return
+    }
+    const list = $('#tags-manage-list')
+    const wrap = document.createElement('div')
+    wrap.className = 'manage-list'
+    wrap.innerHTML = '<div class="manage-list-header"><span class="col-name">名称</span><span class="col-count">文章数</span><span class="col-action"></span></div>'
+    wrap.addEventListener('contextmenu', function(e) {
+      if (e.target === wrap || e.target.classList.contains('manage-list') || e.target.closest('.manage-list-header')) {
+        e.preventDefault()
+        showContextMenu(e, 'tag', {})
+      }
+    })
+    for (const tag of tags) {
+      const item = document.createElement('div')
+      item.className = 'manage-item tag-manage-item'
+      item.dataset.id = tag.id
+      item.dataset.name = tag.name
+      item.dataset.type = 'tag'
+      item.addEventListener('contextmenu', function(e) {
+        showContextMenu(e, 'tag', { id: tag.id, name: tag.name })
+      })
+      item.innerHTML = `
+        <span class="manage-item-name"><i class="fas fa-tag"></i> ${tag.name}</span>
+        <span class="manage-item-count">${tag.post_count || 0}</span>
+        <button class="btn btn-sm btn-danger" onclick="deleteManagedTag(${tag.id})"><i class="fas fa-trash"></i></button>
+      `
+      wrap.appendChild(item)
+    }
+    list.appendChild(wrap)
+  } catch (e) {
+    $('#tags-manage-loading').style.display = 'none'
+    showTagManageMsg('加载失败: ' + e.message, 'error')
+  }
+}
+
+window.deleteManagedTag = async function(id) {
+  if (!confirm('确定删除此标签？')) return
+  try {
+    const res = await fetch('/api/admin/tags/' + id, { method: 'DELETE' })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showTagManageMsg('标签已删除', 'success')
+    loadManagedTags()
+  } catch (e) {
+    showTagManageMsg('删除失败: ' + e.message, 'error')
+  }
+}
+
+window.renameManagedTag = async function(id, name) {
+  try {
+    const res = await fetch('/api/admin/tags/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showTagManageMsg('标签已重命名', 'success')
+    loadManagedTags()
+  } catch (e) {
+    showTagManageMsg('重命名失败: ' + e.message, 'error')
+  }
+}
+
+$('#manage-tags-btn').addEventListener('click', () => {
+  showView('view-tags')
+  loadManagedTags()
+})
+
+window.cancelTagManage = function() {
+  showView('view-posts')
+}
+
+// Helper - add tag via API
+async function addTag(name) {
+  if (!name) return
+  try {
+    const res = await fetch('/api/admin/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showTagManageMsg('标签已添加', 'success')
+    loadManagedTags()
+  } catch (e) {
+    showTagManageMsg('添加失败: ' + e.message, 'error')
+  }
+}
+
+// Helper - add top-level category via API
+async function addTopCategory(name) {
+  if (!name) return
+  try {
+    const res = await fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, parent_id: null })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showCatManageMsg('分类已添加', 'success')
+    loadManagedCategories()
+  } catch (e) {
+    showCatManageMsg('添加失败: ' + e.message, 'error')
+  }
+}
+
+// Helper - add child category via API
+async function addChildCategory(parentId, name) {
+  if (!name) return
+  try {
+    const res = await fetch('/api/admin/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, parent_id: parentId })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showCatManageMsg('子分类已添加', 'success')
+    loadManagedCategories()
+  } catch (e) {
+    showCatManageMsg('添加失败: ' + e.message, 'error')
+  }
+}
+
+// ============ Category Management ============
+
+function showCatManageMsg(text, type) {
+  const el = $('#cats-manage-message')
+  el.textContent = text
+  el.className = 'message-msg ' + type
+  el.style.display = 'block'
+  setTimeout(() => { el.style.display = 'none' }, 3000)
+}
+
+function renderCategoryTree(tree, container, level) {
+  for (const cat of tree) {
+    const item = document.createElement('div')
+    item.className = 'manage-item cat-tree-item'
+    item.style.paddingLeft = (16 + level * 24) + 'px'
+    item.dataset.id = cat.id
+    item.dataset.name = cat.name
+    item.dataset.path = cat.path || ''
+    item.dataset.type = 'cat'
+    item.addEventListener('contextmenu', function(e) {
+      showContextMenu(e, 'cat', { id: cat.id, name: cat.name, path: cat.path || '' })
+    })
+    const icon = cat.children && cat.children.length ? 'fa-folder-open' : 'fa-folder'
+    item.innerHTML = `
+      <span class="manage-item-name"><i class="fas ${icon}"></i> ${cat.name}</span>
+      <span class="manage-item-path" title="${cat.path}">${cat.path}</span>
+      <span class="manage-item-count">${cat.post_count || 0}</span>
+      <button class="btn btn-sm btn-danger" onclick="deleteManagedCategory(${cat.id})"><i class="fas fa-trash"></i></button>
+    `
+    container.appendChild(item)
+    if (cat.children && cat.children.length) {
+      renderCategoryTree(cat.children, container, level + 1)
+    }
+  }
+}
+
+async function loadManagedCategories() {
+  $('#cats-manage-loading').style.display = 'block'
+  $('#cats-manage-list').innerHTML = ''
+  try {
+    const res = await fetch('/api/admin/categories')
+    const data = await res.json()
+    $('#cats-manage-loading').style.display = 'none'
+    const { tree, flat } = data
+    if (!tree || tree.length === 0) {
+      $('#cats-manage-list').innerHTML = '<p class="muted" style="text-align:center;padding:40px">暂无分类</p>'
+      return
+    }
+    const wrap = document.createElement('div')
+    wrap.className = 'manage-list'
+    wrap.innerHTML = '<div class="manage-list-header"><span class="col-name">名称</span><span class="col-path">路径</span><span class="col-count">文章数</span><span class="col-action"></span></div>'
+    wrap.addEventListener('contextmenu', function(e) {
+      if (e.target === wrap || e.target.classList.contains('manage-list') || e.target.closest('.manage-list-header')) {
+        e.preventDefault()
+        showContextMenu(e, 'cat', {})
+      }
+    })
+    renderCategoryTree(tree, wrap, 0)
+    $('#cats-manage-list').appendChild(wrap)
+  } catch (e) {
+    $('#cats-manage-loading').style.display = 'none'
+    showCatManageMsg('加载失败: ' + e.message, 'error')
+  }
+}
+
+window.deleteManagedCategory = async function(id) {
+  if (!confirm('确定删除此分类？子分类也会被删除。')) return
+  try {
+    const res = await fetch('/api/admin/categories/' + id, { method: 'DELETE' })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showCatManageMsg('分类已删除', 'success')
+    loadManagedCategories()
+  } catch (e) {
+    showCatManageMsg('删除失败: ' + e.message, 'error')
+  }
+}
+
+window.renameManagedCategory = async function(id, name) {
+  try {
+    const res = await fetch('/api/admin/categories/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    })
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    showCatManageMsg('分类已重命名', 'success')
+    loadManagedCategories()
+  } catch (e) {
+    showCatManageMsg('重命名失败: ' + e.message, 'error')
+  }
+}
+
+let contextMenuTarget = null
+
+function closeContextMenu() {
+  $('#context-menu').classList.remove('active')
+  contextMenuTarget = null
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#context-menu')) {
+    closeContextMenu()
+  }
+})
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeContextMenu()
+})
+
+window.showContextMenu = function(e, type, data) {
+  e.preventDefault()
+  e.stopPropagation()
+  closeContextMenu()
+  const hasId = !!data.id
+  contextMenuTarget = { type, ...data }
+  const menu = $('#context-menu')
+  const sep = menu.querySelector('.context-menu-separator')
+  menu.querySelector('[data-action="new-cat"]').style.display = 'none'
+  menu.querySelector('[data-action="new-tag"]').style.display = 'none'
+  menu.querySelector('[data-action="add-child"]').style.display = 'none'
+  menu.querySelector('[data-action="rename"]').style.display = 'none'
+  menu.querySelector('[data-action="rename-tag"]').style.display = 'none'
+  menu.querySelector('[data-action="delete"]').style.display = 'none'
+  sep.style.display = 'none'
+  if (hasId) {
+    if (type === 'cat') {
+      menu.querySelector('[data-action="add-child"]').style.display = ''
+      menu.querySelector('[data-action="rename"]').style.display = ''
+      menu.querySelector('[data-action="delete"]').style.display = ''
+      sep.style.display = ''
+    } else {
+      menu.querySelector('[data-action="rename-tag"]').style.display = ''
+      menu.querySelector('[data-action="delete"]').style.display = ''
+      sep.style.display = ''
+    }
+  } else {
+    if (type === 'cat') {
+      menu.querySelector('[data-action="new-cat"]').style.display = ''
+    } else {
+      menu.querySelector('[data-action="new-tag"]').style.display = ''
+    }
+  }
+  const mx = Math.min(e.clientX, window.innerWidth - menu.offsetWidth)
+  const my = Math.min(e.clientY, window.innerHeight - menu.offsetHeight)
+  menu.style.left = Math.max(0, mx) + 'px'
+  menu.style.top = Math.max(0, my) + 'px'
+  menu.classList.add('active')
+}
+
+$('#context-menu').addEventListener('click', function(e) {
+  const item = e.target.closest('.context-menu-item')
+  if (!item || !contextMenuTarget) return
+  const action = item.dataset.action
+  const target = contextMenuTarget
+  closeContextMenu()
+  if (action === 'new-cat') {
+    showInputDialog('请输入新分类名：', addTopCategory)
+    return
+  }
+  if (action === 'new-tag') {
+    showInputDialog('请输入新标签名：', addTag)
+    return
+  }
+  if (target.type === 'cat') {
+    switch (action) {
+      case 'add-child':
+        showInputDialog('请输入子分类名：', function(val) {
+          if (val) addChildCategory(target.id, val)
+        })
+        break
+      case 'rename':
+        showInputDialog('重命名分类：', function(val) {
+          if (val) renameManagedCategory(target.id, val)
+        }, target.name)
+        break
+      case 'delete':
+        deleteManagedCategory(target.id)
+        break
+    }
+  } else {
+    switch (action) {
+      case 'rename-tag':
+        showInputDialog('重命名标签：', function(val) {
+          if (val) renameManagedTag(target.id, val)
+        }, target.name)
+        break
+      case 'delete':
+        deleteManagedTag(target.id)
+        break
+    }
+  }
+})
+
+// ============ Input Dialog ============
+
+let inputDialogCallback = null
+
+window.showInputDialog = function(title, callback, defaultValue) {
+  $('#input-dialog-title').textContent = title
+  $('#input-dialog-field').value = defaultValue || ''
+  inputDialogCallback = callback
+  $('#input-dialog').style.display = 'flex'
+  setTimeout(function() {
+    $('#input-dialog-field').focus()
+    $('#input-dialog-field').select()
+  }, 100)
+}
+
+window.closeInputDialog = function() {
+  $('#input-dialog').style.display = 'none'
+  inputDialogCallback = null
+}
+
+$('#input-dialog-confirm').addEventListener('click', function() {
+  const val = $('#input-dialog-field').value.trim()
+  if (inputDialogCallback) {
+    inputDialogCallback(val)
+  }
+  closeInputDialog()
+})
+
+$('#input-dialog-field').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    $('#input-dialog-confirm').click()
+  }
+  if (e.key === 'Escape') {
+    closeInputDialog()
+  }
+})
+
+$('#manage-categories-btn').addEventListener('click', () => {
+  showView('view-categories')
+  loadManagedCategories()
+})
+
+window.cancelCatManage = function() {
+  showView('view-posts')
+}
+
+// ============ Editor Category/Tag Picker ============
+
+let pickerCategories = []
+let pickerCategoryTree = []
+let pickerTags = []
+let selectedCategoryPath = ''
+let selectedTags = []
+
+async function loadPickerData() {
+  try {
+    const [tagsRes, catsRes] = await Promise.all([
+      fetch('/api/admin/tags'),
+      fetch('/api/admin/categories')
+    ])
+    pickerTags = await tagsRes.json()
+    const catsData = await catsRes.json()
+    pickerCategories = catsData.flat || []
+    pickerCategoryTree = catsData.tree || []
+  } catch (e) {
+    console.error('loadPickerData error:', e)
+  }
+}
+
+function updateCategoryDisplay() {
+  const box = $('#selected-cats-box')
+  const display = $('#selected-cats-display')
+  if (!box) return
+  if (selectedCategoryPath) {
+    display.style.display = 'none'
+    const existing = box.querySelectorAll('.selected-badge')
+    for (const e of existing) e.remove()
+    const badge = document.createElement('span')
+    badge.className = 'selected-badge'
+    badge.innerHTML = `<i class="fas fa-folder"></i> ${selectedCategoryPath} <span class="badge-remove">&times;</span>`
+    badge.querySelector('.badge-remove').addEventListener('click', function(e) {
+      e.stopPropagation()
+      selectedCategoryPath = ''
+      $('#edit-category').value = ''
+      updateCategoryDisplay()
+    })
+    box.insertBefore(badge, box.firstChild)
+  } else {
+    display.style.display = ''
+    const existing = box.querySelectorAll('.selected-badge')
+    for (const e of existing) e.remove()
+  }
+}
+
+function updateTagsDisplay() {
+  const box = $('#selected-tags-box')
+  const display = $('#selected-tags-display')
+  if (!box) return
+  const existing = box.querySelectorAll('.selected-badge')
+  for (const e of existing) e.remove()
+  if (selectedTags.length) {
+    display.style.display = 'none'
+    for (const t of selectedTags) {
+      const badge = document.createElement('span')
+      badge.className = 'selected-badge'
+      badge.innerHTML = `<i class="fas fa-tag"></i> ${t} <span class="badge-remove" data-tag="${t.replace(/"/g, '&quot;')}">&times;</span>`
+      badge.querySelector('.badge-remove').addEventListener('click', function(e) {
+        e.stopPropagation()
+        const tag = this.getAttribute('data-tag')
+        selectedTags = selectedTags.filter(function(x) { return x !== tag })
+        updateTagsDisplay()
+      })
+      box.insertBefore(badge, display)
+    }
+  } else {
+    display.style.display = ''
+  }
+}
+
+// === Category Picker ===
+
+function renderPickerCategoryTree(tree, container, level) {
+  for (const cat of tree) {
+    const item = document.createElement('div')
+    item.className = 'picker-item'
+    item.style.paddingLeft = (16 + level * 24) + 'px'
+    const hasChildren = cat.children && cat.children.length > 0
+    const current = selectedCategoryPath
+    item.innerHTML = `
+      ${hasChildren ? '<span class="picker-toggle"><i class="fas fa-chevron-right"></i></span>' : '<span class="picker-toggle" style="visibility:hidden"><i class="fas fa-chevron-right"></i></span>'}
+      <input type="radio" name="cat-picker" value="${cat.path || cat.name}" ${(cat.path || cat.name) === current ? 'checked' : ''}>
+      <span class="picker-item-name"><i class="fas fa-folder"></i> ${cat.name}</span>
+      <span class="picker-item-path">${cat.post_count || 0} 篇</span>
+    `
+    // Radio click: select this item
+    item.addEventListener('click', function(e) {
+      if (e.target.closest('.picker-toggle')) return
+      const inp = item.querySelector('input[type="radio"]')
+      if (inp) inp.checked = true
+    })
+    container.appendChild(item)
+
+    if (hasChildren) {
+      const childWrap = document.createElement('div')
+      childWrap.className = 'picker-children'
+      childWrap.style.display = 'none'
+      container.appendChild(childWrap)
+      renderPickerCategoryTree(cat.children, childWrap, level + 1)
+
+      const toggle = item.querySelector('.picker-toggle')
+      toggle.addEventListener('click', function(e) {
+        e.stopPropagation()
+        const expanded = childWrap.style.display !== 'none'
+        childWrap.style.display = expanded ? 'none' : ''
+        toggle.querySelector('i').className = expanded ? 'fas fa-chevron-right' : 'fas fa-chevron-down'
+      })
+    }
+  }
+}
+
+window.openCategoryPicker = function() {
+  const modal = $('#cat-picker-modal')
+  const body = $('#cat-picker-body')
+  modal.style.display = 'flex'
+  body.innerHTML = '<div class="picker-loading">加载中...</div>'
+  loadPickerData().then(function() {
+    body.innerHTML = ''
+    if (!pickerCategoryTree.length) {
+      body.innerHTML = '<div class="picker-empty">暂无分类</div>'
+      return
+    }
+    renderPickerCategoryTree(pickerCategoryTree, body, 0)
+  })
+}
+
+window.closeCategoryPicker = function() {
+  $('#cat-picker-modal').style.display = 'none'
+}
+
+window.confirmCategoryPicker = function() {
+  const sel = document.querySelector('input[name="cat-picker"]:checked')
+  if (sel) {
+    selectedCategoryPath = sel.value
+  } else {
+    selectedCategoryPath = ''
+  }
+  $('#edit-category').value = selectedCategoryPath
+  updateCategoryDisplay()
+  closeCategoryPicker()
+}
+
+window.openNewCategoryFromPicker = function() {
+  showInputDialog('输入新分类名：', function(name) {
+    if (name) {
+      fetch('/api/admin/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name })
+      }).then(function() {
+        openCategoryPicker()
+      }).catch(function() {})
+    }
+  })
+}
+
+// === Tag Picker ===
+window.openTagPicker = function() {
+  const modal = $('#tag-picker-modal')
+  const body = $('#tag-picker-body')
+  modal.style.display = 'flex'
+  body.innerHTML = '<div class="picker-loading">加载中...</div>'
+  loadPickerData().then(function() {
+    body.innerHTML = ''
+    if (!pickerTags.length) {
+      body.innerHTML = '<div class="picker-empty">暂无标签</div>'
+      return
+    }
+    for (const t of pickerTags) {
+      const item = document.createElement('div')
+      item.className = 'picker-item' + (selectedTags.indexOf(t.name) !== -1 ? ' selected' : '')
+      item.innerHTML = `
+        <input type="checkbox" value="${t.name}" ${selectedTags.indexOf(t.name) !== -1 ? 'checked' : ''}>
+        <span class="picker-item-name"><i class="fas fa-tag"></i> ${t.name}</span>
+        <span class="picker-item-path">${t.post_count || 0} 篇</span>
+      `
+      item.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'INPUT') {
+          const inp = item.querySelector('input')
+          if (inp) inp.checked = !inp.checked
+        }
+      })
+      body.appendChild(item)
+    }
+  })
+}
+
+window.closeTagPicker = function() {
+  $('#tag-picker-modal').style.display = 'none'
+}
+
+window.confirmTagPicker = function() {
+  var checks = document.querySelectorAll('#tag-picker-body input[type="checkbox"]:checked')
+  selectedTags = []
+  for (var i = 0; i < checks.length; i++) {
+    selectedTags.push(checks[i].value)
+  }
+  $('#edit-tags').value = selectedTags.join(', ')
+  updateTagsDisplay()
+  closeTagPicker()
+}
+
+window.openNewTagFromPicker = function() {
+  showInputDialog('输入新标签名：', function(name) {
+    if (name) {
+      fetch('/api/admin/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name })
+      }).then(function() {
+        openTagPicker()
+      }).catch(function() {})
+    }
+  })
+}
+
+// Override editPost to sync picker display
+const origEditPostFn2 = window.editPost
+window.editPost = async function(id) {
+  await origEditPostFn2(id)
+  const catVal = $('#edit-category').value
+  const tagsVal = $('#edit-tags').value
+  selectedCategoryPath = catVal || ''
+  selectedTags = tagsVal ? tagsVal.split(',').map(function(t) { return t.trim() }).filter(Boolean) : []
+  updateCategoryDisplay()
+  updateTagsDisplay()
+  setTimeout(loadPickerData, 100)
 }
 
 checkAuth()

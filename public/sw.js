@@ -1,4 +1,4 @@
-const CACHE = 'blog-cache-v1';
+const CACHE = 'blog-cache-v2';
 const urlsToCache = [
   '.',
   '/css/style.css',

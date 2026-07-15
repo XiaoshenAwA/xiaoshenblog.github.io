@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="<%= config.CDN.FONT_AWESOME %>" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="<%= config.CDN.KATEX_CSS %>" crossorigin="anonymous">
-  <link rel="stylesheet" href="<%= basePath %>/assets/admin.css">
+  <link rel="stylesheet" href="<%= basePath %>/assets/admin.css?v=<%= cssVersion %>">
 <link rel="stylesheet" href="<%= basePath %>/assets/hljs.css">
   <style>
     .admin-view { display: none; }
@@ -19,6 +19,16 @@
     .admin-header .btn-group { display: inline-flex; gap: 8px; align-items: center; }
     #theme-toggle-admin { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 50%; background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-size: 1em; box-shadow: var(--shadow); transition: 0.3s; }
     #theme-toggle-admin:hover { background: var(--accent); color: #fff; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 24px; transition: 0.3s; }
+    .toggle-slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: 0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent, #3498db); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+    .post-item-status { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85em; }
+    .post-item-status .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .post-item-status .status-dot.published { background: #27ae60; }
+    .post-item-status .status-dot.private { background: #e74c3c; }
   </style>
   <% if (config.PRELOADER_ENABLE) { %>
   <style>
@@ -160,11 +170,19 @@
     <div class="toolbar">
       <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-pen"></i> <%= locale.admin?.write_button || '写文章' %></button>
       <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> <%= locale.admin?.edit_about_button || '编辑关于页' %></button>
+      <button class="btn btn-outline" id="manage-tags-btn"><i class="fas fa-tags"></i> 标签管理</button>
+      <button class="btn btn-outline" id="manage-categories-btn"><i class="fas fa-folder-open"></i> 分类管理</button>
       <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> <%= locale.admin?.home_button || '返回首页' %></a>
+    </div>
+    <div class="search-bar">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="post-search" placeholder="<%= locale.admin?.search_placeholder || '搜索文章标题、标签...' %>" autocomplete="off">
+      <button class="search-clear" id="search-clear" title="清除"><i class="fas fa-times"></i></button>
     </div>
     <div id="posts-loading" class="loading"><%= locale.admin?.loading || '加载中...' %></div>
     <div id="posts-error" class="error-msg"></div>
     <div id="posts-list"></div>
+    <div id="posts-empty" class="loading" style="display:none"><%= locale.admin?.no_search_results || '没有找到匹配的文章' %></div>
   </div>
 
   <div class="admin-view" id="view-edit">
@@ -211,9 +229,31 @@
           </div>
         </div>
         <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;">
-          <input type="text" id="edit-category" placeholder="<%= locale.admin?.category_placeholder || '分类' %>" style="flex:1;min-width:120px;">
-          <input type="text" id="edit-tags" placeholder="<%= locale.admin?.tags_placeholder || '标签（逗号分隔）' %>" style="flex:1;min-width:150px;">
-          <input type="text" id="edit-cover" placeholder="<%= locale.admin?.cover_url_placeholder || '封面图 URL' %>" style="flex:2;min-width:200px;">
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:0.82em;color:var(--text-secondary);margin-bottom:4px;display:block;">分类</label>
+            <div id="selected-cats-box" style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 10px;border:2px solid var(--border);border-radius:8px;min-height:34px;cursor:pointer;background:var(--input-bg);align-items:center;" onclick="openCategoryPicker()">
+              <span id="selected-cats-display" style="color:var(--text-muted);font-size:0.88em;">点击选择分类</span>
+            </div>
+            <input type="hidden" id="edit-category">
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:0.82em;color:var(--text-secondary);margin-bottom:4px;display:block;">标签</label>
+            <div id="selected-tags-box" style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 10px;border:2px solid var(--border);border-radius:8px;min-height:34px;cursor:pointer;background:var(--input-bg);align-items:center;" onclick="openTagPicker()">
+              <span id="selected-tags-display" style="color:var(--text-muted);font-size:0.88em;">点击选择标签</span>
+            </div>
+            <input type="hidden" id="edit-tags">
+          </div>
+          <div style="flex:2;min-width:200px;">
+            <label style="font-size:0.82em;color:var(--text-secondary);margin-bottom:4px;display:block;">封面图</label>
+            <input type="text" id="edit-cover" placeholder="封面图 URL" style="width:100%;padding:6px 10px;border:2px solid var(--border);border-radius:8px;font-size:0.88em;background:var(--input-bg);color:var(--text);box-sizing:border-box;">
+          </div>
+        </div>
+        <div style="margin:12px 0;display:flex;align-items:center;gap:8px;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="edit-published" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="edit-published-label"><%= locale.admin?.published_label || '公开' %></span>
         </div>
         <div class="error-msg" id="edit-error"></div>
         <div class="form-actions">
@@ -292,9 +332,106 @@
       </form>
     </div>
   </div>
-</div>
 
-<script>
+  <div class="admin-view" id="view-tags">
+    <div class="edit-box">
+      <h3><i class="fas fa-tags"></i> 标签管理</h3>
+      <div id="tags-manage-message" class="message-msg" style="display:none;"></div>
+      <div id="tags-manage-loading" class="loading">加载中...</div>
+      <div id="tags-manage-list"></div>
+      <div class="form-actions" style="margin-top:16px;">
+        <button type="button" class="btn btn-outline" onclick="cancelTagManage()"><i class="fas fa-arrow-left"></i> 返回</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-view" id="view-categories">
+    <div class="edit-box">
+      <h3><i class="fas fa-folder-open"></i> 分类管理</h3>
+      <div id="cats-manage-message" class="message-msg" style="display:none;"></div>
+      <div id="cats-manage-loading" class="loading">加载中...</div>
+      <div id="cats-manage-list"></div>
+      <div class="form-actions" style="margin-top:16px;">
+        <button type="button" class="btn btn-outline" onclick="cancelCatManage()"><i class="fas fa-arrow-left"></i> 返回</button>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- Right-click Context Menu -->
+  <div id="context-menu" class="context-menu">
+    <div class="context-menu-item" data-action="new-cat"><i class="fas fa-plus"></i> 新建分类</div>
+    <div class="context-menu-item" data-action="new-tag"><i class="fas fa-plus"></i> 新建标签</div>
+    <div class="context-menu-item" data-action="add-child"><i class="fas fa-folder-plus"></i> 添加子分类</div>
+    <div class="context-menu-item" data-action="rename"><i class="fas fa-pen"></i> 重命名</div>
+    <div class="context-menu-item" data-action="rename-tag"><i class="fas fa-pen"></i> 重命名</div>
+    <div class="context-menu-separator"></div>
+    <div class="context-menu-item danger" data-action="delete"><i class="fas fa-trash"></i> 删除</div>
+  </div>
+
+  <!-- Category Picker Modal -->
+  <div id="cat-picker-modal" class="picker-modal" style="display:none;">
+    <div class="picker-overlay" onclick="closeCategoryPicker()"></div>
+    <div class="picker-dialog">
+      <div class="picker-header">
+        <span>选择分类</span>
+        <button type="button" class="picker-close" onclick="closeCategoryPicker()">&times;</button>
+      </div>
+      <div class="picker-body" id="cat-picker-body">
+        <div class="picker-loading">加载中...</div>
+      </div>
+      <div class="picker-footer">
+        <button type="button" class="btn btn-sm btn-outline" onclick="openNewCategoryFromPicker()">+ 新建分类</button>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeCategoryPicker()">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="confirmCategoryPicker()">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tag Picker Modal -->
+  <div id="tag-picker-modal" class="picker-modal" style="display:none;">
+    <div class="picker-overlay" onclick="closeTagPicker()"></div>
+    <div class="picker-dialog">
+      <div class="picker-header">
+        <span>选择标签</span>
+        <button type="button" class="picker-close" onclick="closeTagPicker()">&times;</button>
+      </div>
+      <div class="picker-body" id="tag-picker-body">
+        <div class="picker-loading">加载中...</div>
+      </div>
+      <div class="picker-footer">
+        <button type="button" class="btn btn-sm btn-outline" onclick="openNewTagFromPicker()">+ 新建标签</button>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeTagPicker()">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick="confirmTagPicker()">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Dialog -->
+  <div id="input-dialog" class="picker-modal" style="display:none;">
+    <div class="picker-overlay" onclick="closeInputDialog()"></div>
+    <div class="picker-dialog" style="width:600px;">
+      <div class="picker-header">
+        <span id="input-dialog-title">输入</span>
+        <button type="button" class="picker-close" onclick="closeInputDialog()">&times;</button>
+      </div>
+      <div class="picker-body" style="padding:16px 18px;">
+        <input type="text" id="input-dialog-field" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;">
+      </div>
+      <div class="picker-footer" style="justify-content:flex-end;">
+        <div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeInputDialog()">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" id="input-dialog-confirm">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
 window.__CONFIG__ = {
   SUPABASE_URL: '<%= config.SUPABASE_URL %>',
   SUPABASE_ANON_KEY: '<%= config.SUPABASE_ANON_KEY %>',
@@ -315,6 +452,6 @@ window.__CONFIG__ = {
     });
   } catch(e) {}
 </script>
-<script type="module" src="<%= basePath %>/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="<%= basePath %>/assets/admin.js?v=<%= cssVersion %>" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
 </body>
 </html>

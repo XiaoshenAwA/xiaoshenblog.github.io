@@ -344,12 +344,16 @@
     <div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div>
   </header>
   <% } else { %>
-  <header class="not-home-page" id="page-header" style="background: var(--hero-gradient);">
+  <% var headerBg = (typeof top_img !== 'undefined' && top_img) ? url(top_img) : ''; %>
+  <header class="not-home-page" id="page-header" style="<%= headerBg ? 'background-image: url(' + headerBg + ');background-size:cover;background-position:center;' : '' %>">
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="<%= basePath %>/">
           <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= url(config.NAV_LOGO) %>" alt="Logo"><% } %>
           <span class="site-name"><%= config.BLOG_NAME %></span>
+        </a>
+        <a class="nav-page-title" href="<%= basePath %>/">
+          <span class="site-name"><%= typeof title !== 'undefined' && title ? title : config.BLOG_NAME %></span>
         </a>
       </span>
       <div id="menus">
@@ -374,9 +378,74 @@
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
       </div>
     </nav>
+    <% if (typeof post !== 'undefined' && post) { %>
+    <div id="post-info">
+      <h1 class="post-title"><%= typeof title !== 'undefined' && title ? title : config.BLOG_NAME %></h1>
+      <div id="post-meta">
+        <div class="meta-firstline">
+          <span class="post-meta-date">
+            <i class="far fa-calendar-alt fa-fw post-meta-icon"></i>
+            <span class="post-meta-label">发表于</span>
+            <time class="post-meta-date-created" datetime="<%= post.created_at %>"><%= formatDate(post.created_at) %></time>
+            <span class="post-meta-separator">|</span>
+            <i class="fas fa-history fa-fw post-meta-icon"></i>
+            <span class="post-meta-label">更新于</span>
+            <time class="post-meta-date-updated" datetime="<%= post.updated_at %>"><%= formatDate(post.updated_at) %></time>
+          </span>
+          <% if (post.category) { %>
+          <% var catParts = post.category.split('/').filter(Boolean); %>
+          <span class="post-meta-categories">
+            <span class="post-meta-separator">|</span>
+            <% catParts.forEach(function(part, idx) { %>
+            <% if (idx > 0) { %>
+            <i class="fas fa-angle-right post-meta-separator"></i>
+            <% } %>
+            <i class="fas fa-inbox fa-fw post-meta-icon"></i>
+            <a class="post-meta-categories" href="<%= basePath %>/categories/<%= catParts.slice(0, idx+1).map(encodeURIComponent).join('/') %>/"><%= part %></a>
+            <% }); %>
+          </span>
+          <% } %>
+        </div>
+        <div class="meta-secondline">
+          <span class="post-meta-separator">|</span>
+          <span class="post-meta-wordcount">
+            <i class="far fa-file-word fa-fw post-meta-icon"></i>
+            <span class="post-meta-label">总字数:</span>
+            <%
+              var wc = post.word_count || post.content.length;
+              var wcDisplay = wc >= 1000 ? (wc / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : wc;
+            %>
+            <span class="word-count"><%= wcDisplay %></span>
+            <span class="post-meta-separator">|</span>
+            <i class="far fa-clock fa-fw post-meta-icon"></i>
+            <span class="post-meta-label">阅读时长:</span>
+            <span><%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %>分钟</span>
+          </span>
+          <span class="post-meta-separator">|</span>
+          <span class="post-meta-pv-cv" id="" data-flag-title="">
+            <i class="far fa-eye fa-fw post-meta-icon"></i>
+            <span class="post-meta-label">浏览量:</span>
+            <span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span>
+          </span>
+        </div>
+      </div>
+      <% if (config.POST_META?.post?.tags !== false && post.tags && post.tags.length > 0) { %>
+      <div class="post-tags">
+        <% post.tags.forEach(function(t) { %>
+          <% var tagEnc = encodeURIComponent(t) %>
+          <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="tag-pill"><i class="fas fa-tag"></i> <%= t %></a>
+        <% }) %>
+      </div>
+      <% } %>
+    </div>
+    <% } else { %>
     <div id="page-site-info">
       <h1 id="site-title"><%= typeof title !== 'undefined' && title ? title : config.BLOG_NAME %></h1>
+      <% if (typeof subtitle !== 'undefined' && subtitle) { %>
+      <div id="site-subtitle"><%= subtitle %></div>
+      <% } %>
     </div>
+    <% } %>
   </header>
   <% } %>
 

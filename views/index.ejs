@@ -9,6 +9,13 @@
           <a href="<%= basePath %>/<%= isStatic ? '' : '' %>" class="tag-clear"><i class="fas fa-times"></i> <%= locale.home?.clear_filter || '清除筛选' %></a>
         </div>
       <% } %>
+      <% if (cat) { %>
+        <div class="tag-filter-bar reveal">
+          <span class="tag-filter-label"><i class="fas fa-folder-open"></i> <%= locale.home?.category_prefix || '分类：' %></span>
+          <span class="tag-pill active"><i class="fas fa-folder-open"></i> <%= cat %></span>
+          <a href="<%= basePath %>/" class="tag-clear"><i class="fas fa-times"></i> <%= locale.home?.clear_filter || '清除筛选' %></a>
+        </div>
+      <% } %>
 
       <% if (posts.length === 0) { %>
         <div class="empty-state reveal">
@@ -26,6 +33,10 @@
                 <a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>">
                   <img class="post-bg" src="<%= post.cover || config.DEFAULT_COVER || 'https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png' %>" alt="<%= post.title %>">
                 </a>
+                <% if (config.POST_META?.page?.categories !== false && post.category) { %>
+                <% var firstCat = post.category.split('/')[0]; %>
+                <span class="post-cover-category"><%= firstCat %></span>
+                <% } %>
               </div>
               <div class="recent-post-info">
                 <a class="article-title" href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>"><%= post.title %></a>
@@ -39,22 +50,25 @@
                     <time datetime="<%= showDate %>"><%= formatDate(showDate) %></time>
                   </span>
                   <% } %>
-                  <% if (config.POST_META?.page?.categories !== false && post.category) { %>
-                  <span class="article-meta">
-                    <span class="article-meta-separator">|</span>
-                    <i class="fas fa-inbox"></i>
-                    <a class="article-meta__categories" href="<%= basePath %>/?cat=<%= encodeURIComponent(post.category) %>"><%= post.category %></a>
-                  </span>
-                  <% } %>
-                  <% if (config.POST_META?.page?.tags !== false) { %>
+                  <% if (config.POST_META?.page?.tags !== false && post.tags && post.tags.length > 0) { %>
+                  <div class="meta-flex-break"></div>
                   <% post.tags.slice(0, 2).forEach(t => { %>
                     <% var tagEnc = encodeURIComponent(t) %>
                     <span class="article-meta">
-                      <span class="article-meta-separator">|</span>
                       <i class="fas fa-tag"></i>
                       <a class="article-meta__categories" href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"><%= t %></a>
                     </span>
                   <% }) %>
+                  <% } %>
+                  <% if (config.POST_META?.page?.categories !== false && post.category) { %>
+                  <% var catParts = post.category.split('/').filter(Boolean); %>
+                  <span class="article-meta">
+                    <i class="fas fa-inbox"></i>
+                    <% catParts.forEach(function(part, idx) { %>
+                    <% if (idx > 0) { %><span class="article-meta-separator">></span><% } %>
+                    <a class="article-meta__categories" href="<%= basePath %>/categories/<%= catParts.slice(0, idx+1).map(function(s){return encodeURIComponent(s)}).join('/') %>/"><%= part %></a>
+                    <% }); %>
+                  </span>
                   <% } %>
                 </div>
                 <div class="content"><%= post.excerptText %></div>
@@ -66,15 +80,18 @@
         <% if (totalPages > 1) { %>
           <nav id="pagination">
             <div class="pagination">
+              <% var pageBase = cat ? (basePath + '/categories/' + cat.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/') : (basePath + '/'); %>
+              <% var pageSuffix = ''; %>
+              <% if (tag && !isStatic) { pageSuffix += (cat ? '&' : '?') + 'tag=' + encodeURIComponent(tag); } %>
               <% if (page > 1) { %>
-                <a href="<%= basePath %><%= isStatic ? '/page/' + (page-1) + '/' : '/?page=' + (page-1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn extend prev" rel="prev"><i class="fas fa-chevron-left fa-fw"></i></a>
+                <a href="<%= pageBase %><%= pageSuffix %><%= (pageSuffix ? '&' : '?') %>page=<%= page-1 %>" class="page-btn extend prev" rel="prev"><i class="fas fa-chevron-left fa-fw"></i></a>
               <% } %>
               <% for (let p = 1; p <= totalPages; p++) { %>
-                <a href="<%= basePath %><%= isStatic ? '/page/' + p + '/' : '/?page=' + p %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>"
+                <a href="<%= pageBase %><%= pageSuffix %><%= (pageSuffix || p > 1 ? (p > 1 ? '&' : '?') : '') %>page=<%= p %>"
                    class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
               <% } %>
               <% if (page < totalPages) { %>
-                <a href="<%= basePath %><%= isStatic ? '/page/' + (page+1) + '/' : '/?page=' + (page+1) %><%= tag && !isStatic ? '&tag='+encodeURIComponent(tag) : '' %>" class="page-btn extend next" rel="next"><i class="fas fa-chevron-right fa-fw"></i></a>
+                <a href="<%= pageBase %><%= pageSuffix %><%= (pageSuffix ? '&' : '?') %>page=<%= page+1 %>" class="page-btn extend next" rel="next"><i class="fas fa-chevron-right fa-fw"></i></a>
               <% } %>
             </div>
           </nav>

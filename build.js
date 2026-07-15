@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
-const { getAllTags, getAllPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getPostCount } = require('./db');
+const { getAllTags, getAllPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getPostCount, getSiteStats, getLastPostUpdateTime } = require('./db');
 const config = require('./config');
 const { render: renderMd, excerpt, init } = require('./markdown');
 const dist = path.join(__dirname, 'dist');
@@ -45,7 +45,9 @@ async function build() {
   const recentPosts = await getRecentPosts(config.SIDEBAR_RECENT_COUNT || 5);
   const totalWordCount = await getTotalWordCount();
   const postCount = allPosts.length;
-  const sidebarData = { allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount, friends: config.FRIEND_LINKS || [] };
+  const siteStats = await getSiteStats();
+  const lastUpdateTime = await getLastPostUpdateTime();
+  const sidebarData = { allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount, visitorCount: siteStats.visitor_count, totalViews: siteStats.total_views, lastUpdateTime, friends: config.FRIEND_LINKS || [] };
 
   function formatDate(d) {
     if (!d) return '';

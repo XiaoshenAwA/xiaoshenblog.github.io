@@ -1,32 +1,8 @@
-<%- include('partials/header', { title: post.title }) %>
+<%- include('partials/header', { title: post.title, top_img: (!config.DISABLE_TOP_IMG && post.cover) ? post.cover : config.DEFAULT_TOP_IMG || '', post: post }) %>
 
   <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
     <div id="post">
       <article class="post-article reveal">
-        <header class="post-header">
-          <h1 class="post-title"><%= post.title %></h1>
-          <div class="post-meta-bar">
-            <% var postDateType = (config.POST_META?.post?.date_type || 'both'); %>
-            <% if (postDateType === 'created' || postDateType === 'both') { %>
-            <span><i class="far fa-calendar-alt"></i> <%= locale.post?.published_at || '发表于' %> <%= formatDate(post.created_at) %></span>
-            <% } %>
-            <% if ((postDateType === 'updated' || postDateType === 'both') && post.updated_at !== post.created_at) { %>
-              <span><i class="far fa-edit"></i> <%= locale.post?.updated_at || '更新于' %> <%= formatDate(post.updated_at) %></span>
-            <% } %>
-            <span><i class="far fa-clock"></i> <%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %> <%= locale.post?.reading_time_unit || '分钟' %></span>
-            <% if (post.category) { %>
-            <span><i class="fas fa-inbox"></i> <%= post.category %></span>
-            <% } %>
-          </div>
-          <% if (config.POST_META?.post?.tags !== false && post.tags.length > 0) { %>
-            <div class="post-tags">
-              <% post.tags.forEach(t => { %>
-                <% var tagEnc = encodeURIComponent(t) %>
-                <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" class="tag-pill"><i class="fas fa-tag"></i> <%= t %></a>
-              <% }) %>
-            </div>
-          <% } %>
-        </header>
         <div class="post-content"><%- post.contentHtml %></div>
         <div class="post-actions">
           <% if (!isStatic) { %>

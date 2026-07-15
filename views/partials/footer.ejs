@@ -73,6 +73,44 @@
     } catch(e) {}
 
     try {
+      var lut = document.querySelector('.last-update-time');
+      if (lut) {
+        var timeStr = lut.getAttribute('data-time');
+        if (timeStr) {
+          var updateDate = new Date(timeStr);
+          var now = new Date();
+          var diffMs = now - updateDate;
+          var diffMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30));
+          if (diffMonths < 1) {
+            var diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            lut.textContent = diffDays + ' 天前';
+          } else if (diffMonths < 12) {
+            lut.textContent = diffMonths + ' 个月前';
+          } else {
+            var diffYears = Math.floor(diffMonths / 12);
+            lut.textContent = diffYears + ' 年前';
+          }
+        }
+      }
+    } catch(e) {}
+
+    try {
+      var today = new Date().toDateString();
+      var lastVisit = localStorage.getItem('blog_last_visit');
+      if (lastVisit !== today) {
+        localStorage.setItem('blog_last_visit', today);
+        fetch('<%= basePath %>/api/stats/visit', { method: 'POST' });
+      }
+    } catch(e) {}
+
+    try {
+      var postId = window.location.pathname.match(/\/posts\/(\d+)/);
+      if (postId) {
+        fetch('<%= basePath %>/api/stats/view/' + postId[1], { method: 'POST' });
+      }
+    } catch(e) {}
+
+    try {
       document.getElementById('menuToggle').addEventListener('click', function() {
         document.getElementById('mobileMenu').classList.toggle('open');
       });
@@ -142,6 +180,7 @@
         var fig = btn.closest('.highlight');
         if (!fig) return;
         fig.classList.toggle('code-fullpage');
+        document.body.classList.toggle('code-fullpage-active', fig.classList.contains('code-fullpage'));
         var icon = fig.querySelector('.fullpage-btn i');
         if (icon) icon.className = fig.classList.contains('code-fullpage') ? 'fas fa-compress' : 'fas fa-expand';
       });
