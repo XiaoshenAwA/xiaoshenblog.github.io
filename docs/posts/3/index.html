@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ddd | 测试博客</title>
+  
+  <link rel="icon" href="/xiaoshenblog.github.io/img/favicon.png">
+  
+  <link rel="icon" type="image/png" sizes="32x32" href="/xiaoshenblog.github.io/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/xiaoshenblog.github.io/img/favicon-16.png">
+  
+  <link rel="manifest" href="/xiaoshenblog.github.io/manifest.json">
+  <link rel="apple-touch-icon" href="/xiaoshenblog.github.io/img/icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="测试博客">
+  
+  
+  <meta property="og:title" content="ddd">
+  <meta property="og:site_name" content="测试博客">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="/xiaoshenblog.github.io/">
+  <meta name="twitter:card" content="summary_large_image">
+  
+  
+  <meta property="og:image" content="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
+
+  <style>
+    :root {
+      --bg: #f5f5f5;
+      --bg-card: #ffffff;
+      --text: #2c3e50;
+      --text-secondary: #666666;
+      --text-muted: #999999;
+      --border: rgba(0,0,0,0.08);
+      --accent: #3498db;
+      --accent-light: rgba(52,152,219,0.12);
+      --shadow: 0 2px 12px rgba(0,0,0,0.06);
+      --shadow-hover: 0 12px 32px rgba(0,0,0,0.1);
+      --hero-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+      --max-width: 1200px;
+      --sidebar-width: 300px;
+      --post-sidebar-width: 280px;
+      --header-height: 60px;
+      --hero-height: 420px;
+      --cover-height: 220px;
+      --font-body: -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, &#39;PingFang SC&#39;, &#39;Microsoft YaHei&#39;, sans-serif;
+      --font-code: &#39;Fira Code&#39;, monospace;
+      
+      
+      
+    }
+    [data-theme="dark"] {
+      --bg: #1a1a2e;
+      --bg-card: #16213e;
+      --text: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-muted: #888888;
+      --border: rgba(255,255,255,0.08);
+      --accent: #5dade2;
+      --accent-light: rgba(93,173,226,0.15);
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+      --shadow-hover: 0 12px 32px rgba(0,0,0,0.4);
+    }
+  </style>
+
+  
+  <style>
+    #preloader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s;
+    }
+    #preloader.hide { opacity: 0; pointer-events: none; }
+    #preloader .loader {
+      --color: var(--accent);
+      --size-mid: 40px;
+      --size-dot: 10px;
+      --size-bar: 3px;
+      --size-square: 24px;
+      display: block;
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+    #preloader .loader::before,
+    #preloader .loader::after {
+      content: '';
+      box-sizing: border-box;
+      position: absolute;
+    }
+    #preloader .loader.--1::before {
+      width: var(--size-mid); height: var(--size-mid);
+      border: 4px solid var(--color);
+      border-top-color: transparent;
+      border-radius: 50%;
+      left: 50%; top: 50%; transform: translate(-50%,-50%);
+      animation: l1 1s linear infinite;
+    }
+    #preloader .loader.--1::after {
+      width: calc(var(--size-mid) - 2px); height: calc(var(--size-mid) - 2px);
+      border: 2px solid transparent;
+      border-top-color: var(--color);
+      border-radius: 50%;
+      left: 50%; top: 50%; transform: translate(-50%,-50%);
+      animation: l1 0.6s linear reverse infinite;
+    }
+    @keyframes l1 { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    #preloader .loader.--2::before,
+    #preloader .loader.--2::after {
+      width: var(--size-dot); height: var(--size-dot);
+      background-color: var(--color); border-radius: 50%;
+      opacity: 0;
+      animation: l2 0.8s cubic-bezier(0.2,0.32,0,0.87) infinite;
+    }
+    #preloader .loader.--2::after { animation-delay: 0.3s; }
+    @keyframes l2 {
+      0%,80%,100% { opacity: 0; }
+      33% { opacity: 1; }
+      0%,100% { transform: translateX(-24px); }
+      90% { transform: translateX(24px); }
+    }
+    #preloader .loader.--3::before,
+    #preloader .loader.--3::after {
+      width: var(--size-dot); height: var(--size-dot);
+      background-color: var(--color); border-radius: 50%;
+      top: 50%;
+      animation: l3 1.2s ease-in-out infinite;
+    }
+    #preloader .loader.--3::before { left: calc(50% - 16px); }
+    #preloader .loader.--3::after { left: calc(50% + 8px); animation-delay: -0.4s; }
+    @keyframes l3 {
+      0%,100% { transform: translateY(-20px); }
+      44% { transform: translateY(20px); }
+    }
+    #preloader .loader.--4::before {
+      height: var(--size-bar); width: 40px;
+      background-color: var(--color);
+      left: 50%; top: 50%; transform-origin: left;
+      animation: l4 0.8s cubic-bezier(0,0,0.03,0.9) infinite;
+    }
+    @keyframes l4 {
+      0%,44%,88.1%,100% { transform-origin: left; }
+      0%,100%,88% { transform: scaleX(0); }
+      44.1%,88% { transform-origin: right; }
+      33%,44% { transform: scaleX(1); }
+    }
+    #preloader .loader.--5::before,
+    #preloader .loader.--5::after {
+      height: 20px; width: var(--size-bar);
+      background-color: var(--color);
+      animation: l5 0.6s cubic-bezier(0,0,0.03,0.9) infinite;
+    }
+    #preloader .loader.--5::before { left: calc(50% - 8px); top: calc(50% - 24px); }
+    #preloader .loader.--5::after { left: calc(50% + 8px); top: calc(50% - 8px); animation-delay: 0.2s; }
+    @keyframes l5 {
+      0%,88%,100% { opacity: 0; }
+      0% { transform: translateY(-40px); }
+      33% { opacity: 1; }
+      33%,88% { transform: translateY(20px); }
+    }
+    #preloader .loader.--6::before,
+    #preloader .loader.--7::before {
+      width: var(--size-square); height: var(--size-square);
+      background-color: var(--color);
+      top: calc(50% - var(--size-square)); left: calc(50% - var(--size-square));
+      animation: l6 2.4s cubic-bezier(0,0,0.24,1.21) infinite;
+    }
+    @keyframes l6 {
+      0%,100% { transform: none; }
+      25% { transform: translateX(100%); }
+      50% { transform: translateX(100%) translateY(100%); }
+      75% { transform: translateY(100%); }
+    }
+    #preloader .loader.--7::after {
+      width: var(--size-square); height: var(--size-square);
+      background-color: var(--color);
+      top: 50%; left: 50%;
+      animation: l7 2.4s cubic-bezier(0,0,0.24,1.21) infinite;
+    }
+    @keyframes l7 {
+      0%,100% { transform: none; }
+      25% { transform: translateX(-100%); }
+      50% { transform: translateX(-100%) translateY(-100%); }
+      75% { transform: translateY(-100%); }
+    }
+    #preloader .loader.--8::before,
+    #preloader .loader.--8::after {
+      width: var(--size-dot); height: var(--size-dot);
+      border-radius: 50%; background-color: var(--color);
+    }
+    #preloader .loader.--8::before {
+      top: calc(50% + 30px);
+      animation: l8-1 0.8s cubic-bezier(0.06,0.01,0.49,1.18) infinite;
+    }
+    @keyframes l8-1 {
+      0%,55%,100% { opacity: 0; }
+      0% { transform: scale(0.2); }
+      22% { opacity: 1; }
+      33%,55% { transform: scale(1) translateY(-40px); }
+    }
+    #preloader .loader.--8::after {
+      opacity: 0; top: calc(50% - 12px);
+      animation: l8-2 0.8s cubic-bezier(0.46,-0.1,0.27,1.07) 0.2s infinite;
+    }
+    @keyframes l8-2 {
+      0%,100% { opacity: 0; }
+      33% { opacity: 0.3; }
+      0% { transform: scale(0); }
+      100% { transform: scale(4); }
+    }
+    #preloader .loader.--9::before,
+    #preloader .loader.--9::after {
+      width: var(--size-dot); height: var(--size-dot);
+      border-radius: 50%; background-color: var(--color);
+      top: 50%;
+      animation: l9 0.42s cubic-bezier(0.39,0.31,0,1.11) infinite;
+    }
+    #preloader .loader.--9::before { left: calc(50% - 20px); }
+    #preloader .loader.--9::after { left: calc(50% + 12px); animation-delay: 0.12s; }
+    @keyframes l9 {
+      0%,100% { opacity: 0; }
+      0% { transform: translate(-24px,-24px); }
+      66% { opacity: 1; }
+      66%,100% { transform: none; }
+    }
+  </style>
+  
+</head>
+<body>
+  
+  <div id="preloader"><div class="loader" id="loaderEl"></div></div>
+  <script>
+    (function(){var e=document.getElementById('loaderEl');if(e)e.classList.add('--'+Math.floor(Math.random()*9+1));})();
+    window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)setTimeout(function(){p.classList.add('hide')},300)});
+  </script>
+  
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- Mobile sidebar -->
+  <div id="sidebar">
+    <div id="menu-mask"></div>
+    <div id="sidebar-menus">
+      <div class="avatar-img text-center">
+        <img src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="博主">
+      </div>
+      <div class="site-data text-center">
+        <a href="/xiaoshenblog.github.io/archives/"><div class="headline">文章</div><div class="length-num">7</div></a>
+        <a href="/xiaoshenblog.github.io/tags/"><div class="headline">标签</div><div class="length-num">3</div></a>
+        <a href="/xiaoshenblog.github.io/categories/"><div class="headline">分类</div><div class="length-num">0</div></a>
+      </div>
+      <div class="menus_items">
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/"><i class="fas fa-home"></i><span> 首页</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/categories"><i class="fas fa-folder-open"></i><span> 分类</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/archives"><i class="fas fa-archive"></i><span> 归档</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/about"><i class="fas fa-user"></i><span> 关于</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/friends"><i class="fas fa-link"></i><span> 友链</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/admin"><i class="fas fa-cog"></i><span> 后台管理</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/editor"><i class="fas fa-pen"></i><span> 编辑器</span></a>
+          </div>
+          
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Header -->
+  
+  <header class="not-home-page" id="page-header" style="background: var(--hero-gradient);">
+    <nav id="nav">
+      <span id="blog-info">
+        <a class="nav-site-title" href="/xiaoshenblog.github.io/">
+          <img class="site-icon" src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="Logo">
+          <span class="site-name">测试博客</span>
+        </a>
+      </span>
+      <div id="menus">
+        <div class="menus_items">
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/"><i class="fas fa-home"></i><span> 首页</span></a>
+            </div>
+            
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/categories"><i class="fas fa-folder-open"></i><span> 分类</span></a>
+            </div>
+            
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/archives"><i class="fas fa-archive"></i><span> 归档</span></a>
+            </div>
+            
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/about"><i class="fas fa-user"></i><span> 关于</span></a>
+            </div>
+            
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/friends"><i class="fas fa-link"></i><span> 友链</span></a>
+            </div>
+            
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/admin"><i class="fas fa-cog"></i><span> 后台管理</span></a>
+            </div>
+            
+          
+            
+            <div class="menus_item">
+              <a class="site-page" href="/xiaoshenblog.github.io/editor"><i class="fas fa-pen"></i><span> 编辑器</span></a>
+            </div>
+            
+          
+        </div>
+        <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
+      </div>
+    </nav>
+    <div id="page-site-info">
+      <h1 id="site-title">ddd</h1>
+    </div>
+  </header>
+  
+
+  <div class="page" id="body-wrap">
+
+  <main class="layout" id="content-inner">
+    <div id="post">
+      <article class="post-article reveal">
+        <header class="post-header">
+          <h1 class="post-title">ddd</h1>
+          <div class="post-meta-bar">
+            <span><i class="far fa-calendar-alt"></i> 2026-07-14</span>
+            
+            <span><i class="far fa-clock"></i> 6 分钟</span>
+            
+          </div>
+          
+        </header>
+        <div class="post-content"><details open class="admonition info"><summary class="admonition-title"><i class="fas fa-circle-info"></i> <mark>快去点个 star⭐！</mark></summary>
+<p>emoji: 😃 💯 📡</p>
+<p>采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 <a href="https://github.com/wbw121124/wbw121124blog/blob/master/LICENSE.md">LICENSE.md</a> 文件。</p>
+<p><s>light mode 让我眼睛瞎了</s></p>
+<p>这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。</p>
+</details>
+<div class="admonition info"><p class="admonition-title"><i class="fas fa-circle-info"></i> 提示</p>
+<p>hi</p>
+</div>
+<div class="admonition success"><p class="admonition-title"><i class="fas fa-circle-check"></i> 完成</p>
+<p>hi</p>
+</div>
+<div class="admonition warning"><p class="admonition-title"><i class="fas fa-triangle-exclamation"></i> 注意</p>
+<p>hi</p>
+</div>
+<div class="admonition error"><p class="admonition-title"><i class="fas fa-circle-xmark"></i> 错误</p>
+<p>hi</p>
+</div>
+<div class="admonition danger"><p class="admonition-title"><i class="fas fa-ban"></i> 危险</p>
+<p>hi</p>
+</div>
+<details class="admonition details"><summary class="admonition-title"><i class="fas fa-chevron-right"></i> 详情</summary>
+<p>hi</p>
+</details>
+<p><a href="https://github.com/wbw121124/wbw121124blog/actions/workflows/pages.yml"><img src="https://github.com/wbw121124/wbw121124blog/actions/workflows/pages.yml/badge.svg" alt="Optimized Blog CI/CD"></a><a href="https://github.com/wbw121124/wbw121124blog/actions/workflows/pages/pages-build-deployment"><img src="https://github.com/wbw121124/wbw121124blog/actions/workflows/pages/pages-build-deployment/badge.svg" alt="pages-build-deployment"></a></p>
+<figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// [!code word:console:1]</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'No errors or warnings'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line diff remove highlighted error"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">error</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Error'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line diff add highlighted warning"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">warn</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Warning'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line diff remove"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'hewwo'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line diff add"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'hello'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'goodbye'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not highlighted'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// [!code word:Hello]</span></span>
+<span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> message</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> 'Hello World'</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(message) </span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// prints Hello World</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// [!code word:Hello:1]</span></span>
+<span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> message</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> 'Hello World'</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(message) </span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// prints Hello World</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not focused'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line focused"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Focused'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not focused'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line focused"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Focused'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line focused"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Focused'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Not focused'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'No errors or warnings'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted error"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">error</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Error'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span>
+<span class="line highlighted warning"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">warn</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'Warning'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">) </span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">JS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-js"><span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'1'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'2'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'3'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span>
+<span class="line highlighted"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'4'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">JS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-js"><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> msg</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF"> 'Hello World'</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(msg)</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(msg) </span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// 打印 Hello World</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'normal typescript'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">)</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">const</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> unused</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> 1</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">type</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0"> Foo</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583"> =</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="--shiki-light:#E36209;--shiki-dark:#FFAB70">  bar</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">:</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF"> string</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre></figure><figure class="highlight" style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">TS</span><i class="shrink-btn" title="展开/折叠">展开</i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="复制">复制</i></div><pre class="code-wrap code-wrap-on code-shrink" tabindex="0"><code class="language-ts"><span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// @errors: 2339</span></span>
+<span class="line"><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">let</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> x</span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">:</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">string</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">number</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">]</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">x </span><span style="--shiki-light:#D73A49;--shiki-dark:#F97583">=</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF">'hello'</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">, </span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">10</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">] </span><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// OK</span></span>
+<span class="line"><span style="--shiki-light:#6A737D;--shiki-dark:#6A737D">// ---cut---</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(x[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">0</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">].</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">substring</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">))</span></span>
+<span class="line"><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">console.</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">log</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(x[</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">].</span><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0">substring</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">(</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF">1</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8">))</span></span></code></pre></figure><table>
+<thead>
+<tr>
+<th style="text-align:center"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle mathsize="2.488em"><mstyle mathcolor="red"><mover accent="true"><mrow></mrow><mo>◯</mo></mover><mstyle mathsize="2.074em"><mspace width="-0.974em"/><mi mathvariant="normal"≯</mi></mstyle><mstyle mathsize="0.8em"><mi><mover><mo><mstyle mathcolor="transparent"><mi mathvariant="normal">.</mi></mstyle></mo><mstyle mathsize="0.9em"><mspace width="-0.3161em"/><mstyle mathcolor="#cc0000"><mtext>\resetcolor</mtext></mstyle><mrow><mi>F</mi><mi>a</mi><mi>k</mi><mi>e</mi></mrow></mstyle></mover></mi></mstyle></mstyle></mstyle><mspace linebreak="newline"></mspace><mstyle mathcolor="#cc0000"><mtext>\resetcolor</mtext></mstyle><mstyle mathsize="0.8em"><mtext>Fake has been forbidden.</mtext></mstyle></mrow><annotation encoding="application/x-tex">{\Huge\color{red}\text{\textcircled{}}{\huge\hspace{-.71cm}\not}\footnotesize\overset{\small\hspace{-.1cm}\resetcolor{Fake}}{\color{transparent}.}} \newline\resetcolor{\footnotesize\text{Fake has been forbidden.}}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.6148em;vertical-align:-0.4033em;"></span><span class="mord"><span class="mord text sizing reset-size6 size11" style="color:red;"><span class="mord accent" style="color:red;"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8889em;"><span style="top:-4.488em;"><span class="pstrut" style="height:4.488em;"></span><span class="mord" style="color:red;"></span></span><span style="top:-4.6824em;"><span class="pstrut" style="height:4.488em;"></span><span class="accent-body accent-full" style="left:0em;top:.2em;"><span class="mord" style="color:red;">◯</span></span></span></span></span></span></span></span><span class="mord sizing reset-size6 size11" style="color:red;"><span class="mspace sizing reset-size11 size10" style="color:red;margin-right:-0.974em;"></span><span class="mrel sizing reset-size11 size10" style="color:red;"><span class="mord vbox" style="color:red;"><span class="thinbox" style="color:red;"><span class="rlap" style="color:red;"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="inner"><span class="mord" style="color:red;"><span class="mrel" style="color:red;"></span></span></span><span class="fix"></span></span></span></span></span><span class="mspace nobreak sizing reset-size11 size10" style="color:red;"></span></span><span class="mord sizing reset-size6 size4" style="color:red;"><span class="mop op-limits" style="color:red;"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.4846em;"><span style="top:-2.9em;"><span class="pstrut" style="height:2.9em;"></span><span><span class="mop" style="color:transparent;">.</span></span></span><span style="top:-3.3978em;margin-left:0em;"><span class="pstrut" style="height:2.9em;"></span><span class="sizing reset-size4 size2 mtight" style="color:red;"><span class="mord mtight" style="color:red;"><span class="mspace sizing reset-size2 size5" style="color:red;margin-right:-0.3161em;"></span><span class="mord text sizing reset-size2 size5" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\resetcolor</span></span><span class="mord sizing reset-size2 size5" style="color:red;"><span class="mord mathnormal" style="margin-right:0.1389em;color:red;">F</span><span class="mord mathnormal" style="margin-right:0.0315em;color:red;">ak</span><span class="mord mathnormal" style="color:red;">e</span></span></span></span></span></span></span></span></span></span></span></span><span class="mspace newline"></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord text" style="color:#cc0000;"><span class="mord" style="color:#cc0000;">\resetcolor</span></span><span class="mord"><span class="mord text sizing reset-size6 size4"><span class="mord">Fake has been forbidden.</span></span></span></span></span></span></th>
+</tr>
+</thead>
+</table>
+<p>dddddd</p>
+</div>
+        <div class="post-actions">
+          
+        </div>
+
+        <div class="post-nav">
+          
+          <a href="/xiaoshenblog.github.io/posts/4/" class="post-nav-item post-nav-prev">
+            <span class="post-nav-label"><i class="fas fa-arrow-left"></i> 上一篇</span>
+            <span class="post-nav-title">adsfa</span>
+          </a>
+          
+          
+          <a href="/xiaoshenblog.github.io/posts/2/" class="post-nav-item post-nav-next">
+            <span class="post-nav-label">下一篇 <i class="fas fa-arrow-right"></i></span>
+            <span class="post-nav-title">另一个博客的特性展示</span>
+          </a>
+          
+        </div>
+
+        <a href="/xiaoshenblog.github.io/" class="btn btn-outline" style="margin-top:20px"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <script>
+        try { if (sessionStorage.getItem('admin')) document.getElementById('admin-actions').style.display = ''; } catch(e){}
+        </script>
+
+        
+        <div class="post-comments">
+          <script src="https://giscus.app/client.js"
+            data-repo="XiaoshenAwA/xiaoshenblog.github.io"
+            data-repo-id="R_kgDOTWm7Wg"
+            data-category="General"
+            data-category-id="DIC_kwDOTWm7Ws4DBKQB"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="light"
+            data-lang="zh-CN"
+            crossorigin="anonymous"
+            async>
+          </script>
+        </div>
+        
+      </article>
+    </div>
+
+    <div class="aside-content" id="aside-content">
+      
+<div class="card-widget card-info text-center">
+  <div class="avatar-img">
+    <img src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="博主" class=&#34;avatar-effect&#34;>
+  </div>
+  <div class="author-info-name">博主</div>
+  <div class="author-info-description">热爱技术，享受生活</div>
+  <div class="site-data">
+    <a href="/xiaoshenblog.github.io/archives/"><div class="headline">文章</div><div class="length-num">7</div></a>
+    <a href="/xiaoshenblog.github.io/tags/"><div class="headline">标签</div><div class="length-num">3</div></a>
+    <a href="/xiaoshenblog.github.io/categories/"><div class="headline">分类</div><div class="length-num">0</div></a>
+  </div>
+  
+  <a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XiaoshenAwA"><i class="fab fa-github"></i><span>关注我</span></a>
+  
+  <div class="card-info-social-icons">
+    <a class="social-icon" href="https://github.com/XiaoshenAwA" target="_blank" title="Github"><i class="fab fa-github"></i></a>
+    <a class="social-icon" href="#" target="_blank" title="微博"><i class="fab fa-weibo"></i></a>
+    <a class="social-icon" href="#" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+    <a class="social-icon" href="mailto:#" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
+  </div>
+</div>
+
+
+
+<div class="card-widget card-announcement">
+  <div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div>
+  <div class="announcement_content">这是我的博客</div>
+</div>
+
+
+<div class="sticky_layout">
+  
+  <div class="card-widget card-recent-post">
+    <div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div>
+    <div class="aside-list">
+      
+        <div class="aside-list-item">
+          <a class="thumbnail" href="/xiaoshenblog.github.io/posts/7" title="测试">
+            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="测试">
+          </a>
+          <div class="content">
+            <a class="title" href="/xiaoshenblog.github.io/posts/7" title="测试">测试</a>
+            <time datetime="2026-07-14T07:33:40.411246+00:00">2026-07-14</time>
+          </div>
+        </div>
+      
+        <div class="aside-list-item">
+          <a class="thumbnail" href="/xiaoshenblog.github.io/posts/6" title="ddfadfasd">
+            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="ddfadfasd">
+          </a>
+          <div class="content">
+            <a class="title" href="/xiaoshenblog.github.io/posts/6" title="ddfadfasd">ddfadfasd</a>
+            <time datetime="2026-07-14T06:21:08.281042+00:00">2026-07-14</time>
+          </div>
+        </div>
+      
+        <div class="aside-list-item">
+          <a class="thumbnail" href="/xiaoshenblog.github.io/posts/5" title="dddaa">
+            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="dddaa">
+          </a>
+          <div class="content">
+            <a class="title" href="/xiaoshenblog.github.io/posts/5" title="dddaa">dddaa</a>
+            <time datetime="2026-07-14T06:20:59.3766+00:00">2026-07-14</time>
+          </div>
+        </div>
+      
+        <div class="aside-list-item">
+          <a class="thumbnail" href="/xiaoshenblog.github.io/posts/4" title="adsfa">
+            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="adsfa">
+          </a>
+          <div class="content">
+            <a class="title" href="/xiaoshenblog.github.io/posts/4" title="adsfa">adsfa</a>
+            <time datetime="2026-07-14T06:20:48.277832+00:00">2026-07-14</time>
+          </div>
+        </div>
+      
+        <div class="aside-list-item">
+          <a class="thumbnail" href="/xiaoshenblog.github.io/posts/3" title="ddd">
+            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="ddd">
+          </a>
+          <div class="content">
+            <a class="title" href="/xiaoshenblog.github.io/posts/3" title="ddd">ddd</a>
+            <time datetime="2026-07-14T06:19:58.228491+00:00">2026-07-14</time>
+          </div>
+        </div>
+      
+    </div>
+  </div>
+  
+
+  
+
+  
+  <div class="card-widget card-tags">
+    <div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div>
+    <div class="card-tag-cloud">
+      
+        
+        <a href="/xiaoshenblog.github.io/tag/%E5%8D%9A%E5%AE%A2/">博客</a>
+      
+        
+        <a href="/xiaoshenblog.github.io/tag/%E6%8A%80%E6%9C%AF/">技术</a>
+      
+        
+        <a href="/xiaoshenblog.github.io/tag/%E5%B1%95%E7%A4%BA/">展示</a>
+      
+    </div>
+  </div>
+  
+
+  
+  <div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
+    </div>
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/xiaoshenblog.github.io/archives#2026-07">
+            <span class="card-archive-list-date">2026 年 7 月</span>
+            <span class="card-archive-list-count">7</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+  
+
+  
+  <div class="card-widget card-webinfo">
+    <div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div>
+    <div class="webinfo">
+      
+      <div class="webinfo-item">
+        <div class="item-name">文章数目 :</div>
+        <div class="item-count">7</div>
+      </div>
+      
+      <div class="webinfo-item">
+        <div class="item-name">本站总字数 :</div>
+        <div class="item-count">13.5k</div>
+      </div>
+      
+    </div>
+  </div>
+  
+</div>
+      
+      <div class="card-widget" id="toc-widget" style="display:none">
+        <div class="item-headline"><i class="fas fa-list"></i> 目录</div>
+        <div class="toc-content" id="toc-content"></div>
+      </div>
+      
+    </div>
+  </main>
+
+  <script>
+  try {
+    var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+    var toc = document.getElementById('toc-content');
+    var tocWidget = document.getElementById('toc-widget');
+    if (toc && headings.length > 0) {
+      
+      toc.className += '';
+      headings.forEach(function(h, i) {
+        if (!h.id) h.id = 'heading-' + i;
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        
+        a.textContent = (i + 1) + '. ' + h.textContent;
+        
+        a.className = 'toc-link toc-link-' + h.tagName.toLowerCase();
+        toc.appendChild(a);
+      });
+      tocWidget.style.display = '';
+    }
+  } catch(e) {}
+  </script>
+
+  </div><!-- #body-wrap -->
+
+  <footer id="footer">
+    <div id="footer-wrap">
+      <div class="copyright">&copy;2026 By 博主</div>
+      <div class="framework-info">
+        <span>框架 </span><a target="_blank" rel="noopener" href="https://expressjs.com">Express</a>
+        <span class="footer-separator">|</span>
+        <span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a>
+      </div>
+      
+    </div>
+  </footer>
+
+  <div id="rightside">
+    <div id="rightside-config-hide">
+      <button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button>
+      <button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button>
+    </div>
+    <div id="rightside-config-show">
+      <button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button>
+      <button id="go-up" type="button" title="回到顶部"><span class="scroll-percent">0</span><i class="fas fa-arrow-up"></i></button>
+    </div>
+  </div>
+
+  <script src="/xiaoshenblog.github.io/assets/main.js?v=1"></script>
+  <script>
+    try {
+      var h = document.documentElement;
+      
+      var s = localStorage.getItem('theme');
+      if (s) { h.setAttribute('data-theme', s); } else {
+        
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) h.setAttribute('data-theme', 'dark');
+        
+      }
+      
+      var t = document.getElementById('themeToggle');
+      if (t) {
+        var i = t.querySelector('i');
+        if (h.getAttribute('data-theme') === 'dark') i.className = 'fas fa-sun';
+        t.addEventListener('click', function() {
+          var c = h.getAttribute('data-theme');
+          var n = c === 'dark' ? 'light' : 'dark';
+          h.setAttribute('data-theme', n);
+          localStorage.setItem('theme', n);
+          i.className = n === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        });
+      }
+    } catch(e) {}
+
+    try {
+      var rt = document.querySelector('.runtime-days');
+      if (rt) {
+        var startDate = rt.getAttribute('data-start');
+        if (startDate) {
+          var start = new Date(startDate);
+          var now = new Date();
+          var days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+          rt.textContent = days + ' 天';
+        }
+      }
+    } catch(e) {}
+
+    try {
+      document.getElementById('menuToggle').addEventListener('click', function() {
+        document.getElementById('mobileMenu').classList.toggle('open');
+      });
+    } catch(e) {}
+
+    try {
+      window.addEventListener('scroll', function() {
+        var bar = document.getElementById('progressBar');
+        if (!bar) return;
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+        bar.style.width = p + '%';
+      });
+    } catch(e) {}
+
+    try {
+      var goUp = document.getElementById('go-up');
+      var scrollPercent = goUp ? goUp.querySelector('.scroll-percent') : null;
+      window.addEventListener('scroll', function() {
+        var h = document.documentElement.scrollHeight - window.innerHeight;
+        var p = h > 0 ? Math.round((window.scrollY / h) * 100) : 0;
+        if (scrollPercent) scrollPercent.textContent = p;
+      });
+    } catch(e) {}
+
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.copy-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        var codeEl = fig.querySelector('pre.code-wrap code');
+        if (!codeEl) return;
+        var text = codeEl.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+          var orig = btn.textContent;
+          btn.textContent = '\u5df2\u590d\u5236';
+          setTimeout(function() { btn.textContent = orig; }, 1500);
+        }).catch(function() {
+          btn.textContent = '\u590d\u5236\u5931\u8d25';
+          setTimeout(function() { btn.textContent = '\u590d\u5236'; }, 1500);
+        });
+      });
+    } catch(e) {}
+
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.shrink-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        if (!fig) return;
+        var pre = fig.querySelector('pre.code-wrap');
+        if (!pre) return;
+        pre.classList.toggle('code-shrink');
+        pre.classList.toggle('code-expanded');
+        if (pre.classList.contains('code-expanded')) {
+          btn.textContent = '折叠';
+        } else {
+          btn.textContent = '展开';
+        }
+      });
+    } catch(e) {}
+
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.fullpage-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        if (!fig) return;
+        fig.classList.toggle('code-fullpage');
+        var icon = fig.querySelector('.fullpage-btn i');
+        if (icon) icon.className = fig.classList.contains('code-fullpage') ? 'fas fa-compress' : 'fas fa-expand';
+      });
+    } catch(e) {}
+
+    /* Right-side buttons */
+    try {
+      document.getElementById('darkmode').addEventListener('click', function() {
+        var c = document.documentElement.getAttribute('data-theme');
+        var n = c === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', n);
+        localStorage.setItem('theme', n);
+      });
+    } catch(e) {}
+
+    try {
+      document.getElementById('hide-aside-btn').addEventListener('click', function() {
+        var layout = document.querySelector('.layout');
+        if (layout) layout.classList.toggle('hide-aside');
+        var hidden = layout ? layout.classList.contains('hide-aside') : false;
+        localStorage.setItem('aside-status', hidden ? 'hide' : 'show');
+      });
+    } catch(e) {}
+
+    try {
+      var asideStatus = localStorage.getItem('aside-status');
+      if (asideStatus === 'hide') {
+        var layout = document.querySelector('.layout');
+        if (layout) layout.classList.add('hide-aside');
+      }
+    } catch(e) {}
+
+    /* Toggle menu (mobile sidebar) */
+    try {
+      var toggleMenu = document.getElementById('toggle-menu');
+      var sidebar = document.getElementById('sidebar');
+      var menuMask = document.getElementById('menu-mask');
+      if (toggleMenu && sidebar && menuMask) {
+        toggleMenu.addEventListener('click', function() {
+          sidebar.classList.toggle('open');
+          menuMask.classList.toggle('open');
+        });
+        menuMask.addEventListener('click', function() {
+          sidebar.classList.remove('open');
+          menuMask.classList.remove('open');
+        });
+      }
+    } catch(e) {}
+
+    /* Dropdown menus on mobile sidebar */
+    try {
+      document.querySelectorAll('#sidebar-menus .menus_item > .site-page.group').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.preventDefault();
+          var child = this.nextElementSibling;
+          if (child) {
+            child.style.display = child.style.display === 'block' ? 'none' : 'block';
+          }
+        });
+      });
+    } catch(e) {}
+
+    /* Scroll-down click goes to content */
+    try {
+      var sd = document.getElementById('scroll-down');
+      if (sd) sd.addEventListener('click', function() {
+        var target = document.getElementById('content-inner');
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    } catch(e) {}
+
+    /* Nav scroll effect */
+    try {
+      var nav = document.getElementById('nav');
+      if (nav) {
+        window.addEventListener('scroll', function() {
+          if (window.scrollY > 60) {
+            nav.classList.add('fixed');
+          } else {
+            nav.classList.remove('fixed');
+          }
+        });
+      }
+    } catch(e) {}
+
+
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/xiaoshenblog.github.io/sw.js');
+      }
+    } catch(e) {}
+    
+  </script>
+
+  
+  <div id="search-mask" class="search-mask"></div>
+  <div id="local-search" class="local-search">
+    <div class="search-dialog">
+      <nav class="search-nav">
+        <span class="search-dialog-title"><i class="fas fa-search"></i> 搜索</span>
+        <button class="search-close-button"><i class="fas fa-times"></i></button>
+      </nav>
+      <div class="local-search-input">
+        <input type="text" id="searchInput" placeholder="搜索文章..." autocomplete="off">
+      </div>
+      <hr>
+      <div id="local-search-results" class="search-result-list"></div>
+      <div id="local-search-stats" class="search-stats"></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script>
+    (function() {
+      var fuse = null;
+      var overlay = document.getElementById('local-search');
+      var mask = document.getElementById('search-mask');
+      var input = document.getElementById('searchInput');
+      var closeBtn = document.querySelector('.search-close-button');
+      var searchBtn = document.getElementById('searchBtn');
+      var navSearchBtn = document.getElementById('navSearchBtn');
+      var resultsEl = document.getElementById('local-search-results');
+      var statsEl = document.getElementById('local-search-stats');
+      if (!overlay || !input) return;
+
+      function loadIndex(cb) {
+        if (fuse) { cb(); return; }
+        fetch('/xiaoshenblog.github.io/search.json').then(function(r) { return r.json(); }).then(function(d) {
+          fuse = new Fuse(d, { keys: ['title', 'content', 'tags'], threshold: 0.4, includeScore: true });
+          cb();
+        })['catch'](function() {});
+      }
+
+      function doSearch(q) {
+        if (!q || q.length < 2) { resultsEl.innerHTML = ''; statsEl.textContent = ''; return; }
+        loadIndex(function() {
+          var res = fuse.search(q).slice(0, 20).map(function(m) { return m.item; });
+          if (res.length === 0) {
+            resultsEl.innerHTML = '<div class="search-no-result">未找到相关内容</div>';
+            statsEl.textContent = '0 个结果';
+          } else {
+            resultsEl.innerHTML = '<ol class="search-result-list">' + res.map(function(r) {
+              return '<li class="search-result-item"><a href="/xiaoshenblog.github.io' + r.url + '" class="search-result-item-link">' +
+                '<span class="search-result-title">' + r.title + '</span>' +
+                '<span class="search-result-excerpt">' + r.content.substring(0, 120) + '</span></a></li>';
+            }).join('') + '</ol>';
+            statsEl.textContent = res.length + ' 个结果';
+          }
+        });
+      }
+
+      function openSearch() {
+        overlay.style.display = 'block';
+        mask.style.display = 'block';
+        setTimeout(function() { input.focus(); }, 100);
+      }
+
+      function closeSearch() {
+        overlay.style.display = 'none';
+        mask.style.display = 'none';
+        input.value = '';
+        resultsEl.innerHTML = '';
+        statsEl.textContent = '';
+      }
+
+      if (searchBtn) searchBtn.addEventListener('click', openSearch);
+      if (navSearchBtn) navSearchBtn.addEventListener('click', openSearch);
+      if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+      if (mask) mask.addEventListener('click', closeSearch);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.style.display === 'block') closeSearch();
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+        if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,textarea')) { e.preventDefault(); openSearch(); }
+      });
+
+      input.addEventListener('input', function() {
+        clearTimeout(this.searchTimer);
+        var q = this.value.trim();
+        this.searchTimer = setTimeout(function() { doSearch(q); }, 200);
+      });
+      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(this.value.trim()); });
+    })();
+  </script>
+  
+</body>
+</html>
