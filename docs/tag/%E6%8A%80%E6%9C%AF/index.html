@@ -424,11 +424,16 @@
               <div class="recent-post-info">
                 <a class="article-title" href="/xiaoshenblog.github.io/posts/1/" title="另一个博客的特性展示">另一个博客的特性展示</a>
                 <div class="article-meta-wrap">
+                  
+                  
+                  
                   <span class="post-meta-date">
                     <i class="far fa-calendar-alt"></i>
                     <span class="article-meta-label">发表于</span>
                     <time datetime="2026-07-13T05:30:39.369656+00:00">2026-07-13</time>
                   </span>
+                  
+                  
                   
                   
                     
@@ -444,6 +449,7 @@
                       <i class="fas fa-tag"></i>
                       <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E6%8A%80%E6%9C%AF/">技术</a>
                     </span>
+                  
                   
                 </div>
                 <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi TS展开复制// [!code word:console:1...</div>
@@ -613,12 +619,16 @@
 
   <footer id="footer">
     <div id="footer-wrap">
-      <div class="copyright">&copy;2026 By 博主</div>
+      
+      <div class="copyright">&copy;2026 由 博主</div>
+      
+      
       <div class="framework-info">
         <span>框架 </span><a target="_blank" rel="noopener" href="https://expressjs.com">Express</a>
         <span class="footer-separator">|</span>
         <span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a>
       </div>
+      
       
     </div>
   </footer>
@@ -709,11 +719,11 @@
         var text = codeEl.textContent;
         navigator.clipboard.writeText(text).then(function() {
           var orig = btn.textContent;
-          btn.textContent = '\u5df2\u590d\u5236';
+          btn.textContent = '已复制';
           setTimeout(function() { btn.textContent = orig; }, 1500);
         }).catch(function() {
-          btn.textContent = '\u590d\u5236\u5931\u8d25';
-          setTimeout(function() { btn.textContent = '\u590d\u5236'; }, 1500);
+          btn.textContent = '复制失败';
+          setTimeout(function() { btn.textContent = '已复制'; }, 1500);
         });
       });
     } catch(e) {}

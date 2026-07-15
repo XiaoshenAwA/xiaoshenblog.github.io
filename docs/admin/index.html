@@ -173,7 +173,7 @@
       <form id="edit-form">
         <input type="hidden" id="edit-id">
         <div class="form-group">
-          <input type="text" id="edit-title" required placeholder="标题" style="font-size:1.3em;font-weight:600;border:none;padding:8px 0;background:transparent;color:var(--text);width:100%;outline:none;">
+          <input type="text" id="edit-title" required placeholder="输入文章标题..." style="font-size:1.3em;font-weight:600;border:none;padding:8px 0;background:transparent;color:var(--text);width:100%;outline:none;">
         </div>
         <div class="form-group editor-wrap">
           <div class="editor-toolbar">
@@ -211,8 +211,8 @@
           </div>
         </div>
         <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;">
-          <input type="text" id="edit-category" placeholder="分类" style="flex:1;min-width:120px;">
-          <input type="text" id="edit-tags" placeholder="标签（逗号分隔）" style="flex:1;min-width:150px;">
+          <input type="text" id="edit-category" placeholder="如: 技术, 生活" style="flex:1;min-width:120px;">
+          <input type="text" id="edit-tags" placeholder="如: JavaScript, Node.js, 生活" style="flex:1;min-width:150px;">
           <input type="text" id="edit-cover" placeholder="封面图 URL" style="flex:2;min-width:200px;">
         </div>
         <div class="error-msg" id="edit-error"></div>
@@ -229,11 +229,11 @@
       <h3><i class="fas fa-key"></i> 修改密码</h3>
       <form id="change-pw-form">
         <div class="form-group">
-          <label>新密码</label>
+          <label>修改密码</label>
           <input type="password" id="new-password" required placeholder="输入新密码" minlength="6">
         </div>
         <div class="form-group">
-          <label>确认新密码</label>
+          <label>再次输入新密码</label>
           <input type="password" id="confirm-password" required placeholder="再次输入新密码" minlength="6">
         </div>
         <div id="change-pw-message" class="message-msg" style="display:none;"></div>
@@ -300,7 +300,9 @@ window.__CONFIG__ = {
   SUPABASE_ANON_KEY: 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P',
   DEPLOY_HOOK_URL: 'https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/bc09ca78-dc24-4203-965c-a4c27b3e8479',
   ADMIN_SAVE_REDIRECT_DELAY: 1500,
-  ADMIN_CHANGE_PW_REDIRECT_DELAY: 2000
+  ADMIN_CHANGE_PW_REDIRECT_DELAY: 2000,
+  DB_TABLE: 'posts',
+  LOCALE: {"title":"后台管理","login_title":"管理员登录","login_button":"登录","email_placeholder":"邮箱","password_placeholder":"密码","write_button":"写文章","edit_about_button":"编辑关于页","home_button":"返回首页","change_password_button":"修改密码","logout_button":"退出","loading":"加载中...","content_placeholder":"支持 Markdown 语法","preview_placeholder":"预览区域","save_button":"保存","cancel_button":"取消","publish_button":"发布","new_post_title":"写新文章","new_post_placeholder":"输入文章标题...","edit_post_title":"编辑文章","category_placeholder":"如: 技术, 生活","tags_placeholder":"如: JavaScript, Node.js, 生活","cover_placeholder":"封面图链接（可选）","cover_url_placeholder":"封面图 URL","empty_content_error":"标题和内容不能为空","password_empty_error":"请输入新密码","password_mismatch_error":"两次输入的密码不一致","password_too_short_error_prefix":"密码至少","password_too_short_error_suffix":"位","password_modifying":"修改中...","password_confirm_button":"确认修改","password_modify_success":"密码修改成功！","password_modify_failed_prefix":"修改失败: ","password_input_placeholder":"输入新密码","password_confirm_placeholder":"再次输入新密码","about_title":"编辑关于页","about_loading":"加载中...","about_load_failed":"加载失败","about_empty_error":"内容不能为空","about_save_success":"保存成功！","about_save_failed_prefix":"保存失败: ","about_saving":"保存中...","login_failed_prefix":"登录失败: ","no_posts":"暂无文章","delete_confirm":"确定删除此文章？","delete_failed_prefix":"删除失败: ","save_failed_prefix":"保存失败: ","saving":"保存中..."}
 };
 </script>
 <script>

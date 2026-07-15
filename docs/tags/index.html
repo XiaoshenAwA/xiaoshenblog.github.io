@@ -556,12 +556,16 @@
 
   <footer id="footer">
     <div id="footer-wrap">
-      <div class="copyright">&copy;2026 By 博主</div>
+      
+      <div class="copyright">&copy;2026 由 博主</div>
+      
+      
       <div class="framework-info">
         <span>框架 </span><a target="_blank" rel="noopener" href="https://expressjs.com">Express</a>
         <span class="footer-separator">|</span>
         <span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a>
       </div>
+      
       
     </div>
   </footer>
@@ -652,11 +656,11 @@
         var text = codeEl.textContent;
         navigator.clipboard.writeText(text).then(function() {
           var orig = btn.textContent;
-          btn.textContent = '\u5df2\u590d\u5236';
+          btn.textContent = '已复制';
           setTimeout(function() { btn.textContent = orig; }, 1500);
         }).catch(function() {
-          btn.textContent = '\u590d\u5236\u5931\u8d25';
-          setTimeout(function() { btn.textContent = '\u590d\u5236'; }, 1500);
+          btn.textContent = '复制失败';
+          setTimeout(function() { btn.textContent = '已复制'; }, 1500);
         });
       });
     } catch(e) {}
