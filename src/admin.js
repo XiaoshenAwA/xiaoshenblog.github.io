@@ -1,6 +1,5 @@
 import './style.css'
 import './admin.css'
-import '@fortawesome/fontawesome-free/css/all.min.css'
 import 'katex/dist/katex.min.css'
 import { createClient } from '@supabase/supabase-js'
 import markdownit from 'markdown-it'

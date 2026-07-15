@@ -1,6 +1,5 @@
 import './style.css'
 import './editor.css'
-import '@fortawesome/fontawesome-free/css/all.min.css'
 import 'katex/dist/katex.min.css'
 import markdownit from 'markdown-it'
 import markdownItContainer from 'markdown-it-container'
