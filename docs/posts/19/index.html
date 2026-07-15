@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>标签 | 测试博客</title>
+  <title>测试 | 测试博客</title>
   
   <link rel="icon" href="/xiaoshenblog.github.io/img/favicon.png">
   
@@ -16,7 +16,7 @@
   <meta name="application-name" content="测试博客">
   
   
-  <meta property="og:title" content="标签">
+  <meta property="og:title" content="测试">
   <meta property="og:site_name" content="测试博客">
   <meta property="og:type" content="article">
   <meta property="og:url" content="/xiaoshenblog.github.io/">
@@ -363,7 +363,7 @@
       </div>
     </nav>
     <div id="page-site-info">
-      <h1 id="site-title">标签</h1>
+      <h1 id="site-title">测试</h1>
     </div>
   </header>
   
@@ -371,32 +371,61 @@
   <div class="page" id="body-wrap">
 
   <main class="layout" id="content-inner">
-    <div id="tag">
-      <div class="page-header reveal">
-        <h1><i class="fas fa-tags"></i> 标签</h1>
-        <p>共 3 个标签</p>
-      </div>
-
-      
-        <div class="card-tag-cloud tags-page-cloud reveal">
-          
+    <div id="post">
+      <article class="post-article reveal">
+        <header class="post-header">
+          <h1 class="post-title">测试</h1>
+          <div class="post-meta-bar">
+            <span><i class="far fa-calendar-alt"></i> 2026-07-15</span>
             
-            <a href="/xiaoshenblog.github.io/tag/%E5%8D%9A%E5%AE%A2/" style="font-size:0.9500000000000001em">
-              博客
-            </a>
-          
+            <span><i class="far fa-clock"></i> 1 分钟</span>
             
-            <a href="/xiaoshenblog.github.io/tag/%E6%8A%80%E6%9C%AF/" style="font-size:0.9500000000000001em">
-              技术
-            </a>
+          </div>
           
-            
-            <a href="/xiaoshenblog.github.io/tag/%E5%B1%95%E7%A4%BA/" style="font-size:0.9500000000000001em">
-              展示
-            </a>
+        </header>
+        <div class="post-content"><p>dfafdsf</p>
+</div>
+        <div class="post-actions">
           
         </div>
-      
+
+        <div class="post-nav">
+          
+          <div></div>
+          
+          
+          <a href="/xiaoshenblog.github.io/posts/7/" class="post-nav-item post-nav-next">
+            <span class="post-nav-label">下一篇 <i class="fas fa-arrow-right"></i></span>
+            <span class="post-nav-title">测试</span>
+          </a>
+          
+        </div>
+
+        <a href="/xiaoshenblog.github.io/" class="btn btn-outline" style="margin-top:20px"><i class="fas fa-arrow-left"></i> 返回首页</a>
+        <script>
+        try { if (sessionStorage.getItem('admin')) document.getElementById('admin-actions').style.display = ''; } catch(e){}
+        </script>
+
+        
+        <div class="post-comments">
+          <script src="https://giscus.app/client.js"
+            data-repo="XiaoshenAwA/xiaoshenblog.github.io"
+            data-repo-id="R_kgDOTWm7Wg"
+            data-category="General"
+            data-category-id="DIC_kwDOTWm7Ws4DBKQB"
+            data-mapping="pathname"
+            data-strict="0"
+            data-reactions-enabled="1"
+            data-emit-metadata="0"
+            data-input-position="bottom"
+            data-theme="light"
+            data-lang="zh-CN"
+            crossorigin="anonymous"
+            async>
+          </script>
+        </div>
+        
+      </article>
     </div>
 
     <div class="aside-content" id="aside-content">
@@ -549,8 +578,37 @@
   </div>
   
 </div>
+      
+      <div class="card-widget" id="toc-widget" style="display:none">
+        <div class="item-headline"><i class="fas fa-list"></i> 目录</div>
+        <div class="toc-content" id="toc-content"></div>
+      </div>
+      
     </div>
   </main>
+
+  <script>
+  try {
+    var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+    var toc = document.getElementById('toc-content');
+    var tocWidget = document.getElementById('toc-widget');
+    if (toc && headings.length > 0) {
+      
+      toc.className += '';
+      headings.forEach(function(h, i) {
+        if (!h.id) h.id = 'heading-' + i;
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        
+        a.textContent = (i + 1) + '. ' + h.textContent;
+        
+        a.className = 'toc-link toc-link-' + h.tagName.toLowerCase();
+        toc.appendChild(a);
+      });
+      tocWidget.style.display = '';
+    }
+  } catch(e) {}
+  </script>
 
   </div><!-- #body-wrap -->
 
