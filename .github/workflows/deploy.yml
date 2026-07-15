@@ -1,4 +1,4 @@
-name: 部署到 GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -6,44 +6,23 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 设置 Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: 安装依赖
-        run: npm ci
-
-      - name: 构建 Vite 资源
-        run: npx vite build
-
-      - name: 构建静态站点
-        run: npm run build:static
+          cache: npm
+      - run: npm ci
+      - run: npx vite build
+      - run: node build.js
         env:
-          BASE_PATH: ${{ vars.BASE_PATH || '/xiaoshenblog.github.io' }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
-      - name: 上传构建产物
-        uses: actions/upload-pages-artifact@v3
+          BASE_PATH: /xiaoshenblog.github.io
+      - uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
-
-      - name: 部署到 GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
