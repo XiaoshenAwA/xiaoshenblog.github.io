@@ -31,6 +31,7 @@ function copyDirSync(src, dest) {
 async function build() {
   const basePath = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : '';
   const isStatic = true;
+  const cssVersion = Date.now();
 
   console.log('\u6B63\u5728\u6E05\u7406 dist \u76EE\u5F55...');
   if (fs.existsSync(dist)) fs.rmSync(dist, { recursive: true });
@@ -52,7 +53,7 @@ async function build() {
   function formatDate(d) {
     if (!d) return '';
     var dt = new Date(d);
-    var y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), day = String(dt.getDate()).padStart(2,'0');
+    var y = dt.getFullYear(), m = String(dt.getMonth() + 1).padStart(2, '0'), day = String(dt.getDate()).padStart(2, '0');
     return y + '-' + m + '-' + day;
   }
 
@@ -64,7 +65,7 @@ async function build() {
   async function render(template, data, outPath) {
     const html = await ejs.renderFile(
       path.join(__dirname, 'views', template),
-      { ...data, basePath, url, isStatic, config, formatDate, locale: config.locale },
+      { ...data, basePath, url, isStatic, config, formatDate, locale: config.locale, cssVersion },
       { views: [path.join(__dirname, 'views')] }
     );
     writeFile(path.join(dist, outPath), html);
@@ -79,7 +80,7 @@ async function build() {
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u9996\u9875...');
-    for (let page = 1; page <= totalPages; page++) {
+  for (let page = 1; page <= totalPages; page++) {
     const offset = (page - 1) * config.PAGE_SIZE;
     const posts = await preparePosts(allPosts.slice(offset, offset + config.PAGE_SIZE));
     const data = { posts, page, totalPages, total: allPosts.length, tag: '', cat: '', ...sidebarData, pageType: 'home' };
