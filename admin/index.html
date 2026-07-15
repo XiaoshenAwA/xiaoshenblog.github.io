@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>后台管理 | 测试博客</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/assets/main.css" onerror="this.onerror=null;this.href='/css/style.css'">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/assets/admin.css">
-<link rel="stylesheet" href="/assets/hljs.css">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/admin.css">
+<link rel="stylesheet" href="/xiaoshenblog.github.io/assets/hljs.css">
   <style>
     .admin-view { display: none; }
     .admin-view.active { display: block; animation: adminFadeIn 0.25s ease; }
@@ -160,7 +160,7 @@
     <div class="toolbar">
       <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-pen"></i> 写文章</button>
       <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> 编辑关于页</button>
-      <a href="/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
+      <a href="/xiaoshenblog.github.io/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
     </div>
     <div id="posts-loading" class="loading">加载中...</div>
     <div id="posts-error" class="error-msg"></div>
@@ -313,6 +313,6 @@ window.__CONFIG__ = {
     });
   } catch(e) {}
 </script>
-<script type="module" src="/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="/xiaoshenblog.github.io/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
 </body>
 </html>
