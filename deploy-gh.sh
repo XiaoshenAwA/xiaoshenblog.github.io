@@ -4,6 +4,10 @@ if [ -z "$GH_PAT" ]; then
   echo "GH_PAT not set, skipping GitHub Pages deploy"
   exit 0
 fi
+
+# Rebuild with GitHub Pages BASE_PATH
+BASE_PATH=/xiaoshenblog.github.io node build.js
+
 WORK_DIR="/tmp/gh-deploy"
 rm -rf "$WORK_DIR"
 git clone --depth 1 -b main "https://x-access-token:$GH_PAT@github.com/XiaoshenAwA/xiaoshenblog.github.io.git" "$WORK_DIR"
