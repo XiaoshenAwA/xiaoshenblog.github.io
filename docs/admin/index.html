@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>后台管理 | 博客</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/assets/main.css" onerror="this.onerror=null;this.href='/css/style.css'">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/assets/admin.css">
-<link rel="stylesheet" href="/assets/hljs.css">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/admin.css?v=1784107524772">
+<link rel="stylesheet" href="/xiaoshenblog.github.io/assets/hljs.css">
   <style>
     .admin-view { display: none; }
     .admin-view.active { display: block; animation: adminFadeIn 0.25s ease; }
@@ -172,7 +172,7 @@
       <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> 编辑关于页</button>
       <button class="btn btn-outline" id="manage-tags-btn"><i class="fas fa-tags"></i> 标签管理</button>
       <button class="btn btn-outline" id="manage-categories-btn"><i class="fas fa-folder-open"></i> 分类管理</button>
-      <a href="/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
+      <a href="/xiaoshenblog.github.io/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
     </div>
     <div class="search-bar">
       <i class="fas fa-search search-icon"></i>
@@ -229,7 +229,6 @@
           </div>
         </div>
         <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;">
-<<<<<<< HEAD
           <div style="flex:1;min-width:200px;">
             <label style="font-size:0.82em;color:var(--text-secondary);margin-bottom:4px;display:block;">分类</label>
             <div id="selected-cats-box" style="display:flex;gap:4px;flex-wrap:wrap;padding:6px 10px;border:2px solid var(--border);border-radius:8px;min-height:34px;cursor:pointer;background:var(--input-bg);align-items:center;" onclick="openCategoryPicker()">
@@ -255,11 +254,6 @@
             <span class="toggle-slider"></span>
           </label>
           <span id="edit-published-label">公开</span>
-=======
-          <input type="text" id="edit-category" placeholder="如: 技术, 生活" style="flex:1;min-width:120px;">
-          <input type="text" id="edit-tags" placeholder="如: JavaScript, Node.js, 生活" style="flex:1;min-width:150px;">
-          <input type="text" id="edit-cover" placeholder="封面图 URL" style="flex:2;min-width:200px;">
->>>>>>> dae31a2a8fee031d4187a6737a50029536f128d8
         </div>
         <div class="error-msg" id="edit-error"></div>
         <div class="form-actions">
@@ -342,9 +336,6 @@
   <div class="admin-view" id="view-tags">
     <div class="edit-box">
       <h3><i class="fas fa-tags"></i> 标签管理</h3>
-      <div class="toolbar" style="margin-bottom:12px;">
-        <button class="btn btn-sm btn-primary" id="add-tag-btn"><i class="fas fa-plus"></i> 新建标签</button>
-      </div>
       <div id="tags-manage-message" class="message-msg" style="display:none;"></div>
       <div id="tags-manage-loading" class="loading">加载中...</div>
       <div id="tags-manage-list"></div>
@@ -357,9 +348,6 @@
   <div class="admin-view" id="view-categories">
     <div class="edit-box">
       <h3><i class="fas fa-folder-open"></i> 分类管理</h3>
-      <div class="toolbar" style="margin-bottom:12px;">
-        <button class="btn btn-sm btn-primary" id="add-cat-btn"><i class="fas fa-plus"></i> 新建分类</button>
-      </div>
       <div id="cats-manage-message" class="message-msg" style="display:none;"></div>
       <div id="cats-manage-loading" class="loading">加载中...</div>
       <div id="cats-manage-list"></div>
@@ -423,6 +411,26 @@
     </div>
   </div>
 
+  <!-- Input Dialog -->
+  <div id="input-dialog" class="picker-modal" style="display:none;">
+    <div class="picker-overlay" onclick="closeInputDialog()"></div>
+    <div class="picker-dialog" style="width:600px;">
+      <div class="picker-header">
+        <span id="input-dialog-title">输入</span>
+        <button type="button" class="picker-close" onclick="closeInputDialog()">&times;</button>
+      </div>
+      <div class="picker-body" style="padding:16px 18px;">
+        <input type="text" id="input-dialog-field" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;">
+      </div>
+      <div class="picker-footer" style="justify-content:flex-end;">
+        <div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeInputDialog()">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" id="input-dialog-confirm">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
 window.__CONFIG__ = {
   SUPABASE_URL: 'https://eacieurozwzligrxnyos.supabase.co',
@@ -444,6 +452,6 @@ window.__CONFIG__ = {
     });
   } catch(e) {}
 </script>
-<script type="module" src="/assets/admin.js" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="/xiaoshenblog.github.io/assets/admin.js?v=1784107524772" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
 </body>
 </html>
