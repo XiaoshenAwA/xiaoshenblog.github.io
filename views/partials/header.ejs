@@ -23,7 +23,7 @@
   <meta name="twitter:card" content="<%= config.OG_TWITTER_CARD %>">
   <% if (config.OG_TWITTER_ID) { %><meta name="twitter:site" content="<%= config.OG_TWITTER_ID %>"><% } %>
   <% if (config.OG_FB_APP_ID) { %><meta property="fb:app_id" content="<%= config.OG_FB_APP_ID %>"><% } %>
-  <% if (config.INDEX_IMG) { %><meta property="og:image" content="<%= basePath %><%= config.INDEX_IMG %>"><% } %>
+  <% if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
   <% } %>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
@@ -248,7 +248,7 @@
     <div id="menu-mask"></div>
     <div id="sidebar-menus">
       <div class="avatar-img text-center">
-        <img src="<%= basePath %><%= config.AVATAR_IMG || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>">
+        <img src="<%= url(config.AVATAR_IMG) || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>">
       </div>
       <div class="site-data text-center">
         <a href="<%= basePath %>/archives/"><div class="headline">文章</div><div class="length-num"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div></a>
@@ -282,7 +282,7 @@
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="<%= basePath %>/">
-          <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= basePath %><%= config.NAV_LOGO %>" alt="Logo"><% } %>
+          <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= url(config.NAV_LOGO) %>" alt="Logo"><% } %>
           <span class="site-name"><%= config.BLOG_NAME %></span>
         </a>
       </span>
@@ -348,7 +348,7 @@
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="<%= basePath %>/">
-          <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= basePath %><%= config.NAV_LOGO %>" alt="Logo"><% } %>
+          <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= url(config.NAV_LOGO) %>" alt="Logo"><% } %>
           <span class="site-name"><%= config.BLOG_NAME %></span>
         </a>
       </span>

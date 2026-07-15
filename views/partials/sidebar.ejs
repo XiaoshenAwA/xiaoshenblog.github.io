@@ -1,7 +1,7 @@
 <% if (config.ASIDE_CARD_AUTHOR) { %>
 <div class="card-widget card-info text-center">
   <div class="avatar-img">
-    <img src="<%= basePath %><%= config.AVATAR_IMG || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>"<%= config.AVATAR_EFFECT ? ' class="avatar-effect"' : '' %>>
+    <img src="<%= url(config.AVATAR_IMG) || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>"<%= config.AVATAR_EFFECT ? ' class="avatar-effect"' : '' %>>
   </div>
   <div class="author-info-name"><%= config.BLOG_AUTHOR %></div>
   <div class="author-info-description"><%= config.BLOG_AUTHOR_BIO %></div>

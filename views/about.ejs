@@ -5,7 +5,7 @@
       <div class="about-page reveal">
         <div class="about-hero">
           <% if (config.AVATAR_IMG) { %>
-            <img src="<%= basePath %><%= config.AVATAR_IMG %>" alt="<%= config.BLOG_AUTHOR %>" class="about-avatar-img<%= config.AVATAR_EFFECT ? ' avatar-effect' : '' %>">
+            <img src="<%= url(config.AVATAR_IMG) %>" alt="<%= config.BLOG_AUTHOR %>" class="about-avatar-img<%= config.AVATAR_EFFECT ? ' avatar-effect' : '' %>">
           <% } else { %>
             <div class="about-avatar"><i class="fas fa-user-astronaut"></i></div>
           <% } %>

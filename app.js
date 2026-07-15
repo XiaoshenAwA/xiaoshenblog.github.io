@@ -23,6 +23,10 @@ app.use(methodOverride('_method'));
 
 app.use((req, res, next) => {
   res.locals.basePath = config.BASE_PATH;
+  res.locals.url = function(path) {
+    if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//')) return path || '';
+    return config.BASE_PATH + path;
+  };
   res.locals.isStatic = false;
   res.locals.config = config;
   res.locals.cssVersion = cssVersion;
