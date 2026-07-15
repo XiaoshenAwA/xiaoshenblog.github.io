@@ -4,18 +4,18 @@
     <div class="recent-posts nc" id="recent-posts">
       <% if (tag) { %>
         <div class="tag-filter-bar reveal">
-          <span class="tag-filter-label"><i class="fas fa-tag"></i> 标签：</span>
+          <span class="tag-filter-label"><i class="fas fa-tag"></i> <%= locale.home?.tags_prefix || '标签：' %></span>
           <span class="tag-pill active"><i class="fas fa-tag"></i> <%= tag %></span>
-          <a href="<%= basePath %>/<%= isStatic ? '' : '' %>" class="tag-clear"><i class="fas fa-times"></i> 清除筛选</a>
+          <a href="<%= basePath %>/<%= isStatic ? '' : '' %>" class="tag-clear"><i class="fas fa-times"></i> <%= locale.home?.clear_filter || '清除筛选' %></a>
         </div>
       <% } %>
 
       <% if (posts.length === 0) { %>
         <div class="empty-state reveal">
           <div class="empty-icon"><i class="fas fa-book-open"></i></div>
-          <h3>还没有文章</h3>
-          <p>开始你的第一篇博客吧！</p>
-          <a href="<%= basePath %>/editor" class="btn btn-primary"><i class="fas fa-pen"></i> 开始写作</a>
+          <h3><%= locale.home?.empty_title || '还没有文章' %></h3>
+          <p><%= locale.home?.empty_text || '开始你的第一篇博客吧！' %></p>
+          <a href="<%= basePath %>/editor" class="btn btn-primary"><i class="fas fa-pen"></i> <%= locale.home?.empty_button || '开始写作' %></a>
         </div>
       <% } else { %>
         <div class="recent-post-items">
@@ -30,18 +30,23 @@
               <div class="recent-post-info">
                 <a class="article-title" href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>"><%= post.title %></a>
                 <div class="article-meta-wrap">
+                  <% var metaDateType = (config.POST_META?.page?.date_type || 'created'); %>
+                  <% var showDate = metaDateType === 'both' ? post.updated_at : (metaDateType === 'updated' ? post.updated_at : post.created_at); %>
+                  <% if (showDate) { %>
                   <span class="post-meta-date">
                     <i class="far fa-calendar-alt"></i>
-                    <span class="article-meta-label">发表于</span>
-                    <time datetime="<%= post.created_at %>"><%= formatDate(post.created_at) %></time>
+                    <span class="article-meta-label"><%= locale.home?.published_at || '发表于' %></span>
+                    <time datetime="<%= showDate %>"><%= formatDate(showDate) %></time>
                   </span>
-                  <% if (post.category) { %>
+                  <% } %>
+                  <% if (config.POST_META?.page?.categories !== false && post.category) { %>
                   <span class="article-meta">
                     <span class="article-meta-separator">|</span>
                     <i class="fas fa-inbox"></i>
                     <a class="article-meta__categories" href="<%= basePath %>/?cat=<%= encodeURIComponent(post.category) %>"><%= post.category %></a>
                   </span>
                   <% } %>
+                  <% if (config.POST_META?.page?.tags !== false) { %>
                   <% post.tags.slice(0, 2).forEach(t => { %>
                     <% var tagEnc = encodeURIComponent(t) %>
                     <span class="article-meta">
@@ -50,6 +55,7 @@
                       <a class="article-meta__categories" href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"><%= t %></a>
                     </span>
                   <% }) %>
+                  <% } %>
                 </div>
                 <div class="content"><%= post.excerptText %></div>
               </div>

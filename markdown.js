@@ -219,14 +219,14 @@ async function init() {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: false });
       } catch (e) {
-        return `<span style="color:#cc0000">[公式错误: ${e.message}]</span>`;
+        return `<span style="color:${config.MD_KATEX_ERROR_COLOR}">[公式错误: ${e.message}]</span>`;
       }
     },
     blockRenderer: (str) => {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: true });
       } catch (e) {
-        return `<span style="color:#cc0000" class="katex-error katex-display">[公式错误: ${e.message}]</span>`;
+        return `<span style="color:${config.MD_KATEX_ERROR_COLOR}" class="katex-error katex-display">[公式错误: ${e.message}]</span>`;
       }
     }
   });

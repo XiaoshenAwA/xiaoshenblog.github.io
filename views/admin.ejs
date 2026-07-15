@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="<%= config.SITE_LANGUAGE %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>后台管理 | <%= config.BLOG_NAME %></title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="<%= config.CDN.FONT_AWESOME %>" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="<%= config.CDN.KATEX_CSS %>" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/admin.css">
 <link rel="stylesheet" href="<%= basePath %>/assets/hljs.css">
   <style>
@@ -129,28 +129,28 @@
   <% } %>
 <div class="admin-page">
   <div class="admin-header">
-    <h1><i class="fas fa-cog"></i> 后台管理</h1>
+    <h1><i class="fas fa-cog"></i> <%= locale.admin?.title || '后台管理' %></h1>
     <div>
       <span class="admin-user" id="user-email"></span>
       <div class="btn-group">
         <button id="theme-toggle-admin" title="切换主题"><i class="fas fa-adjust"></i></button>
-        <button class="btn btn-sm btn-outline" id="change-pw-btn" style="display:none"><i class="fas fa-key"></i> 修改密码</button>
-        <button class="btn btn-sm btn-outline" id="logout-btn" style="display:none"><i class="fas fa-sign-out-alt"></i> 退出</button>
+        <button class="btn btn-sm btn-outline" id="change-pw-btn" style="display:none"><i class="fas fa-key"></i> <%= locale.admin?.change_password_button || '修改密码' %></button>
+        <button class="btn btn-sm btn-outline" id="logout-btn" style="display:none"><i class="fas fa-sign-out-alt"></i> <%= locale.admin?.logout_button || '退出' %></button>
       </div>
     </div>
   </div>
 
   <div class="admin-view" id="view-login">
     <div class="login-box">
-      <h2><i class="fas fa-lock"></i> 管理员登录</h2>
+      <h2><i class="fas fa-lock"></i> <%= locale.admin?.login_title || '管理员登录' %></h2>
       <form id="login-form">
         <div class="form-group">
-          <input type="email" id="login-email" placeholder="邮箱" required>
+          <input type="email" id="login-email" placeholder="<%= locale.admin?.email_placeholder || '邮箱' %>" required>
         </div>
         <div class="form-group">
-          <input type="password" id="login-password" placeholder="密码" required>
+          <input type="password" id="login-password" placeholder="<%= locale.admin?.password_placeholder || '密码' %>" required>
         </div>
-        <button type="submit" class="btn btn-primary">登录</button>
+        <button type="submit" class="btn btn-primary"><%= locale.admin?.login_button || '登录' %></button>
         <div class="error-msg" id="login-error"></div>
       </form>
     </div>
@@ -158,22 +158,22 @@
 
   <div class="admin-view" id="view-posts">
     <div class="toolbar">
-      <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-pen"></i> 写文章</button>
-      <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> 编辑关于页</button>
-      <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> 返回首页</a>
+      <button class="btn btn-primary" id="new-post-btn"><i class="fas fa-pen"></i> <%= locale.admin?.write_button || '写文章' %></button>
+      <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> <%= locale.admin?.edit_about_button || '编辑关于页' %></button>
+      <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> <%= locale.admin?.home_button || '返回首页' %></a>
     </div>
-    <div id="posts-loading" class="loading">加载中...</div>
+    <div id="posts-loading" class="loading"><%= locale.admin?.loading || '加载中...' %></div>
     <div id="posts-error" class="error-msg"></div>
     <div id="posts-list"></div>
   </div>
 
   <div class="admin-view" id="view-edit">
     <div class="edit-box">
-      <h3 id="edit-heading"><i class="fas fa-pen"></i> 写文章</h3>
+      <h3 id="edit-heading"><i class="fas fa-pen"></i> <%= locale.admin?.write_button || '写文章' %></h3>
       <form id="edit-form">
         <input type="hidden" id="edit-id">
         <div class="form-group">
-          <input type="text" id="edit-title" required placeholder="标题" style="font-size:1.3em;font-weight:600;border:none;padding:8px 0;background:transparent;color:var(--text);width:100%;outline:none;">
+          <input type="text" id="edit-title" required placeholder="<%= locale.admin?.new_post_placeholder || '输入文章标题...' %>" style="font-size:1.3em;font-weight:600;border:none;padding:8px 0;background:transparent;color:var(--text);width:100%;outline:none;">
         </div>
         <div class="form-group editor-wrap">
           <div class="editor-toolbar">
@@ -202,23 +202,23 @@
             <div class="editor-pane">
               <div class="editor-input-wrap">
                 <div class="editor-gutter" data-for="edit-content"></div>
-                <textarea id="edit-content" required placeholder="支持 Markdown 语法"></textarea>
+                <textarea id="edit-content" required placeholder="<%= locale.admin?.content_placeholder || '支持 Markdown 语法' %>"></textarea>
               </div>
             </div>
             <div class="editor-pane">
-              <div class="post-content" id="edit-preview"><p class="muted">预览区域</p></div>
+              <div class="post-content" id="edit-preview"><p class="muted"><%= locale.admin?.preview_placeholder || '预览区域' %></p></div>
             </div>
           </div>
         </div>
         <div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;">
-          <input type="text" id="edit-category" placeholder="分类" style="flex:1;min-width:120px;">
-          <input type="text" id="edit-tags" placeholder="标签（逗号分隔）" style="flex:1;min-width:150px;">
-          <input type="text" id="edit-cover" placeholder="封面图 URL" style="flex:2;min-width:200px;">
+          <input type="text" id="edit-category" placeholder="<%= locale.admin?.category_placeholder || '分类' %>" style="flex:1;min-width:120px;">
+          <input type="text" id="edit-tags" placeholder="<%= locale.admin?.tags_placeholder || '标签（逗号分隔）' %>" style="flex:1;min-width:150px;">
+          <input type="text" id="edit-cover" placeholder="<%= locale.admin?.cover_url_placeholder || '封面图 URL' %>" style="flex:2;min-width:200px;">
         </div>
         <div class="error-msg" id="edit-error"></div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="edit-submit">保存</button>
-          <button type="button" class="btn btn-outline" onclick="cancelEdit()">取消</button>
+          <button type="submit" class="btn btn-primary" id="edit-submit"><%= locale.admin?.save_button || '保存' %></button>
+          <button type="button" class="btn btn-outline" onclick="cancelEdit()"><%= locale.admin?.cancel_button || '取消' %></button>
         </div>
       </form>
     </div>
@@ -226,20 +226,20 @@
 
   <div class="admin-view" id="view-change-pw">
     <div class="edit-box">
-      <h3><i class="fas fa-key"></i> 修改密码</h3>
+      <h3><i class="fas fa-key"></i> <%= locale.admin?.change_password_button || '修改密码' %></h3>
       <form id="change-pw-form">
         <div class="form-group">
-          <label>新密码</label>
-          <input type="password" id="new-password" required placeholder="输入新密码" minlength="<%= config.ADMIN_MIN_PASSWORD_LENGTH %>">
+          <label><%= locale.admin?.change_password_button || '新密码' %></label>
+          <input type="password" id="new-password" required placeholder="<%= locale.admin?.password_input_placeholder || '输入新密码' %>" minlength="<%= config.ADMIN_MIN_PASSWORD_LENGTH %>">
         </div>
         <div class="form-group">
-          <label>确认新密码</label>
-          <input type="password" id="confirm-password" required placeholder="再次输入新密码" minlength="<%= config.ADMIN_MIN_PASSWORD_LENGTH %>">
+          <label><%= locale.admin?.password_confirm_placeholder || '确认新密码' %></label>
+          <input type="password" id="confirm-password" required placeholder="<%= locale.admin?.password_confirm_placeholder || '再次输入新密码' %>" minlength="<%= config.ADMIN_MIN_PASSWORD_LENGTH %>">
         </div>
         <div id="change-pw-message" class="message-msg" style="display:none;"></div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="change-pw-submit">确认修改</button>
-          <button type="button" class="btn btn-outline" onclick="cancelChangePw()">取消</button>
+          <button type="submit" class="btn btn-primary" id="change-pw-submit"><%= locale.admin?.password_confirm_button || '确认修改' %></button>
+          <button type="button" class="btn btn-outline" onclick="cancelChangePw()"><%= locale.admin?.cancel_button || '取消' %></button>
         </div>
       </form>
     </div>
@@ -247,7 +247,7 @@
 
   <div class="admin-view" id="view-about">
     <div class="edit-box">
-      <h3><i class="fas fa-info-circle"></i> 编辑关于页</h3>
+      <h3><i class="fas fa-info-circle"></i> <%= locale.admin?.about_title || '编辑关于页' %></h3>
       <form id="about-form">
         <div class="form-group editor-wrap">
           <div class="editor-toolbar">
@@ -276,18 +276,18 @@
             <div class="editor-pane">
               <div class="editor-input-wrap">
                 <div class="editor-gutter" data-for="about-content"></div>
-                <textarea id="about-content" placeholder="支持 Markdown 语法"></textarea>
+                <textarea id="about-content" placeholder="<%= locale.admin?.content_placeholder || '支持 Markdown 语法' %>"></textarea>
               </div>
             </div>
             <div class="editor-pane">
-              <div class="post-content" id="about-preview"><p class="muted">预览区域</p></div>
+              <div class="post-content" id="about-preview"><p class="muted"><%= locale.admin?.preview_placeholder || '预览区域' %></p></div>
             </div>
           </div>
         </div>
         <div id="about-message" class="message-msg" style="display:none;"></div>
         <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="about-submit">保存</button>
-          <button type="button" class="btn btn-outline" onclick="cancelAbout()">取消</button>
+          <button type="submit" class="btn btn-primary" id="about-submit"><%= locale.admin?.save_button || '保存' %></button>
+          <button type="button" class="btn btn-outline" onclick="cancelAbout()"><%= locale.admin?.cancel_button || '取消' %></button>
         </div>
       </form>
     </div>
@@ -300,7 +300,9 @@ window.__CONFIG__ = {
   SUPABASE_ANON_KEY: '<%= config.SUPABASE_ANON_KEY %>',
   DEPLOY_HOOK_URL: '<%= config.DEPLOY_HOOK_URL %>',
   ADMIN_SAVE_REDIRECT_DELAY: <%= config.ADMIN_SAVE_REDIRECT_DELAY || 1500 %>,
-  ADMIN_CHANGE_PW_REDIRECT_DELAY: <%= config.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000 %>
+  ADMIN_CHANGE_PW_REDIRECT_DELAY: <%= config.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000 %>,
+  DB_TABLE: '<%= config.DB_TABLE %>',
+  LOCALE: <%- JSON.stringify(locale.admin || {}) %>
 };
 </script>
 <script>

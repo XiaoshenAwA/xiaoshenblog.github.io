@@ -1,4 +1,4 @@
-<%- include('partials/header', { title: 'Markdown 编辑器' }) %>
+<%- include('partials/header', { title: locale.editor?.title || 'Markdown 编辑器' }) %>
 <link rel="stylesheet" href="<%= basePath %>/assets/editor.css">
 <link rel="stylesheet" href="<%= basePath %>/assets/hljs.css">
 <style>
@@ -32,11 +32,11 @@
     <div class="editor-pane">
       <div class="editor-input-wrap">
         <div class="editor-gutter" id="editor-gutter"></div>
-        <textarea id="editor-input" placeholder="在此输入 Markdown..."></textarea>
+        <textarea id="editor-input" placeholder="<%= locale.editor?.input_placeholder || '在此输入 Markdown...' %>"></textarea>
       </div>
     </div>
     <div class="editor-pane">
-      <div class="post-content" id="editor-preview"><p class="muted">等待输入...</p></div>
+      <div class="post-content" id="editor-preview"><p class="muted"><%= locale.editor?.preview_placeholder || '等待输入...' %></p></div>
     </div>
   </div>
 </div>

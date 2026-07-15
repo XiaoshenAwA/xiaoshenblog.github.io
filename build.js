@@ -62,7 +62,7 @@ async function build() {
   async function render(template, data, outPath) {
     const html = await ejs.renderFile(
       path.join(__dirname, 'views', template),
-      { ...data, basePath, url, isStatic, config, formatDate },
+      { ...data, basePath, url, isStatic, config, formatDate, locale: config.locale },
       { views: [path.join(__dirname, 'views')] }
     );
     writeFile(path.join(dist, outPath), html);
@@ -146,7 +146,7 @@ async function build() {
       searchIndex.push({
         id: post.id,
         title: post.title,
-        content: text.substring(0, 500),
+        content: text.substring(0, config.SEARCH_EXCERPT_LENGTH || 500),
         url: basePath + '/posts/' + post.id + '/',
         tags: post.tags
       });
@@ -155,7 +155,7 @@ async function build() {
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u540E\u53F0\u7BA1\u7406\u9875\u9762...');
-  await render('admin.ejs', { allTags: [], postCount: 0, title: '\u540E\u53F0\u7BA1\u7406' }, 'admin/index.html');
+  await render('admin.ejs', { allTags: [], postCount: 0, title: '\u540E\u53F0\u7BA1\u7406', locale: config.locale }, 'admin/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210 Markdown \u7F16\u8F91\u5668\u9875\u9762...');
   await render('editor.ejs', { title: 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');

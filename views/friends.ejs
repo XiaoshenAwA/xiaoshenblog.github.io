@@ -1,17 +1,17 @@
-<%- include('partials/header', { title: '友链' }) %>
+<%- include('partials/header', { title: locale.friends?.title || '友链' }) %>
 
   <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
     <div id="friend">
       <div class="page-header reveal">
-        <h1><i class="fas fa-link"></i> 友情链接</h1>
-        <p>各位大佬们的博客</p>
+        <h1><i class="fas fa-link"></i> <%= locale.friends?.title || '友情链接' %></h1>
+        <p><%= locale.friends?.subtitle || '各位大佬们的博客' %></p>
       </div>
 
       <% if (!friends || friends.length === 0) { %>
         <div class="empty-state reveal">
           <div class="empty-icon"><i class="fas fa-link"></i></div>
-          <h3>暂无友链</h3>
-          <p>在 config.yml 的 friend_links 中添加友链</p>
+          <h3><%= locale.friends?.empty_title || '暂无友链' %></h3>
+          <p><%= locale.friends?.empty_text || '在 config.yml 的 friend_links 中添加友链' %></p>
         </div>
       <% } else { %>
         <div class="friends-grid">

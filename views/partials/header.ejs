@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="<%= config.THEME_DEFAULT %>">
+<html lang="<%= config.SITE_LANGUAGE %>" data-theme="<%= config.THEME_DEFAULT %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,9 +25,9 @@
   <% if (config.OG_FB_APP_ID) { %><meta property="fb:app_id" content="<%= config.OG_FB_APP_ID %>"><% } %>
   <% if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
   <% } %>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="<%= config.CDN.FONT_AWESOME %>" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="<%= config.CDN.KATEX_CSS %>" crossorigin="anonymous">
 
   <style>
     :root {
@@ -251,9 +251,9 @@
         <img src="<%= url(config.AVATAR_IMG) || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>">
       </div>
       <div class="site-data text-center">
-        <a href="<%= basePath %>/archives/"><div class="headline">文章</div><div class="length-num"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div></a>
-        <a href="<%= basePath %>/tags/"><div class="headline">标签</div><div class="length-num"><%= typeof allTags !== 'undefined' ? allTags.length : 0 %></div></a>
-        <a href="<%= basePath %>/categories/"><div class="headline">分类</div><div class="length-num"><%= typeof allCategories !== 'undefined' ? allCategories.length : 0 %></div></a>
+        <a href="<%= basePath %>/archives/"><div class="headline"><%= locale.sidebar?.post_count_label || '文章' %></div><div class="length-num"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div></a>
+        <a href="<%= basePath %>/tags/"><div class="headline"><%= locale.sidebar?.tag_count_label || '标签' %></div><div class="length-num"><%= typeof allTags !== 'undefined' ? allTags.length : 0 %></div></a>
+        <a href="<%= basePath %>/categories/"><div class="headline"><%= locale.sidebar?.category_count_label || '分类' %></div><div class="length-num"><%= typeof allCategories !== 'undefined' ? allCategories.length : 0 %></div></a>
       </div>
       <div class="menus_items">
         <% (config.NAV_MENU || []).forEach(function(item) { %>

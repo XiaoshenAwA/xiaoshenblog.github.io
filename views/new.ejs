@@ -1,17 +1,17 @@
-<%- include('partials/header', { title: '写文章' }) %>
+<%- include('partials/header', { title: locale.admin?.new_post_title || '写文章' }) %>
 
   <div class="main-layout single-layout">
     <div class="main-content">
       <div class="form-page reveal">
-        <h1 class="form-page-title"><i class="fas fa-feather"></i> 写新文章</h1>
+        <h1 class="form-page-title"><i class="fas fa-feather"></i> <%= locale.admin?.new_post_title || '写新文章' %></h1>
         <form action="<%= basePath %>/posts" method="POST" class="blog-form">
           <div class="form-group">
-            <label><i class="fas fa-heading"></i> 标题</label>
-            <input type="text" name="title" placeholder="输入文章标题..." required>
+            <label><i class="fas fa-heading"></i> <%= locale.admin?.new_post_placeholder || '标题' %></label>
+            <input type="text" name="title" placeholder="<%= locale.admin?.new_post_placeholder || '输入文章标题...' %>" required>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-folder"></i> 分类</label>
-            <input type="text" name="category" placeholder="如: 技术, 生活" list="categoryList">
+            <label><i class="fas fa-folder"></i> <%= locale.categories?.title || '分类' %></label>
+            <input type="text" name="category" placeholder="<%= locale.admin?.category_placeholder || '如: 技术, 生活' %>" list="categoryList">
             <datalist id="categoryList">
               <% (allCategories || []).forEach(c => { %>
                 <option value="<%= c.name %>">
@@ -19,20 +19,20 @@
             </datalist>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-tags"></i> 标签（逗号分隔）</label>
-            <input type="text" name="tags" placeholder="如: JavaScript, Node.js, 生活">
+            <label><i class="fas fa-tags"></i> <%= locale.admin?.tags_placeholder || '标签（逗号分隔）' %></label>
+            <input type="text" name="tags" placeholder="<%= locale.admin?.tags_placeholder || '如: JavaScript, Node.js, 生活' %>">
           </div>
           <div class="form-group">
-            <label><i class="fas fa-image"></i> 封面图链接（可选）</label>
-            <input type="text" name="cover" placeholder="https://example.com/image.jpg">
+            <label><i class="fas fa-image"></i> <%= locale.admin?.cover_placeholder || '封面图链接（可选）' %></label>
+            <input type="text" name="cover" placeholder="<%= locale.admin?.cover_url_placeholder || 'https://example.com/image.jpg' %>">
           </div>
           <div class="form-group">
-            <label><i class="fas fa-pen"></i> 内容</label>
+            <label><i class="fas fa-pen"></i> <%= locale.admin?.content_placeholder || '内容' %></label>
             <textarea name="content" rows="18" placeholder="支持 Markdown 和 LaTeX 数学公式（$...$ 行内, $$...$$ 块级）&#10;&#10;开始写你的文章..." required></textarea>
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> 发布</button>
-            <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-times"></i> 取消</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> <%= locale.admin?.publish_button || '发布' %></button>
+            <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-times"></i> <%= locale.admin?.cancel_button || '取消' %></a>
           </div>
         </form>
       </div>

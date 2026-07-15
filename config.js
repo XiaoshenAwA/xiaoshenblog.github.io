@@ -20,6 +20,9 @@ const config = {
   // 服务端
   PORT: parseInt(env('PORT', cfg.server?.port ?? 3000), 10),
 
+  // 站点
+  SITE_LANGUAGE: cfg.site?.language ?? 'zh-CN',
+
   // 数据库
   SUPABASE_URL: env('SUPABASE_URL', cfg.database?.url ?? ''),
   SUPABASE_ANON_KEY: env('SUPABASE_ANON_KEY', cfg.database?.anon_key ?? ''),
@@ -148,10 +151,23 @@ const config = {
   GISCUS_CATEGORY_ID: cfg.comments?.giscus?.category_id ?? '',
   GISCUS_LIGHT_THEME: cfg.comments?.giscus?.light_theme ?? 'light',
   GISCUS_DARK_THEME: cfg.comments?.giscus?.dark_theme ?? 'dark',
+  GISCUS_SCRIPT_URL: cfg.comments?.giscus?.script_url ?? 'https://giscus.app/client.js',
+  GISCUS_MAPPING: cfg.comments?.giscus?.mapping ?? 'pathname',
+  GISCUS_STRICT: cfg.comments?.giscus?.strict ?? '0',
+  GISCUS_REACTIONS_ENABLED: cfg.comments?.giscus?.reactions_enabled ?? '1',
+  GISCUS_EMIT_METADATA: cfg.comments?.giscus?.emit_metadata ?? '0',
+  GISCUS_INPUT_POSITION: cfg.comments?.giscus?.input_position ?? 'bottom',
+  GISCUS_LANG: cfg.comments?.giscus?.lang ?? '',
 
   // 搜索
   SEARCH_ENABLE: cfg.search?.enable === true,
   SEARCH_PLACEHOLDER: cfg.search?.placeholder ?? '搜索文章...',
+  SEARCH_THRESHOLD: cfg.search?.threshold ?? 0.4,
+  SEARCH_DEBOUNCE_MS: cfg.search?.debounce_ms ?? 200,
+  SEARCH_MAX_RESULTS: cfg.search?.max_results ?? 20,
+  SEARCH_MIN_QUERY_LENGTH: cfg.search?.min_query_length ?? 2,
+  SEARCH_EXCERPT_LENGTH: cfg.search?.excerpt_length ?? 120,
+  SEARCH_SHORTCUT_KEYS: cfg.search?.shortcut_keys ?? ['Ctrl+K', '/'],
 
   // PWA
   PWA_ENABLE: cfg.pwa?.enable === true,
@@ -207,6 +223,18 @@ const config = {
   // about
   ABOUT_TAGLINE: cfg.about?.tagline ?? '一名热爱技术的开发者',
   ABOUT_CONTENT_FILE: cfg.about?.content_file ?? 'views/about_content.md',
+
+  // 国际化（保持嵌套结构，不扁平化）
+  locale: cfg.locale ?? {},
+
+  // CDN
+  CDN: {
+    FONT_AWESOME: cfg.cdn?.font_awesome ?? 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css',
+    KATEX_CSS: cfg.cdn?.katex_css ?? 'https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css',
+    KATEX_JS: cfg.cdn?.katex_js ?? 'https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.js',
+    KATEX_AUTO_RENDER: cfg.cdn?.katex_auto_render ?? 'https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/contrib/auto-render.min.js',
+    FUSE_JS: cfg.cdn?.fuse_js ?? 'https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js',
+  },
 };
 
 module.exports = config;

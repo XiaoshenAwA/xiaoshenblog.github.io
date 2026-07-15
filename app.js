@@ -29,6 +29,7 @@ app.use((req, res, next) => {
   };
   res.locals.isStatic = false;
   res.locals.config = config;
+  res.locals.locale = config.locale;
   res.locals.cssVersion = cssVersion;
   res.locals.formatDate = function(d) {
     if (!d) return '';
@@ -40,11 +41,11 @@ app.use((req, res, next) => {
 });
 
 app.get(`${config.BASE_PATH}/admin`, (req, res) => {
-  res.render('admin');
+  res.render('admin', { locale: config.locale });
 });
 
 app.get(`${config.BASE_PATH}/editor`, (req, res) => {
-  res.render('editor');
+  res.render('editor', { locale: config.locale });
 });
 
 app.use(config.BASE_PATH, postsRouter);

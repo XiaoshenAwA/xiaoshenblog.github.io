@@ -17,6 +17,15 @@ server:
   port: 3000
 
 # ============================================================
+#  站点基础设置
+# ============================================================
+
+site:
+  # 网站语言。用于 HTML lang 属性、Giscus 评论语言等。
+  # 常用值：zh-CN（简体中文）、en（英文）、ja（日语）。
+  language: "zh-CN"
+
+# ============================================================
 #  数据库 (Supabase)
 # ============================================================
 
@@ -52,6 +61,191 @@ blog:
   # 预估阅读时间的计算基准（字符/分钟）。
   # 公式：文章总字符数 ÷ 该值 = 阅读分钟数。
   reading_speed: 500
+
+# ============================================================
+#  国际化 / 界面文字
+#  控制博客所有界面显示的文字。修改后立即生效，无需重启。
+#  如果想改成英文博客，修改 site.language 为 "en" 并修改此处对应文字即可。
+# ============================================================
+
+locale:
+  # ---- 导航栏 ----
+  nav:
+    home: "首页"
+    categories: "分类"
+    archives: "归档"
+    about: "关于"
+    friends: "友链"
+    admin: "后台管理"
+    editor: "编辑器"
+    # 移动端侧边栏中的 "关注我" 按钮文字。
+    follow_me: "关注我"
+
+  # ---- 首页 ----
+  home:
+    # 标签筛选栏中 "标签：" 的前缀文字。
+    tags_prefix: "标签："
+    # 清除筛选按钮文字。
+    clear_filter: "清除筛选"
+    empty_title: "还没有文章"
+    empty_text: "开始你的第一篇博客吧！"
+    empty_button: "开始写作"
+    # 文章卡片中 "发表于" 的日期前缀文字。
+    published_at: "发表于"
+
+  # ---- 文章详情页 ----
+  post:
+    published_at: "发表于"
+    updated_at: "更新于"
+    reading_time_unit: "分钟"
+    toc_title: "目录"
+    prev_post: "上一篇"
+    next_post: "下一篇"
+    back_home: "返回首页"
+    edit: "编辑"
+    delete: "删除"
+    delete_confirm: "确定删除？"
+    # 文章未找到时的错误提示。
+    not_found: "文章未找到"
+
+  # ---- 分类页 ----
+  categories:
+    title: "分类"
+    subtitle_suffix: "个大类"
+    empty_title: "暂无分类"
+    empty_text: "还没有为文章添加分类标签"
+    all_categories: "所有分类"
+
+  # ---- 归档页 ----
+  archives:
+    title: "归档"
+    subtitle_prefix: "全部文章 - "
+    empty_title: "暂无文章"
+
+  # ---- 标签页 ----
+  tags:
+    title: "标签"
+    subtitle_prefix: "共 "
+    subtitle_suffix: " 个标签"
+    empty_title: "暂无标签"
+
+  # ---- 友链页 ----
+  friends:
+    title: "友情链接"
+    subtitle: "各位大佬们的博客"
+    empty_title: "暂无友链"
+    empty_text: "在 config.yml 的 friend_links 中添加友链"
+
+  # ---- 侧边栏 ----
+  sidebar:
+    # 侧边栏各卡片的标题文字。
+    announcement_title: "公告"
+    recent_posts_title: "最新文章"
+    categories_title: "分类"
+    all_categories_link: "所有分类"
+    tags_title: "标签"
+    archives_title: "归档"
+    webinfo_title: "网站信息"
+    # 站点数据统计标签。
+    post_count_label: "文章"
+    tag_count_label: "标签"
+    category_count_label: "分类"
+    # 网站信息卡片中的各项标签。
+    webinfo_post_count: "文章数目 :"
+    webinfo_word_count: "本站总字数 :"
+    webinfo_runtime: "运行时间 :"
+    webinfo_runtime_loading: "计算中..."
+    # 归档日期后缀。
+    year_suffix: "年"
+    month_suffix: "月"
+
+  # ---- 页脚 ----
+  footer:
+    day_night_toggle: "日间和夜间模式切换"
+    column_toggle: "单栏和双栏切换"
+    settings: "设置"
+    back_to_top: "回到顶部"
+    copied: "已复制"
+    copy_failed: "复制失败"
+    fold: "折叠"
+    expand: "展开"
+    # 框架署名。显示为 "框架 Express | 主题 Butterfly"。
+    framework_label: "框架"
+    theme_label: "主题"
+    powered_by_label: "由"
+
+  # ---- 搜索 ----
+  search:
+    title: "搜索"
+    no_results: "未找到相关内容"
+    result_count_suffix: " 个结果"
+
+  # ---- 后台管理 ----
+  admin:
+    title: "后台管理"
+    login_title: "管理员登录"
+    login_button: "登录"
+    email_placeholder: "邮箱"
+    password_placeholder: "密码"
+    write_button: "写文章"
+    edit_about_button: "编辑关于页"
+    home_button: "返回首页"
+    change_password_button: "修改密码"
+    logout_button: "退出"
+    loading: "加载中..."
+    content_placeholder: "支持 Markdown 语法"
+    preview_placeholder: "预览区域"
+    save_button: "保存"
+    cancel_button: "取消"
+    publish_button: "发布"
+    new_post_title: "写新文章"
+    new_post_placeholder: "输入文章标题..."
+    edit_post_title: "编辑文章"
+    # 分类输入框占位文字。
+    category_placeholder: "如: 技术, 生活"
+    # 标签输入框占位文字。
+    tags_placeholder: "如: JavaScript, Node.js, 生活"
+    # 封面图输入框占位文字。
+    cover_placeholder: "封面图链接（可选）"
+    cover_url_placeholder: "封面图 URL"
+    # 内容为空时的错误提示。
+    empty_content_error: "标题和内容不能为空"
+    # 密码修改相关提示。
+    password_empty_error: "请输入新密码"
+    password_mismatch_error: "两次输入的密码不一致"
+    password_too_short_error_prefix: "密码至少"
+    password_too_short_error_suffix: "位"
+    password_modifying: "修改中..."
+    password_confirm_button: "确认修改"
+    password_modify_success: "密码修改成功！"
+    password_modify_failed_prefix: "修改失败: "
+    password_input_placeholder: "输入新密码"
+    password_confirm_placeholder: "再次输入新密码"
+    about_title: "编辑关于页"
+    about_loading: "加载中..."
+    about_load_failed: "加载失败"
+    about_empty_error: "内容不能为空"
+    about_save_success: "保存成功！"
+    about_save_failed_prefix: "保存失败: "
+    about_saving: "保存中..."
+    login_failed_prefix: "登录失败: "
+    no_posts: "暂无文章"
+    delete_confirm: "确定删除此文章？"
+    delete_failed_prefix: "删除失败: "
+    save_failed_prefix: "保存失败: "
+    saving: "保存中..."
+
+  # ---- 编辑器 ----
+  editor:
+    title: "Markdown 编辑器"
+    input_placeholder: "在此输入 Markdown..."
+    preview_placeholder: "等待输入..."
+
+  # ---- 通用错误 ----
+  common:
+    server_error: "服务器错误"
+    not_found: "文章未找到"
+    empty_error: "标题和内容不能为空"
 
 # ============================================================
 #  部署设置
@@ -495,6 +689,20 @@ comments:
     light_theme: "light"
     # 深色模式下的 Giscus 主题名。
     dark_theme: "dark"
+    # Giscus 脚本地址。一般无需修改。
+    script_url: "https://giscus.app/client.js"
+    # 评论映射方式。pathname = 页面路径（推荐），url = 页面完整 URL，title = 页面标题。
+    mapping: "pathname"
+    # 是否启用严格匹配。0 = 关闭，1 = 开启。
+    strict: "0"
+    # 是否启用评论反应表情。1 = 开启，0 = 关闭。
+    reactions_enabled: "1"
+    # 是否输出评论元数据到 <head>。1 = 开启，0 = 关闭。
+    emit_metadata: "0"
+    # 评论输入框位置。bottom = 底部（推荐），top = 顶部。
+    input_position: "bottom"
+    # Giscus 评论语言。留空则使用 site.language 设置。
+    lang: ""
 
 # ============================================================
 #  搜索设置
@@ -505,6 +713,20 @@ search:
   enable: true
   # 搜索输入框的占位提示文字。
   placeholder: "搜索文章..."
+  # Fuse.js 搜索匹配阈值。0.0 = 精确匹配，1.0 = 匹配所有。推荐 0.3-0.5。
+  threshold: 0.4
+  # 搜索防抖延迟（毫秒）。用户停止输入后多久开始搜索。
+  debounce_ms: 200
+  # 搜索结果最大显示数量。
+  max_results: 20
+  # 搜索关键词最小长度。少于此字符数不会触发搜索。
+  min_query_length: 2
+  # 搜索结果摘要截取长度（字符数）。
+  excerpt_length: 120
+  # 搜索快捷键配置。
+  shortcut_keys:
+    - "Ctrl+K"
+    - "/"
 
 # ============================================================
 #  PWA（渐进式 Web 应用）
@@ -539,8 +761,27 @@ open_graph:
   fb_app_id: ""
 
 # ============================================================
-#  Markdown 编辑器设置
+  # ============================================================
+#  CDN 资源
+#  控制外部 CDN 资源的版本和地址。如需锁定版本或使用私有 CDN，
+#  修改此处即可。留空则使用默认值。
 # ============================================================
+
+cdn:
+  # Font Awesome CSS CDN。修改版本号可切换版本。
+  font_awesome: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+  # KaTeX CSS CDN。用于数学公式渲染样式。
+  katex_css: "https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css"
+  # KaTeX JS CDN。用于数学公式渲染。
+  katex_js: "https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.js"
+  # KaTeX auto-render JS CDN。用于自动渲染行内/块级公式。
+  katex_auto_render: "https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/contrib/auto-render.min.js"
+  # Fuse.js CDN。用于本地搜索功能。
+  fuse_js: "https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"
+
+# ============================================================
+#  Markdown 编辑器设置
+#  ============================================================
 
 editor:
   # 编辑器缩进方式。tab = 制表符，spaces2 = 2空格，spaces4 = 4空格，spaces8 = 8空格。

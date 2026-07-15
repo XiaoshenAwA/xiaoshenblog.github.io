@@ -85,12 +85,14 @@ function addMathPlugin(md) {
 }
 
 const cfg = window.__CONFIG__ || {}
-const SUPABASE_URL = cfg.SUPABASE_URL || 'https://eacieurozwzligrxnyos.supabase.co'
-const SUPABASE_ANON_KEY = cfg.SUPABASE_ANON_KEY || 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P'
+const SUPABASE_URL = cfg.SUPABASE_URL
+const SUPABASE_ANON_KEY = cfg.SUPABASE_ANON_KEY
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 const DEPLOY_HOOK_URL = cfg.DEPLOY_HOOK_URL || ''
 const SAVE_REDIRECT_DELAY = cfg.ADMIN_SAVE_REDIRECT_DELAY || 1500
 const CHANGE_PW_REDIRECT_DELAY = cfg.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000
+const DB_TABLE = cfg.DB_TABLE || 'posts'
+const L = cfg.LOCALE || {}
 
 function triggerDeploy() {
   if (DEPLOY_HOOK_URL) fetch(DEPLOY_HOOK_URL, { method: 'POST' }).catch(() => {})
@@ -143,7 +145,7 @@ $('#login-form').addEventListener('submit', async e => {
   $('#login-error').textContent = ''
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
-    $('#login-error').textContent = '登录失败: ' + error.message
+    $('#login-error').textContent = L.login_failed_prefix || '登录失败: ' + error.message
   } else {
     try { sessionStorage.setItem('admin', 'true') } catch(e) {}
     checkAuth()
@@ -184,19 +186,19 @@ changePwForm.addEventListener('submit', async e => {
   changePwMessage.className = 'message-msg'
 
   if (!newPw) {
-    changePwMessage.textContent = '请输入新密码'
+    changePwMessage.textContent = L.password_empty_error || '请输入新密码'
     changePwMessage.className = 'message-msg error'
     changePwMessage.style.display = 'block'
     return
   }
   if (newPw !== confirmPw) {
-    changePwMessage.textContent = '两次输入的密码不一致'
+    changePwMessage.textContent = L.password_mismatch_error || '两次输入的密码不一致'
     changePwMessage.className = 'message-msg error'
     changePwMessage.style.display = 'block'
     return
   }
   if (newPw.length < (cfg.ADMIN_MIN_PASSWORD_LENGTH || 6)) {
-    changePwMessage.textContent = '密码至少' + (cfg.ADMIN_MIN_PASSWORD_LENGTH || 6) + '位'
+    changePwMessage.textContent = (L.password_too_short_error_prefix || '密码至少') + (cfg.ADMIN_MIN_PASSWORD_LENGTH || 6) + (L.password_too_short_error_suffix || '位')
     changePwMessage.className = 'message-msg error'
     changePwMessage.style.display = 'block'
     return
@@ -204,21 +206,21 @@ changePwForm.addEventListener('submit', async e => {
 
   const submitBtn = $('#change-pw-submit')
   submitBtn.disabled = true
-  submitBtn.textContent = '修改中...'
+  submitBtn.textContent = L.password_modifying || '修改中...'
 
   const { error } = await supabase.auth.updateUser({ password: newPw })
 
   submitBtn.disabled = false
-  submitBtn.textContent = '确认修改'
+  submitBtn.textContent = L.password_confirm_button || '确认修改'
 
   if (error) {
-    changePwMessage.textContent = '修改失败: ' + error.message
+    changePwMessage.textContent = (L.password_modify_failed_prefix || '修改失败: ') + error.message
     changePwMessage.className = 'message-msg error'
     changePwMessage.style.display = 'block'
     return
   }
 
-  changePwMessage.textContent = '密码修改成功！'
+  changePwMessage.textContent = L.password_modify_success || '密码修改成功！'
   changePwMessage.className = 'message-msg success'
   changePwMessage.style.display = 'block'
   changePwForm.reset()
@@ -231,7 +233,7 @@ changePwForm.addEventListener('submit', async e => {
 // About editing
 editAboutBtn.addEventListener('click', async () => {
   aboutMessage.style.display = 'none'
-  aboutContent.value = '加载中...'
+  aboutContent.value = L.about_loading || '加载中...'
   showView('view-about')
   updatePreview('about-content', 'about-preview')
   try {
@@ -242,7 +244,7 @@ editAboutBtn.addEventListener('click', async () => {
   } catch {
     aboutContent.value = ''
     updatePreview('about-content', 'about-preview')
-    aboutMessage.textContent = '加载失败'
+    aboutMessage.textContent = L.about_load_failed || '加载失败'
     aboutMessage.className = 'message-msg error'
     aboutMessage.style.display = 'block'
   }
@@ -260,14 +262,14 @@ aboutForm.addEventListener('submit', async e => {
 
   const content = aboutContent.value
   if (!content) {
-    aboutMessage.textContent = '内容不能为空'
+    aboutMessage.textContent = L.about_empty_error || '内容不能为空'
     aboutMessage.className = 'message-msg error'
     aboutMessage.style.display = 'block'
     return
   }
 
   aboutSubmit.disabled = true
-  aboutSubmit.textContent = '保存中...'
+  aboutSubmit.textContent = L.about_saving || '保存中...'
 
   try {
     const res = await fetch('/about', {
@@ -276,18 +278,18 @@ aboutForm.addEventListener('submit', async e => {
       body: JSON.stringify({ content })
     })
     if (!res.ok) throw new Error(await res.text())
-    aboutMessage.textContent = '保存成功！'
+    aboutMessage.textContent = L.about_save_success || '保存成功！'
     aboutMessage.className = 'message-msg success'
     aboutMessage.style.display = 'block'
     setTimeout(cancelAbout, SAVE_REDIRECT_DELAY)
   } catch (err) {
-    aboutMessage.textContent = '保存失败: ' + err.message
+    aboutMessage.textContent = (L.about_save_failed_prefix || '保存失败: ') + err.message
     aboutMessage.className = 'message-msg error'
     aboutMessage.style.display = 'block'
   }
 
   aboutSubmit.disabled = false
-  aboutSubmit.textContent = '保存'
+  aboutSubmit.textContent = L.save_button || '保存'
 })
 
 // Toolbar buttons (supports textarea with data-target)
@@ -409,13 +411,13 @@ function updatePreview(textareaId, previewId) {
 
 function saveDraft(textareaId) {
   const ta = document.getElementById(textareaId)
-  if (ta) localStorage.setItem('admin-draft-' + textareaId, ta.value)
+  if (ta) localStorage.setItem(cfg.EDITOR_DRAFT_PREFIX + '-' + textareaId, ta.value)
 }
 
 function setupPreview(textareaId, previewId) {
   const textarea = document.getElementById(textareaId)
   if (textarea) {
-    const saved = localStorage.getItem('admin-draft-' + textareaId)
+    const saved = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-' + textareaId)
     if (saved) textarea.value = saved
     textarea.addEventListener('input', () => { saveDraft(textareaId); updatePreview(textareaId, previewId) })
     const gutterEl = document.querySelector('.editor-gutter[data-for="' + textareaId + '"]')
@@ -590,9 +592,9 @@ setTimeout(() => {
   })
   const titleInput = document.getElementById('edit-title')
   if (titleInput) {
-    titleInput.value = localStorage.getItem('admin-draft-edit-title') || ''
+    titleInput.value = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') || ''
     titleInput.addEventListener('input', () => {
-      localStorage.setItem('admin-draft-edit-title', titleInput.value)
+      localStorage.setItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title', titleInput.value)
     })
   }
   updateIndentBtns()
@@ -601,11 +603,11 @@ setTimeout(() => {
 async function loadPosts() {
   $('#posts-loading').style.display = 'block'
   $('#posts-list').innerHTML = ''
-  const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false })
+  const { data, error } = await supabase.from(DB_TABLE).select('*').order('created_at', { ascending: false })
   $('#posts-loading').style.display = 'none'
-  if (error) { $('#posts-error').textContent = '加载失败: ' + error.message; return }
+  if (error) { $('#posts-error').textContent = (L.load_failed_prefix || '加载失败: ') + error.message; return }
   if (!data || data.length === 0) {
-    $('#posts-list').innerHTML = '<p class="muted">暂无文章</p>'
+    $('#posts-list').innerHTML = '<p class="muted">' + (L.no_posts || '暂无文章') + '</p>'
     return
   }
   for (const post of data) {
@@ -626,7 +628,7 @@ async function loadPosts() {
 }
 
 window.editPost = async function (id) {
-  const { data } = await supabase.from('posts').select('*').eq('id', id).single()
+  const { data } = await supabase.from(DB_TABLE).select('*').eq('id', id).single()
   if (!data) return
   $('#edit-id').value = data.id
   $('#edit-title').value = data.title
@@ -647,21 +649,21 @@ $('#edit-form').addEventListener('submit', async e => {
   const tags = $('#edit-tags').value.split(',').map(t => t.trim()).filter(Boolean)
   const cover = $('#edit-cover').value
 
-  if (!title || !content) { $('#edit-error').textContent = '标题和内容不能为空'; return }
+  if (!title || !content) { $('#edit-error').textContent = L.empty_content_error || '标题和内容不能为空'; return }
   $('#edit-error').textContent = ''
   $('#edit-submit').disabled = true
-  $('#edit-submit').textContent = '保存中...'
+  $('#edit-submit').textContent = L.saving || '保存中...'
 
   let error
   if (id) {
-    ({ error } = await supabase.from('posts').update({ title, content, tags, cover, category, word_count: content.length, updated_at: new Date().toISOString() }).eq('id', id))
+    ({ error } = await supabase.from(DB_TABLE).update({ title, content, tags, cover, category, word_count: content.length, updated_at: new Date().toISOString() }).eq('id', id))
   } else {
-    ({ error } = await supabase.from('posts').insert({ title, content, tags, cover, category, word_count: content.length }))
+    ({ error } = await supabase.from(DB_TABLE).insert({ title, content, tags, cover, category, word_count: content.length }))
   }
 
   $('#edit-submit').disabled = false
-  $('#edit-submit').textContent = '保存'
-  if (error) { $('#edit-error').textContent = '保存失败: ' + error.message; return }
+  $('#edit-submit').textContent = L.save_button || '保存'
+  if (error) { $('#edit-error').textContent = (L.save_failed_prefix || '保存失败: ') + error.message; return }
   clearDraft()
   cancelEdit()
   loadPosts()
@@ -669,19 +671,19 @@ $('#edit-form').addEventListener('submit', async e => {
 })
 
 function clearDraft() {
-  localStorage.removeItem('admin-draft-edit-content')
-  localStorage.removeItem('admin-draft-edit-title')
+  localStorage.removeItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-content')
+  localStorage.removeItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title')
 }
 
 $('#new-post-btn').addEventListener('click', () => {
   $('#edit-id').value = ''
-  $('#edit-title').value = localStorage.getItem('admin-draft-edit-title') || ''
-  const draft = localStorage.getItem('admin-draft-edit-content')
+  $('#edit-title').value = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') || ''
+  const draft = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-content')
   $('#edit-content').value = draft || ''
   $('#edit-category').value = ''
   $('#edit-tags').value = ''
   $('#edit-cover').value = ''
-  $('#edit-submit').textContent = '保存'
+  $('#edit-submit').textContent = L.save_button || '保存'
   showView('view-edit')
   updatePreview('edit-content', 'edit-preview')
 })
@@ -691,9 +693,9 @@ window.cancelEdit = function () {
 }
 
 window.deletePost = async function (id) {
-  if (!confirm('确定删除此文章？')) return
-  const { error } = await supabase.from('posts').delete().eq('id', id)
-  if (error) { alert('删除失败: ' + error.message); return }
+  if (!confirm(L.delete_confirm || '确定删除此文章？')) return
+  const { error } = await supabase.from(DB_TABLE).delete().eq('id', id)
+  if (error) { alert((L.delete_failed_prefix || '删除失败: ') + error.message); return }
   loadPosts()
   triggerDeploy()
 }

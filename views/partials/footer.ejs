@@ -2,12 +2,16 @@
 
   <footer id="footer">
     <div id="footer-wrap">
-      <div class="copyright">&copy;<%= config.FOOTER_OWNER_SINCE %> By <%= config.BLOG_AUTHOR %></div>
+      <% if (config.FOOTER_OWNER_ENABLE) { %>
+      <div class="copyright">&copy;<%= config.FOOTER_OWNER_SINCE %> <%= locale.footer?.powered_by_label || 'By' %> <%= config.BLOG_AUTHOR %></div>
+      <% } %>
+      <% if (config.FOOTER_COPYRIGHT) { %>
       <div class="framework-info">
-        <span>框架 </span><a target="_blank" rel="noopener" href="https://expressjs.com">Express</a>
+        <span><%= locale.footer?.framework_label || '框架' %> </span><a target="_blank" rel="noopener" href="https://expressjs.com">Express</a>
         <span class="footer-separator">|</span>
-        <span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a>
+        <span><%= locale.footer?.theme_label || '主题' %> </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a>
       </div>
+      <% } %>
       <% if (config.FOOTER_CUSTOM_TEXT) { %>
         <div style="margin-top:8px;font-size:0.82em;color:var(--text-muted)"><%= config.FOOTER_CUSTOM_TEXT %></div>
       <% } %>
@@ -16,12 +20,12 @@
 
   <div id="rightside">
     <div id="rightside-config-hide">
-      <button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button>
-      <button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button>
+      <button id="darkmode" type="button" title="<%= locale.footer?.day_night_toggle || '日间和夜间模式切换' %>"><i class="fas fa-adjust"></i></button>
+      <button id="hide-aside-btn" type="button" title="<%= locale.footer?.column_toggle || '单栏和双栏切换' %>"><i class="fas fa-arrows-alt-h"></i></button>
     </div>
     <div id="rightside-config-show">
-      <button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button>
-      <button id="go-up" type="button" title="回到顶部"><span class="scroll-percent">0</span><i class="fas fa-arrow-up"></i></button>
+      <button id="rightside-config" type="button" title="<%= locale.footer?.settings || '设置' %>"><i class="fas fa-cog fa-spin"></i></button>
+      <button id="go-up" type="button" title="<%= locale.footer?.back_to_top || '回到顶部' %>"><span class="scroll-percent">0</span><i class="fas fa-arrow-up"></i></button>
     </div>
   </div>
 
@@ -104,11 +108,11 @@
         var text = codeEl.textContent;
         navigator.clipboard.writeText(text).then(function() {
           var orig = btn.textContent;
-          btn.textContent = '\u5df2\u590d\u5236';
+          btn.textContent = '<%= locale.footer?.copied || '已复制' %>';
           setTimeout(function() { btn.textContent = orig; }, 1500);
         }).catch(function() {
-          btn.textContent = '\u590d\u5236\u5931\u8d25';
-          setTimeout(function() { btn.textContent = '\u590d\u5236'; }, 1500);
+          btn.textContent = '<%= locale.footer?.copy_failed || '复制失败' %>';
+          setTimeout(function() { btn.textContent = '<%= locale.footer?.copied || '已复制' %>'; }, 1500);
         });
       });
     } catch(e) {}
@@ -124,9 +128,9 @@
         pre.classList.toggle('code-shrink');
         pre.classList.toggle('code-expanded');
         if (pre.classList.contains('code-expanded')) {
-          btn.textContent = '折叠';
+          btn.textContent = '<%= locale.footer?.fold || '折叠' %>';
         } else {
-          btn.textContent = '展开';
+          btn.textContent = '<%= locale.footer?.expand || '展开' %>';
         }
       });
     } catch(e) {}
@@ -237,7 +241,7 @@
   <div id="local-search" class="local-search">
     <div class="search-dialog">
       <nav class="search-nav">
-        <span class="search-dialog-title"><i class="fas fa-search"></i> 搜索</span>
+        <span class="search-dialog-title"><i class="fas fa-search"></i> <%= locale.search?.title || '搜索' %></span>
         <button class="search-close-button"><i class="fas fa-times"></i></button>
       </nav>
       <div class="local-search-input">
@@ -248,7 +252,7 @@
       <div id="local-search-stats" class="search-stats"></div>
     </div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script src="<%= config.CDN.FUSE_JS %>"></script>
   <script>
     (function() {
       var fuse = null;
@@ -265,25 +269,25 @@
       function loadIndex(cb) {
         if (fuse) { cb(); return; }
         fetch('<%= basePath %>/search.json').then(function(r) { return r.json(); }).then(function(d) {
-          fuse = new Fuse(d, { keys: ['title', 'content', 'tags'], threshold: 0.4, includeScore: true });
+          fuse = new Fuse(d, { keys: ['title', 'content', 'tags'], threshold: <%= config.SEARCH_THRESHOLD %>, includeScore: true });
           cb();
         })['catch'](function() {});
       }
 
       function doSearch(q) {
-        if (!q || q.length < 2) { resultsEl.innerHTML = ''; statsEl.textContent = ''; return; }
+        if (!q || q.length < <%= config.SEARCH_MIN_QUERY_LENGTH %>) { resultsEl.innerHTML = ''; statsEl.textContent = ''; return; }
         loadIndex(function() {
-          var res = fuse.search(q).slice(0, 20).map(function(m) { return m.item; });
+          var res = fuse.search(q).slice(0, <%= config.SEARCH_MAX_RESULTS %>).map(function(m) { return m.item; });
           if (res.length === 0) {
-            resultsEl.innerHTML = '<div class="search-no-result">未找到相关内容</div>';
-            statsEl.textContent = '0 个结果';
+            resultsEl.innerHTML = '<div class="search-no-result"><%= locale.search?.no_results || '未找到相关内容' %></div>';
+            statsEl.textContent = '0<%= locale.search?.result_count_suffix || ' 个结果' %>';
           } else {
             resultsEl.innerHTML = '<ol class="search-result-list">' + res.map(function(r) {
               return '<li class="search-result-item"><a href="<%= basePath %>' + r.url + '" class="search-result-item-link">' +
                 '<span class="search-result-title">' + r.title + '</span>' +
-                '<span class="search-result-excerpt">' + r.content.substring(0, 120) + '</span></a></li>';
+                '<span class="search-result-excerpt">' + r.content.substring(0, <%= config.SEARCH_EXCERPT_LENGTH %>) + '</span></a></li>';
             }).join('') + '</ol>';
-            statsEl.textContent = res.length + ' 个结果';
+            statsEl.textContent = res.length + '<%= locale.search?.result_count_suffix || ' 个结果' %>';
           }
         });
       }
@@ -316,7 +320,7 @@
       input.addEventListener('input', function() {
         clearTimeout(this.searchTimer);
         var q = this.value.trim();
-        this.searchTimer = setTimeout(function() { doSearch(q); }, 200);
+        this.searchTimer = setTimeout(function() { doSearch(q); }, <%= config.SEARCH_DEBOUNCE_MS %>);
       });
       input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(this.value.trim()); });
     })();

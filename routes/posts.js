@@ -19,42 +19,42 @@ router.get('/', async (req, res) => {
       p.excerptText = await excerpt(p.content, config.EXCERPT_LENGTH);
     }
 
-    res.render('index', { posts, page, totalPages, total, tag, cat, ...sidebar, basePath: config.BASE_PATH, config, isStatic: false, pageType: 'home' });
+    res.render('index', { posts, page, totalPages, total, tag, cat, ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'home' });
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
 router.get('/posts/new', async (req, res) => {
   try {
     const allCategories = await getAllCategories();
-    res.render('new', { basePath: config.BASE_PATH, config, isStatic: false, allCategories });
+    res.render('new', { basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, allCategories });
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
 router.get('/posts/:id', async (req, res) => {
   try {
     const post = await getPost(req.params.id);
-    if (!post) return res.status(404).send('文章未找到');
+    if (!post) return res.status(404).send(config.locale?.post?.not_found || '文章未找到');
     post.contentHtml = await render(post.content);
     const sidebar = await getSidebarData();
     const { prev, next } = await getAdjacentPosts(post.id);
-    res.render('show', { post, ...sidebar, prevPost: prev, nextPost: next, basePath: config.BASE_PATH, config, isStatic: false });
+    res.render('show', { post, ...sidebar, prevPost: prev, nextPost: next, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
 router.post('/posts', async (req, res) => {
   try {
     const { title, content, tags, cover, category } = req.body;
-    if (!title || !content) return res.status(400).send('标题和内容不能为空');
+    if (!title || !content) return res.status(400).send(config.locale?.common?.empty_error || '标题和内容不能为空');
     const id = await createPost({ title, content, tags, cover, category });
     res.redirect(`${config.BASE_PATH}/posts/${id}`);
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
@@ -63,30 +63,30 @@ router.delete('/posts/:id', async (req, res) => {
     await deletePost(req.params.id);
     res.redirect(config.BASE_PATH || '/');
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
 router.get('/posts/:id/edit', async (req, res) => {
   try {
     const post = await getPost(req.params.id);
-    if (!post) return res.status(404).send('文章未找到');
+    if (!post) return res.status(404).send(config.locale?.post?.not_found || '文章未找到');
     post.tagsStr = post.tags.join(',');
     const allCategories = await getAllCategories();
-    res.render('edit', { post, basePath: config.BASE_PATH, config, isStatic: false, allCategories });
+    res.render('edit', { post, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, allCategories });
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
 router.put('/posts/:id', async (req, res) => {
   try {
     const { title, content, tags, cover, category } = req.body;
-    if (!title || !content) return res.status(400).send('标题和内容不能为空');
+    if (!title || !content) return res.status(400).send(config.locale?.common?.empty_error || '标题和内容不能为空');
     await updatePost(req.params.id, { title, content, tags, cover, category });
     res.redirect(`${config.BASE_PATH}/posts/${req.params.id}`);
   } catch (e) {
-    res.status(500).send('服务器错误');
+    res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
@@ -144,7 +144,7 @@ router.get('/about', async (req, res) => {
     const aboutContent = fs.readFileSync(aboutFilePath, 'utf-8');
     const aboutHtml = await render(aboutContent);
     const sidebar = await getSidebarData();
-    res.render('about', { ...sidebar, aboutHtml, basePath: config.BASE_PATH, config, isStatic: false });
+    res.render('about', { ...sidebar, aboutHtml, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
@@ -153,7 +153,7 @@ router.get('/about', async (req, res) => {
 router.get('/categories', async (req, res) => {
   try {
     const sidebar = await getSidebarData();
-    res.render('categories', { ...sidebar, basePath: config.BASE_PATH, config, isStatic: false });
+    res.render('categories', { ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
@@ -162,7 +162,7 @@ router.get('/categories', async (req, res) => {
 router.get('/archives', async (req, res) => {
   try {
     const sidebar = await getSidebarData();
-    res.render('archives', { ...sidebar, basePath: config.BASE_PATH, config, isStatic: false });
+    res.render('archives', { ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
@@ -171,7 +171,7 @@ router.get('/archives', async (req, res) => {
 router.get('/friends', async (req, res) => {
   try {
     const sidebar = await getSidebarData();
-    res.render('friends', { ...sidebar, basePath: config.BASE_PATH, config, isStatic: false, friends: config.FRIEND_LINKS || [] });
+    res.render('friends', { ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, friends: config.FRIEND_LINKS || [] });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
@@ -192,7 +192,7 @@ router.get('/tags', async (req, res) => {
       allTagCounts.push({ name, count });
     }
     allTagCounts.sort((a, b) => b.count - a.count);
-    res.render('tags', { ...sidebar, allTagCounts, basePath: config.BASE_PATH, config, isStatic: false });
+    res.render('tags', { ...sidebar, allTagCounts, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }
