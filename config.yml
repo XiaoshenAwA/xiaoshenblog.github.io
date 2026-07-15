@@ -67,7 +67,7 @@ deploy:
   # Cloudflare Pages 自动部署 Webhook URL。
   # 在后台保存文章后会自动 POST 请求此 URL 触发 Cloudflare Pages 重新部署。
   # 留空表示不触发自动部署。
-  deploy_hook_url: "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/aeddd3fe-52ad-45c1-9b29-4b0093c2168b"
+  deploy_hook_url: "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/bc09ca78-dc24-4203-965c-a4c27b3e8479"
   # GitHub Pages 部署相关设置（运行 npm run deploy 时生效）。
   github_pages:
     # 部署到 GitHub Pages 时使用的分支名称。
