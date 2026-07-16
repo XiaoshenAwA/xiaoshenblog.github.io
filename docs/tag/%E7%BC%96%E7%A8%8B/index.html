@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>友链 | 博客</title>
+  <title>博客</title>
   
   <link rel="icon" href="/xiaoshenblog.github.io/img/favicon.png">
   
@@ -16,9 +16,9 @@
   <meta name="application-name" content="博客">
   
   
-  <meta property="og:title" content="友链">
+  <meta property="og:title" content="博客">
   <meta property="og:site_name" content="博客">
-  <meta property="og:type" content="article">
+  <meta property="og:type" content="website">
   <meta property="og:url" content="/xiaoshenblog.github.io/">
   <meta name="twitter:card" content="summary_large_image">
   
@@ -305,16 +305,12 @@
 
   <!-- Page Header -->
   
-  
-  <header class="not-home-page" id="page-header" style="">
+  <header class="full_page" id="page-header" style="background-image: url('https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png'); background-size: cover; background-position: center;">
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="/xiaoshenblog.github.io/">
           <img class="site-icon" src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="Logo">
           <span class="site-name">博客</span>
-        </a>
-        <a class="nav-page-title" href="/xiaoshenblog.github.io/">
-          <span class="site-name">友链</span>
         </a>
       </span>
       <div id="menus">
@@ -366,36 +362,215 @@
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
       </div>
     </nav>
-    
-    <div id="page-site-info">
-      <h1 id="site-title">友链</h1>
+    <div id="site-info">
+      <h1 id="site-title">博客</h1>
+      <div id="site-subtitle"><span id="subtitle">正在测试功能中...</span></div>
       
-      <div id="site-subtitle">各位大佬们的博客</div>
+      <script>
+        var subtitleStrings = ["优秀的人总是孤独的","学习可以演戏，但人生不会和你演戏"];
+        var subtitleEl = document.getElementById('subtitle');
+        var subCharIdx = 0, subStrIdx = 0, subDeleting = false;
+        var subSpeed = 80, subBack = 40, subPause = 2000;
+        function subType() {
+          var cur = subtitleStrings[subStrIdx];
+          if (subDeleting) {
+            subtitleEl.textContent = cur.substring(0, subCharIdx--) + '|';
+            if (subCharIdx < 0) { subDeleting = false; subStrIdx = (subStrIdx + 1) % subtitleStrings.length; subCharIdx = 0; setTimeout(subType, 500); return; }
+            setTimeout(subType, subBack);
+          } else {
+            subtitleEl.textContent = cur.substring(0, ++subCharIdx) + '|';
+            if (subCharIdx === cur.length) { subDeleting = true; setTimeout(subType, subPause); return; }
+            setTimeout(subType, subSpeed);
+          }
+        }
+        function subStart() { subType(); }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', subStart);
+        else subStart();
+      </script>
       
+      <div id="site_social_icons">
+        <a class="social-icon" href="https://github.com/XiaoshenAwA" target="_blank" title="Github"><i class="fab fa-github"></i></a>
+        <a class="social-icon" href="#" target="_blank" title="微博"><i class="fab fa-weibo"></i></a>
+        <a class="social-icon" href="https://x.com/XiaoshenAwA" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+        <a class="social-icon" href="mailto:#" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
+      </div>
     </div>
-    
+    <div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div>
   </header>
   
 
   <div class="page" id="body-wrap">
 
   <main class="layout" id="content-inner">
-    <div id="friend">
+    <div class="recent-posts nc" id="recent-posts">
+      
+        <div class="tag-filter-bar reveal">
+          <span class="tag-filter-label"><i class="fas fa-tag"></i> 标签：</span>
+          <span class="tag-pill active"><i class="fas fa-tag"></i> 编程</span>
+          <a href="/xiaoshenblog.github.io/" class="tag-clear"><i class="fas fa-times"></i> 清除筛选</a>
+        </div>
+      
+      
 
       
-        <div class="friends-grid">
+        <div class="recent-post-items">
           
-            <a href="https://zym2013.amlg.top" target="_blank" class="friend-card card reveal" rel="noopener">
-              <div class="friend-avatar">
-                <img src="https://zym2013.amlg.top/icon.webp" alt="zym2013的博客" loading="lazy">
+            
+            <article class="recent-post-item reveal" style="animation-delay:0s">
+              <div class="post_cover left">
+                <a href="/xiaoshenblog.github.io/posts/7/" title="测试">
+                  <img class="post-bg" src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="测试">
+                </a>
+                
+                
+                <span class="post-cover-category">洛谷</span>
+                
               </div>
-              <div class="friend-info">
-                <h3>zym2013的博客</h3>
-                <p>zym 的博客</p>
+              <div class="recent-post-info">
+                <a class="article-title" href="/xiaoshenblog.github.io/posts/7/" title="测试">测试</a>
+                <div class="article-meta-wrap">
+                  
+                  
+                  
+                  <span class="post-meta-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span class="article-meta-label">发表于</span>
+                    <time datetime="2026-07-14T07:33:40.411246+00:00">2026-07-14</time>
+                  </span>
+                  
+                  
+                  <div class="meta-flex-break"></div>
+                  
+                    
+                    <span class="article-meta">
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E6%B5%8B%E8%AF%95/">测试</a>
+                    </span>
+                  
+                    
+                    <span class="article-meta">
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E7%BC%96%E7%A8%8B/">编程</a>
+                    </span>
+                  
+                  
+                  
+                  
+                  <span class="article-meta">
+                    <i class="fas fa-inbox"></i>
+                    
+                    
+                    <a class="article-meta__categories" href="/xiaoshenblog.github.io/categories/%E6%B4%9B%E8%B0%B7/">洛谷</a>
+                    
+                  </span>
+                  
+                </div>
+                <div class="content">测试标题 代码块 JavaScript展开复制function hello() { console.log(&#34;Hello World&#34;); }数学公式 行内公式 E=mc2E=mc^2E=mc2 和块级公式： ∑i=1ni=n(n+1)2\sum_{i=1}^n i = \frac{n(n+1)}{2}i=1∑n​i=2n(n+1)​ 警告块 提示 这是一条提示信息 注意 带自定义标题的警告 标记...</div>
               </div>
-            </a>
+            </article>
+          
+            
+            <article class="recent-post-item reveal" style="animation-delay:0.08s">
+              <div class="post_cover right">
+                <a href="/xiaoshenblog.github.io/posts/6/" title="ddfadfasd">
+                  <img class="post-bg" src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="ddfadfasd">
+                </a>
+                
+                
+                <span class="post-cover-category">洛谷</span>
+                
+              </div>
+              <div class="recent-post-info">
+                <a class="article-title" href="/xiaoshenblog.github.io/posts/6/" title="ddfadfasd">ddfadfasd</a>
+                <div class="article-meta-wrap">
+                  
+                  
+                  
+                  <span class="post-meta-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span class="article-meta-label">发表于</span>
+                    <time datetime="2026-07-14T06:21:08.281042+00:00">2026-07-14</time>
+                  </span>
+                  
+                  
+                  <div class="meta-flex-break"></div>
+                  
+                    
+                    <span class="article-meta">
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E7%BC%96%E7%A8%8B/">编程</a>
+                    </span>
+                  
+                  
+                  
+                  
+                  <span class="article-meta">
+                    <i class="fas fa-inbox"></i>
+                    
+                    
+                    <a class="article-meta__categories" href="/xiaoshenblog.github.io/categories/%E6%B4%9B%E8%B0%B7/">洛谷</a>
+                    
+                    <span class="article-meta-separator">></span>
+                    <a class="article-meta__categories" href="/xiaoshenblog.github.io/categories/%E6%B4%9B%E8%B0%B7/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+                    
+                  </span>
+                  
+                </div>
+                <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi TS展开复制// [!code word:console:1...</div>
+              </div>
+            </article>
+          
+            
+            <article class="recent-post-item reveal" style="animation-delay:0.16s">
+              <div class="post_cover left">
+                <a href="/xiaoshenblog.github.io/posts/5/" title="dddaa">
+                  <img class="post-bg" src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="dddaa">
+                </a>
+                
+                
+                <span class="post-cover-category">qwq</span>
+                
+              </div>
+              <div class="recent-post-info">
+                <a class="article-title" href="/xiaoshenblog.github.io/posts/5/" title="dddaa">dddaa</a>
+                <div class="article-meta-wrap">
+                  
+                  
+                  
+                  <span class="post-meta-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span class="article-meta-label">发表于</span>
+                    <time datetime="2026-07-14T06:20:59.3766+00:00">2026-07-14</time>
+                  </span>
+                  
+                  
+                  <div class="meta-flex-break"></div>
+                  
+                    
+                    <span class="article-meta">
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E7%BC%96%E7%A8%8B/">编程</a>
+                    </span>
+                  
+                  
+                  
+                  
+                  <span class="article-meta">
+                    <i class="fas fa-inbox"></i>
+                    
+                    
+                    <a class="article-meta__categories" href="/xiaoshenblog.github.io/categories/qwq/">qwq</a>
+                    
+                  </span>
+                  
+                </div>
+                <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi TS展开复制// [!code word:console:1...</div>
+              </div>
+            </article>
           
         </div>
+
+        
       
     </div>
 
