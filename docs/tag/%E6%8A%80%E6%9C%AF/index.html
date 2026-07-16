@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>另一个博客的特性展示 | 博客</title>
+  <title>博客</title>
   
   <link rel="icon" href="/xiaoshenblog.github.io/img/favicon.png">
   
@@ -16,9 +16,9 @@
   <meta name="application-name" content="博客">
   
   
-  <meta property="og:title" content="另一个博客的特性展示">
+  <meta property="og:title" content="博客">
   <meta property="og:site_name" content="博客">
-  <meta property="og:type" content="article">
+  <meta property="og:type" content="website">
   <meta property="og:url" content="/xiaoshenblog.github.io/">
   <meta name="twitter:card" content="summary_large_image">
   
@@ -305,16 +305,12 @@
 
   <!-- Page Header -->
   
-  
-  <header class="not-home-page" id="page-header" style="background-image: url(https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png);background-size:cover;background-position:center;">
+  <header class="full_page" id="page-header" style="background-image: url('https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png'); background-size: cover; background-position: center;">
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="/xiaoshenblog.github.io/">
           <img class="site-icon" src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="Logo">
           <span class="site-name">博客</span>
-        </a>
-        <a class="nav-page-title" href="/xiaoshenblog.github.io/">
-          <span class="site-name">另一个博客的特性展示</span>
         </a>
       </span>
       <div id="menus">
@@ -366,109 +362,120 @@
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
       </div>
     </nav>
-    
-    <div id="post-info">
-      <h1 class="post-title">另一个博客的特性展示</h1>
-      <div id="post-meta">
-        <div class="meta-firstline">
-          <span class="post-meta-date">
-            <i class="far fa-calendar-alt fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">发表于</span>
-            <time class="post-meta-date-created" datetime="2026-07-13T08:23:25.908948+00:00">2026-07-13</time>
-            <span class="post-meta-separator">|</span>
-            <i class="fas fa-history fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">更新于</span>
-            <time class="post-meta-date-updated" datetime="2026-07-16T01:37:18.492+00:00">2026-07-16</time>
-          </span>
-          
-          
-          <span class="post-meta-categories">
-            <span class="post-meta-separator">|</span>
-            
-            
-            <i class="fas fa-inbox fa-fw post-meta-icon"></i>
-            <a class="post-meta-categories" href="/xiaoshenblog.github.io/categories/11/">11</a>
-            
-          </span>
-          
-        </div>
-        <div class="meta-secondline">
-          <span class="post-meta-separator">|</span>
-          <span class="post-meta-wordcount">
-            <i class="far fa-file-word fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">总字数:</span>
-            
-            <span class="word-count">3</span>
-            <span class="post-meta-separator">|</span>
-            <i class="far fa-clock fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">阅读时长:</span>
-            <span>1分钟</span>
-          </span>
-          <span class="post-meta-separator">|</span>
-          <span class="post-meta-pv-cv" id="" data-flag-title="">
-            <i class="far fa-eye fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">浏览量:</span>
-            <span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span>
-          </span>
-        </div>
-      </div>
+    <div id="site-info">
+      <h1 id="site-title">博客</h1>
+      <div id="site-subtitle"><span id="subtitle">正在测试功能中...</span></div>
       
+      <script>
+        var subtitleStrings = ["优秀的人总是孤独的","学习可以演戏，但人生不会和你演戏"];
+        var subtitleEl = document.getElementById('subtitle');
+        var subCharIdx = 0, subStrIdx = 0, subDeleting = false;
+        var subSpeed = 80, subBack = 40, subPause = 2000;
+        function subType() {
+          var cur = subtitleStrings[subStrIdx];
+          if (subDeleting) {
+            subtitleEl.textContent = cur.substring(0, subCharIdx--) + '|';
+            if (subCharIdx < 0) { subDeleting = false; subStrIdx = (subStrIdx + 1) % subtitleStrings.length; subCharIdx = 0; setTimeout(subType, 500); return; }
+            setTimeout(subType, subBack);
+          } else {
+            subtitleEl.textContent = cur.substring(0, ++subCharIdx) + '|';
+            if (subCharIdx === cur.length) { subDeleting = true; setTimeout(subType, subPause); return; }
+            setTimeout(subType, subSpeed);
+          }
+        }
+        function subStart() { subType(); }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', subStart);
+        else subStart();
+      </script>
+      
+      <div id="site_social_icons">
+        <a class="social-icon" href="https://github.com/XiaoshenAwA" target="_blank" title="Github"><i class="fab fa-github"></i></a>
+        <a class="social-icon" href="#" target="_blank" title="微博"><i class="fab fa-weibo"></i></a>
+        <a class="social-icon" href="https://x.com/XiaoshenAwA" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+        <a class="social-icon" href="mailto:#" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
+      </div>
     </div>
-    
+    <div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div>
   </header>
   
 
   <div class="page" id="body-wrap">
 
   <main class="layout" id="content-inner">
-    <div id="post">
-      <article class="post-article reveal">
-        <div class="post-content"><h1>1</h1>
-</div>
-        <div class="post-actions">
+    <div class="recent-posts nc" id="recent-posts">
+      
+        <div class="tag-filter-bar reveal">
+          <span class="tag-filter-label"><i class="fas fa-tag"></i> 标签：</span>
+          <span class="tag-pill active"><i class="fas fa-tag"></i> 技术</span>
+          <a href="/xiaoshenblog.github.io/" class="tag-clear"><i class="fas fa-times"></i> 清除筛选</a>
+        </div>
+      
+      
+
+      
+        <div class="recent-post-items">
+          
+            
+            <article class="recent-post-item reveal" style="animation-delay:0s">
+              <div class="post_cover left">
+                <a href="/xiaoshenblog.github.io/posts/7/" title="测试">
+                  <img class="post-bg" src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="测试">
+                </a>
+                
+                
+                <span class="post-cover-category">洛谷</span>
+                
+              </div>
+              <div class="recent-post-info">
+                <a class="article-title" href="/xiaoshenblog.github.io/posts/7/" title="测试">测试</a>
+                <div class="article-meta-wrap">
+                  
+                  
+                  
+                  <span class="post-meta-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span class="article-meta-label">发表于</span>
+                    <time datetime="2026-07-14T07:33:40.411246+00:00">2026-07-14</time>
+                  </span>
+                  
+                  
+                  <div class="meta-flex-break"></div>
+                  
+                    
+                    <span class="article-meta">
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E6%B5%8B%E8%AF%95/">测试</a>
+                    </span>
+                  
+                    
+                    <span class="article-meta">
+                      <i class="fas fa-tag"></i>
+                      <a class="article-meta__categories" href="/xiaoshenblog.github.io/tag/%E7%BC%96%E7%A8%8B/">编程</a>
+                    </span>
+                  
+                  
+                  
+                  
+                  <span class="article-meta">
+                    <i class="fas fa-inbox"></i>
+                    
+                    
+                    <a class="article-meta__categories" href="/xiaoshenblog.github.io/categories/%E6%B4%9B%E8%B0%B7/">洛谷</a>
+                    
+                    <span class="article-meta-separator">></span>
+                    <a class="article-meta__categories" href="/xiaoshenblog.github.io/categories/%E6%B4%9B%E8%B0%B7/qwq/">qwq</a>
+                    
+                  </span>
+                  
+                </div>
+                <div class="content">测试标题 代码块 JavaScript展开复制function hello() { console.log(&#34;Hello World&#34;); }数学公式 行内公式 E=mc2E=mc^2E=mc2 和块级公式： ∑i=1ni=n(n+1)2\sum_{i=1}^n i = \frac{n(n+1)}{2}i=1∑n​i=2n(n+1)​ 警告块 提示 这是一条提示信息 注意 带自定义标题的警告 标记...</div>
+              </div>
+            </article>
           
         </div>
-
-        <div class="post-nav">
-          
-          <a href="/xiaoshenblog.github.io/posts/3/" class="post-nav-item post-nav-prev">
-            <span class="post-nav-label"><i class="fas fa-arrow-left"></i> 上一篇</span>
-            <span class="post-nav-title">ddd</span>
-          </a>
-          
-          
-          <a href="/xiaoshenblog.github.io/posts/1/" class="post-nav-item post-nav-next">
-            <span class="post-nav-label">下一篇 <i class="fas fa-arrow-right"></i></span>
-            <span class="post-nav-title">另一个博客的特性展示</span>
-          </a>
-          
-        </div>
-
-        <a href="/xiaoshenblog.github.io/" class="btn btn-outline" style="margin-top:20px"><i class="fas fa-arrow-left"></i> 返回首页</a>
-        <script>
-        try { if (sessionStorage.getItem('admin')) document.getElementById('admin-actions').style.display = ''; } catch(e){}
-        </script>
 
         
-        <div class="post-comments">
-          <script src="https://giscus.app/client.js"
-            data-repo="XiaoshenAwA/xiaoshenblog.github.io"
-            data-repo-id="R_kgDOTWm7Wg"
-            data-category="General"
-            data-category-id="DIC_kwDOTWm7Ws4DBKQB"
-            data-mapping="pathname"
-            data-strict="0"
-            data-reactions-enabled="1"
-            data-emit-metadata="0"
-            data-input-position="bottom"
-            data-theme="light"
-            data-lang="zh-CN"
-            crossorigin="anonymous"
-            async>
-          </script>
-        </div>
-        
-      </article>
+      
     </div>
 
     <div class="aside-content" id="aside-content">
@@ -747,37 +754,8 @@
   </div>
   
 </div>
-      
-      <div class="card-widget" id="toc-widget" style="display:none">
-        <div class="item-headline"><i class="fas fa-list"></i> 目录</div>
-        <div class="toc-content" id="toc-content"></div>
-      </div>
-      
     </div>
   </main>
-
-  <script>
-  try {
-    var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
-    var toc = document.getElementById('toc-content');
-    var tocWidget = document.getElementById('toc-widget');
-    if (toc && headings.length > 0) {
-      
-      toc.className += '';
-      headings.forEach(function(h, i) {
-        if (!h.id) h.id = 'heading-' + i;
-        var a = document.createElement('a');
-        a.href = '#' + h.id;
-        
-        a.textContent = (i + 1) + '. ' + h.textContent;
-        
-        a.className = 'toc-link toc-link-' + h.tagName.toLowerCase();
-        toc.appendChild(a);
-      });
-      tocWidget.style.display = '';
-    }
-  } catch(e) {}
-  </script>
 
   </div><!-- #body-wrap -->
 
