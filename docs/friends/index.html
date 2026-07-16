@@ -26,7 +26,7 @@
   <meta property="og:image" content="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png">
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1784171908610" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1784171941654" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -439,7 +439,7 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/19" title="测试">
-            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="测试">
+            <img src="https://t.alcy.cc/fj?19" alt="测试">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/19" title="测试">测试</a>
@@ -449,7 +449,7 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/7" title="测试">
-            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="测试">
+            <img src="https://t.alcy.cc/fj?7" alt="测试">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/7" title="测试">测试</a>
@@ -459,7 +459,7 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/6" title="ddfadfasd">
-            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="ddfadfasd">
+            <img src="https://t.alcy.cc/fj?6" alt="ddfadfasd">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/6" title="ddfadfasd">ddfadfasd</a>
@@ -469,7 +469,7 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/5" title="dddaa">
-            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="dddaa">
+            <img src="https://t.alcy.cc/fj?5" alt="dddaa">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/5" title="dddaa">dddaa</a>
@@ -479,7 +479,7 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/4" title="adsfa">
-            <img src="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png" alt="adsfa">
+            <img src="https://t.alcy.cc/fj?4" alt="adsfa">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/4" title="adsfa">adsfa</a>
@@ -700,6 +700,7 @@
     <div id="rightside-config-hide">
       <button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button>
       <button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button>
+    <button id="font-settings-btn" type="button" title="字体设置"><i class="fas fa-font"></i></button>
     </div>
     <div id="rightside-config-show">
       <button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button>
@@ -707,7 +708,7 @@
     </div>
   </div>
 
-  <script src="/xiaoshenblog.github.io/assets/main.js?v=1784171908610"></script>
+  <script src="/xiaoshenblog.github.io/assets/main.js?v=1784171941654"></script>
   <script>
     try {
       var h = document.documentElement;
@@ -803,6 +804,11 @@
     try {
       var goUp = document.getElementById('go-up');
       var scrollPercent = goUp ? goUp.querySelector('.scroll-percent') : null;
+      if (goUp) {
+        goUp.addEventListener('click', function() {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
       window.addEventListener('scroll', function() {
         var h = document.documentElement.scrollHeight - window.innerHeight;
         var p = h > 0 ? Math.round((window.scrollY / h) * 100) : 0;
@@ -861,6 +867,12 @@
     } catch(e) {}
 
     /* Right-side buttons */
+    try {
+      document.getElementById('rightside-config').addEventListener('click', function() {
+        document.getElementById('rightside-config-hide').classList.toggle('open');
+      });
+    } catch(e) {}
+
     try {
       document.getElementById('darkmode').addEventListener('click', function() {
         var c = document.documentElement.getAttribute('data-theme');
@@ -947,6 +959,193 @@
       }
     } catch(e) {}
     
+  </script>
+
+  <div id="font-settings-overlay" class="settings-overlay">
+    <div class="settings-dialog">
+      <div class="settings-header">
+        <span class="settings-title"><i class="fas fa-font"></i> 字体设置</span>
+        <button class="settings-close"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="settings-body">
+        <div class="settings-group">
+          <label class="settings-label">字体大小</label>
+          <div class="settings-options">
+            <button class="settings-opt" data-fontsize="14">小</button>
+            <button class="settings-opt active" data-fontsize="16">中</button>
+            <button class="settings-opt" data-fontsize="18">大</button>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">阅读字体</label>
+          <div class="settings-options">
+            <button class="settings-opt active" data-bodyfont="">网站默认</button>
+            <button class="settings-opt" data-bodyfont="unset">浏览器默认</button>
+          </div>
+          <div style="display:flex;gap:6px">
+            <input class="settings-input" id="font-body-input" type="text" placeholder="或输入自定义字体..." style="flex:1">
+            <button class="settings-scan-btn" data-target="body"><i class="fas fa-search"></i></button>
+          </div>
+          <div class="font-local-list" id="font-body-list"></div>
+        </div>
+
+        <div class="settings-group">
+          <label class="settings-label">代码字体</label>
+          <div class="settings-options">
+            <button class="settings-opt active" data-codefont="">网站默认</button>
+            <button class="settings-opt" data-codefont="unset">浏览器默认</button>
+          </div>
+          <div style="display:flex;gap:6px">
+            <input class="settings-input" id="font-code-input" type="text" placeholder="或输入自定义字体..." style="flex:1">
+            <button class="settings-scan-btn" data-target="code"><i class="fas fa-search"></i></button>
+          </div>
+          <div class="font-local-list" id="font-code-list" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  try {
+    (function() {
+      var FONT_KEY = 'blog_font_settings';
+      var defaults = { fontSize: 16, bodyFont: '', codeFont: '' };
+      var saved;
+      try { saved = JSON.parse(localStorage.getItem(FONT_KEY)); } catch(e) {}
+      var settings = saved || defaults;
+
+      function applySettings(s) {
+        document.documentElement.style.setProperty('--font-size-global', s.fontSize + 'px');
+        if (s.bodyFont === 'unset') document.documentElement.style.removeProperty('--font-body');
+        else if (s.bodyFont) document.documentElement.style.setProperty('--font-body', s.bodyFont);
+        else document.documentElement.style.removeProperty('--font-body');
+        if (s.codeFont === 'unset') document.documentElement.style.removeProperty('--font-code');
+        else if (s.codeFont) document.documentElement.style.setProperty('--font-code', s.codeFont);
+        else document.documentElement.style.removeProperty('--font-code');
+        try { localStorage.setItem(FONT_KEY, JSON.stringify(s)); } catch(e) {}
+        var bi = document.getElementById('font-body-input');
+        var ci = document.getElementById('font-code-input');
+        if (bi && bi !== document.activeElement) bi.value = s.bodyFont === 'unset' ? '' : s.bodyFont;
+        if (ci && ci !== document.activeElement) ci.value = s.codeFont === 'unset' ? '' : s.codeFont;
+      }
+
+      applySettings(settings);
+
+      var overlay = document.getElementById('font-settings-overlay');
+      var openBtn = document.getElementById('font-settings-btn');
+      var closeBtn = overlay ? overlay.querySelector('.settings-close') : null;
+      if (openBtn && overlay) {
+        openBtn.addEventListener('click', function() { overlay.style.display = 'flex'; });
+      }
+      if (closeBtn && overlay) {
+        closeBtn.addEventListener('click', function() { overlay.style.display = 'none'; });
+      }
+
+      var bodyInput = document.getElementById('font-body-input');
+      var codeInput = document.getElementById('font-code-input');
+      if (bodyInput) {
+        bodyInput.value = settings.bodyFont === 'unset' ? '' : settings.bodyFont;
+        bodyInput.addEventListener('input', function() {
+          settings.bodyFont = this.value.trim();
+          settings.bodyFontMode = 'custom';
+          applySettings(settings);
+        });
+      }
+      if (codeInput) {
+        codeInput.value = settings.codeFont === 'unset' ? '' : settings.codeFont;
+        codeInput.addEventListener('input', function() {
+          settings.codeFont = this.value.trim();
+          settings.codeFontMode = 'custom';
+          applySettings(settings);
+        });
+      }
+
+      function pickFont(target, value) {
+        if (target === 'body') {
+          settings.bodyFont = value;
+          applySettings(settings);
+          if (bodyInput) bodyInput.value = value === 'unset' ? '' : value;
+        } else {
+          settings.codeFont = value;
+          applySettings(settings);
+          if (codeInput) codeInput.value = value === 'unset' ? '' : value;
+        }
+      }
+
+      overlay.addEventListener('click', function(e) {
+        var btn = e.target.closest('.settings-opt');
+        if (!btn) return;
+        var group = btn.closest('.settings-group');
+        group.querySelectorAll('.settings-opt').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var fs = btn.getAttribute('data-fontsize');
+        var bf = btn.getAttribute('data-bodyfont');
+        var cf = btn.getAttribute('data-codefont');
+        if (fs) { settings.fontSize = parseInt(fs); applySettings(settings); }
+        if (bf !== null) { pickFont('body', bf); }
+        if (cf !== null) { pickFont('code', cf); }
+      });
+
+      var _allFonts = {};
+      function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+      function showLocalFonts(target) {
+        var list = document.getElementById('font-' + target + '-list');
+        if (!list) return;
+        if (list.dataset.loaded) { list.style.display = list.style.display === 'none' ? 'block' : 'none'; return; }
+        list.style.display = 'block';
+        list.dataset.loaded = '1';
+        list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">扫描中...</div>';
+        var doScan = function(fonts) {
+          var names = [...new Set(fonts.map(function(f) { return f.family; }))].filter(function(n) { return n && n.trim(); }).sort(function(a,b) { return a.localeCompare(b); });
+          _allFonts[target] = names;
+          if (names.length === 0) {
+            list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">未检测到可用字体</div>';
+            return;
+          }
+          list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '">';
+          names.forEach(function(n) {
+            var el = document.createElement('div');
+            el.className = 'font-local-item';
+            el.setAttribute('data-target', target);
+            el.setAttribute('data-font', n);
+            el.textContent = n;
+            list.appendChild(el);
+          });
+          document.getElementById('font-search-' + target).addEventListener('input', function() {
+            var q = this.value.toLowerCase();
+            var items = list.querySelectorAll('.font-local-item');
+            items.forEach(function(el) {
+              if (el.textContent.toLowerCase().indexOf(q) !== -1) el.style.display = '';
+              else el.style.display = 'none';
+            });
+          });
+        };
+        if ('queryLocalFonts' in window) {
+          window.queryLocalFonts().then(doScan).catch(function() {
+            list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">权限被拒绝或浏览器不支持</div>';
+          });
+        } else {
+          list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">当前浏览器不支持扫描本地字体</div>';
+        }
+      }
+
+      overlay.addEventListener('click', function(e) {
+        var scanBtn = e.target.closest('.settings-scan-btn');
+        if (scanBtn) { showLocalFonts(scanBtn.getAttribute('data-target')); return; }
+        var item = e.target.closest('.font-local-item');
+        if (item) {
+          var target = item.getAttribute('data-target');
+          var font = item.getAttribute('data-font');
+          pickFont(target, font);
+          var input = document.getElementById('font-' + target + '-input');
+          if (input) input.value = font;
+          document.getElementById('font-' + target + '-list').style.display = 'none';
+        }
+      });
+    })();
+  } catch(e) { console.error(e); }
   </script>
 
   

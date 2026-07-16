@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/admin.css?v=1784171908610">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/admin.css?v=1784171941654">
 <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/hljs.css">
   <style>
     .admin-view { display: none; }
@@ -183,6 +183,11 @@
     <div id="posts-error" class="error-msg"></div>
     <div id="posts-list"></div>
     <div id="posts-empty" class="loading" style="display:none">没有找到匹配的文章</div>
+    <div class="pagination-bar" id="pagination-bar" style="display:none">
+      <button class="btn btn-sm btn-outline" id="page-prev-btn" onclick="goToPage(currentPage - 1)"><i class="fas fa-chevron-left"></i></button>
+      <span class="page-info" id="page-info"></span>
+      <button class="btn btn-sm btn-outline" id="page-next-btn" onclick="goToPage(currentPage + 1)"><i class="fas fa-chevron-right"></i></button>
+    </div>
   </div>
 
   <div class="admin-view" id="view-edit">
@@ -334,27 +339,48 @@
   </div>
 
   <div class="admin-view" id="view-tags">
-    <div class="edit-box">
-      <h3><i class="fas fa-tags"></i> 标签管理</h3>
-      <div id="tags-manage-message" class="message-msg" style="display:none;"></div>
-      <div id="tags-manage-loading" class="loading">加载中...</div>
-      <div id="tags-manage-list"></div>
-      <div class="form-actions" style="margin-top:16px;">
-        <button type="button" class="btn btn-outline" onclick="cancelTagManage()"><i class="fas fa-arrow-left"></i> 返回</button>
+    <div class="explorer-wrap">
+      <div class="explorer-toolbar">
+        <div class="explorer-toolbar-left">
+          <button class="btn btn-sm btn-outline" id="tag-undo-btn" disabled title="撤销 (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+          <button class="btn btn-sm btn-outline" id="tag-redo-btn" disabled title="重做 (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+          <span class="toolbar-divider"></span>
+          <button class="btn btn-sm btn-outline" id="tag-back-btn" style="display:none"><i class="fas fa-arrow-left"></i> 返回</button>
+          <div class="explorer-breadcrumb" id="tag-breadcrumb"></div>
+        </div>
+        <div class="explorer-toolbar-right">
+          <button class="btn btn-sm btn-primary" id="explorer-new-tag-btn"><i class="fas fa-tag"></i> 新建标签</button>
+        </div>
       </div>
+      <div id="tags-manage-message" class="message-msg" style="display:none;"></div>
+      <div class="explorer-content" id="tags-explorer-content"></div>
+      <div class="explorer-status" id="tags-explorer-status"></div>
+    </div>
+    <div class="form-actions" style="margin-top:16px;">
+      <button type="button" class="btn btn-outline" onclick="cancelTagManage()"><i class="fas fa-arrow-left"></i> 返回</button>
     </div>
   </div>
 
   <div class="admin-view" id="view-categories">
-    <div class="edit-box">
-      <h3><i class="fas fa-folder-open"></i> 分类管理</h3>
-      <div id="cats-manage-message" class="message-msg" style="display:none;"></div>
-      <div id="cats-manage-loading" class="loading">加载中...</div>
-      <div id="cats-manage-list"></div>
-      <div class="form-actions" style="margin-top:16px;">
-        <button type="button" class="btn btn-outline" onclick="cancelCatManage()"><i class="fas fa-arrow-left"></i> 返回</button>
+    <div class="explorer-wrap">
+      <div class="explorer-toolbar">
+        <div class="explorer-toolbar-left">
+          <button class="btn btn-sm btn-outline" id="cat-undo-btn" disabled title="撤销 (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+          <button class="btn btn-sm btn-outline" id="cat-redo-btn" disabled title="重做 (Ctrl+Y)"><i class="fas fa-redo"></i></button>
+          <span class="toolbar-divider"></span>
+          <button class="btn btn-sm btn-outline" id="explorer-back-btn" disabled><i class="fas fa-arrow-left"></i> 返回</button>
+          <div class="explorer-breadcrumb" id="explorer-breadcrumb"></div>
+        </div>
+        <div class="explorer-toolbar-right">
+          <button class="btn btn-sm btn-primary" id="explorer-new-folder-btn"><i class="fas fa-folder-plus"></i> 新建文件夹</button>
+        </div>
       </div>
+      <div id="cats-manage-message" class="message-msg" style="display:none;"></div>
+      <div class="explorer-content" id="explorer-content"></div>
+      <div class="explorer-status" id="explorer-status"></div>
     </div>
+    <div class="form-actions" style="margin-top:16px;">
+      <button type="button" class="btn btn-outline" onclick="cancelCatManage()"><i class="fas fa-arrow-left"></i> 返回</button>
     </div>
   </div>
 
@@ -431,6 +457,27 @@
     </div>
   </div>
 
+  <!-- Delete Tag Confirmation Modal -->
+  <div id="delete-tag-modal" class="picker-modal" style="display:none;">
+    <div class="picker-overlay" onclick="closeDeleteTagDialog()"></div>
+    <div class="picker-dialog" style="width:640px;">
+      <div class="picker-header">
+        <span id="delete-tag-title">删除标签</span>
+        <button type="button" class="picker-close" onclick="closeDeleteTagDialog()">&times;</button>
+      </div>
+      <div class="picker-body" id="delete-tag-body" style="padding:16px 18px;"></div>
+      <div class="picker-footer" style="justify-content:space-between;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9em;color:var(--text);">
+          <input type="checkbox" id="delete-tag-remove-articles" checked> <span>同时从所有文章中移除该标签</span>
+        </label>
+        <div>
+          <button type="button" class="btn btn-sm btn-outline" onclick="closeDeleteTagDialog()">取消</button>
+          <button type="button" class="btn btn-sm btn-danger" id="delete-tag-confirm-btn" onclick="confirmDeleteTag()">删除标签</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
 window.__CONFIG__ = {
   SUPABASE_URL: 'https://eacieurozwzligrxnyos.supabase.co',
@@ -452,6 +499,6 @@ window.__CONFIG__ = {
     });
   } catch(e) {}
 </script>
-<script type="module" src="/xiaoshenblog.github.io/assets/admin.js?v=1784171908610" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="/xiaoshenblog.github.io/assets/admin.js?v=1784171941654" onerror="document.getElementById('view-login').innerHTML='<p style=color:red>admin.js 加载失败，请先运行 npx vite build</p>'"></script>
 </body>
 </html>
