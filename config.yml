@@ -37,7 +37,7 @@ database:
   anon_key: "sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P"
   # 服务端密钥（service_role key）。拥有完全管理权限，请妥善保管，不要泄露。
   # 此密钥只在服务端使用，不会暴露给前端。
-  service_key: ""
+  service_key: "REMOVED"
   # 文章数据表名。如果使用不同的表名，请同步修改此处。
   table: "posts"
 
@@ -55,7 +55,7 @@ blog:
   # 作者简介。显示在侧边栏作者头像下方。
   author_bio: "热爱技术，享受生活"
   # 首页每页显示的文章数量。
-  page_size: 5
+  page_size: 12
   # 文章摘要截断长度（字符数）。超出部分将被截断并追加 "..."。
   excerpt_length: 200
   # 预估阅读时间的计算基准（字符/分钟）。
@@ -92,6 +92,8 @@ locale:
     empty_button: "开始写作"
     # 文章卡片中 "发表于" 的日期前缀文字。
     published_at: "发表于"
+    # 加载更多按钮文字。
+    load_more: "加载更多"
 
   # ---- 文章详情页 ----
   post:
@@ -169,6 +171,19 @@ locale:
     back_to_top: "回到顶部"
     copied: "已复制"
     copy_failed: "复制失败"
+    font_settings: "字体设置"
+    font_size: "字体大小"
+    font_small: "小"
+    font_medium: "中"
+    font_large: "大"
+    reading_font: "阅读字体"
+    code_font: "代码字体"
+    font_system: "系统默认"
+    font_serif: "衬线体"
+    font_sans: "无衬线"
+    font_mono: "等宽字体"
+    font_hint: "输入字体名称，多个用逗号分隔"
+    font_custom_hint: "或输入自定义字体..."
     fold: "折叠"
     expand: "展开"
     # 框架署名。显示为 "框架 Express | 主题 Butterfly"。

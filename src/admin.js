@@ -148,6 +148,10 @@ $('#login-form').addEventListener('submit', async e => {
     $('#login-error').textContent = L.login_failed_prefix || '登录失败: ' + error.message
   } else {
     try { sessionStorage.setItem('admin', 'true') } catch(e) {}
+    loadPosts()
+  }
+})
+
 $('#search-clear').addEventListener('click', () => {
   $('#post-search').value = ''
   $('.search-bar').classList.remove('has-value')
@@ -160,8 +164,7 @@ $('#post-search').addEventListener('input', () => {
 })
 
 checkAuth()
-  }
-})
+
 
 logoutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut()
@@ -618,32 +621,68 @@ setTimeout(() => {
 }, 0)
 
 let allPosts = []
+let currentPage = 1
+let totalPages = 1
+const PAGE_SIZE = 20
 
 function renderPosts(posts) {
   $('#posts-list').innerHTML = ''
   const empty = $('#posts-empty')
+  const paginationBar = $('#pagination-bar')
   if (!posts || posts.length === 0) {
     empty.style.display = 'block'
+    if (paginationBar) paginationBar.style.display = 'none'
     return
   }
+  totalPages = Math.ceil(posts.length / PAGE_SIZE)
+  if (currentPage < 1) currentPage = 1
+  if (currentPage > totalPages) currentPage = totalPages
+  const start = (currentPage - 1) * PAGE_SIZE
+  const pagePosts = posts.slice(start, start + PAGE_SIZE)
   empty.style.display = 'none'
-  for (const post of posts) {
+  for (const post of pagePosts) {
     const d = document.createElement('div')
     d.className = 'post-item'
     const isPublished = post.published !== false
+    const cat = (post.category || '').trim()
+    const tags = (post.tags || []).map(t => '<span class="tag-pill"><i class="fas fa-tag"></i> ' + t + '</span>').join('')
     d.innerHTML = `
       <div class="post-item-info">
         <strong>${post.title}</strong>
         <span class="muted">${new Date(post.created_at).toLocaleString('zh-CN')}</span>
-        <span class="post-item-status"><span class="status-dot ${isPublished ? 'published' : 'private'}"></span>${isPublished ? '公开' : '不公开'}</span>
-        <span class="tag-list">${(post.tags || []).map(t => '<span class="tag-pill">' + t + '</span>').join('')}</span>
+        <div class="post-item-meta">
+          <span class="post-item-status"><span class="status-dot ${isPublished ? 'published' : 'private'}"></span>${isPublished ? '公开' : '不公开'}</span>
+          ${cat ? '<span class="post-item-cat"><i class="fas fa-folder"></i> ' + cat + '</span>' : ''}
+          ${tags ? '<span class="tag-list">' + tags + '</span>' : ''}
+        </div>
       </div>
       <div class="post-item-actions">
+        <button class="btn btn-sm btn-publish-toggle ${isPublished ? 'published' : 'private'}" onclick="togglePublished(${post.id}, ${isPublished})" title="${isPublished ? '设为不公开' : '设为公开'}"><i class="fas fa-eye${isPublished ? '' : '-slash'}"></i></button>
         <button class="btn btn-sm btn-outline" onclick="editPost(${post.id})">编辑</button>
         <button class="btn btn-sm btn-danger" onclick="deletePost(${post.id})">删除</button>
       </div>`
     $('#posts-list').appendChild(d)
   }
+  renderPagination(posts.length)
+}
+
+function renderPagination(total) {
+  const bar = $('#pagination-bar')
+  const info = $('#page-info')
+  if (!bar || !info) return
+  if (totalPages <= 1 && total <= PAGE_SIZE) { bar.style.display = 'none'; return }
+  bar.style.display = 'flex'
+  info.textContent = total + ' 篇，第 ' + currentPage + ' / ' + totalPages + ' 页'
+  const prev = $('#page-prev-btn')
+  const next = $('#page-next-btn')
+  if (prev) prev.disabled = currentPage <= 1
+  if (next) next.disabled = currentPage >= totalPages
+}
+
+window.goToPage = function(page) {
+  if (page < 1 || page > totalPages) return
+  currentPage = page
+  filterPosts()
 }
 
 function filterPosts() {
@@ -655,6 +694,7 @@ function filterPosts() {
     const category = (p.category || '').toLowerCase()
     return title.includes(q) || tags.includes(q) || category.includes(q)
   })
+  currentPage = 1
   renderPosts(filtered)
 }
 
@@ -666,11 +706,25 @@ async function loadPosts() {
   $('#posts-loading').style.display = 'none'
   if (error) { $('#posts-error').textContent = (L.load_failed_prefix || '加载失败: ') + error.message; return }
   allPosts = data || []
+  currentPage = 1
   if (allPosts.length === 0) {
     $('#posts-list').innerHTML = '<p class="muted">' + (L.no_posts || '暂无文章') + '</p>'
     return
   }
   renderPosts(allPosts)
+}
+
+window.togglePublished = async function(id, currentPublished) {
+  const newVal = !currentPublished
+  try {
+    const { error } = await supabase.from(DB_TABLE).update({ published: newVal, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) throw error
+    const post = allPosts.find(p => p.id === id)
+    if (post) post.published = newVal
+    filterPosts()
+  } catch (e) {
+    $('#posts-error').textContent = '修改失败: ' + e.message
+  }
 }
 
 window.editPost = async function (id) {
@@ -756,71 +810,376 @@ window.deletePost = async function (id) {
   triggerDeploy()
 }
 
+// ============ Undo/Redo System ============
+
+const undoStack = []
+const redoStack = []
+const MAX_UNDO = 50
+
+function pushUndo(action) {
+  undoStack.push(action)
+  if (undoStack.length > MAX_UNDO) undoStack.shift()
+  redoStack.length = 0
+  updateUndoButtons()
+}
+
+function updateUndoButtons() {
+  const cu = $('#cat-undo-btn'); const cr = $('#cat-redo-btn')
+  const tu = $('#tag-undo-btn'); const tr = $('#tag-redo-btn')
+  if (cu) cu.disabled = undoStack.length === 0
+  if (cr) cr.disabled = redoStack.length === 0
+  if (tu) tu.disabled = undoStack.length === 0
+  if (tr) tr.disabled = redoStack.length === 0
+}
+
+async function applyAction(action) {
+  switch (action.type) {
+    case 'move-article': {
+      const { error } = await supabase.from(DB_TABLE).update({ category: action.toCategory, updated_at: new Date().toISOString() }).eq('id', action.postId)
+      if (error) throw error
+      break
+    }
+    case 'add-tag': {
+      if (action.toTags) {
+        const { error } = await supabase.from(DB_TABLE).update({ tags: action.toTags, updated_at: new Date().toISOString() }).eq('id', action.postId)
+        if (error) throw error
+      }
+      break
+    }
+    case 'move-folder': {
+      const res = await fetch('/api/admin/categories/' + action.folderId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parent_id: action.toParentId })
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      break
+    }
+  }
+}
+
+async function performUndo() {
+  const action = undoStack.pop()
+  if (!action) return
+  try {
+    const reverse = Object.assign({}, action, {
+      fromCategory: action.toCategory, toCategory: action.fromCategory,
+      fromParentId: action.toParentId, toParentId: action.fromParentId,
+      fromTags: action.toTags || action.fromTags, toTags: action.fromTags || action.toTags
+    })
+    await applyAction(reverse)
+    redoStack.push(action)
+    updateUndoButtons()
+    if (action.type === 'move-article' || action.type === 'move-folder') loadExplorerData()
+    else if (action.type === 'add-tag') loadTagExplorerData()
+  } catch (e) {
+    showTagManageMsg('撤销失败: ' + e.message, 'error')
+  }
+}
+
+async function performRedo() {
+  const action = redoStack.pop()
+  if (!action) return
+  try {
+    await applyAction(action)
+    undoStack.push(action)
+    updateUndoButtons()
+    if (action.type === 'move-article' || action.type === 'move-folder') loadExplorerData()
+    else if (action.type === 'add-tag') loadTagExplorerData()
+  } catch (e) {
+    showTagManageMsg('重做失败: ' + e.message, 'error')
+  }
+}
+
+function handleUndoKeyboard(e) {
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); performUndo() }
+  if (e.ctrlKey && e.key === 'y') { e.preventDefault(); performRedo() }
+}
+document.addEventListener('keydown', handleUndoKeyboard)
+
+$('#cat-undo-btn').addEventListener('click', performUndo)
+$('#cat-redo-btn').addEventListener('click', performRedo)
+$('#tag-undo-btn').addEventListener('click', performUndo)
+$('#tag-redo-btn').addEventListener('click', performRedo)
+
 // ============ Tag Management ============
 
 function showTagManageMsg(text, type) {
   const el = $('#tags-manage-message')
+  if (!el) return
   el.textContent = text
   el.className = 'message-msg ' + type
   el.style.display = 'block'
   setTimeout(() => { el.style.display = 'none' }, 3000)
 }
 
-async function loadManagedTags() {
-  $('#tags-manage-loading').style.display = 'block'
-  $('#tags-manage-list').innerHTML = ''
+const tagExplorer = {
+  tags: [],
+  allPosts: [],
+  currentTag: null
+}
+
+async function loadTagExplorerData() {
+  const content = $('#tags-explorer-content')
+  if (!content) return
+  content.innerHTML = '<div class="explorer-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>'
   try {
-    const res = await fetch('/api/admin/tags')
-    const tags = await res.json()
-    $('#tags-manage-loading').style.display = 'none'
-    if (!tags.length) {
-      $('#tags-manage-list').innerHTML = '<p class="muted" style="text-align:center;padding:40px">暂无标签</p>'
-      return
-    }
-    const list = $('#tags-manage-list')
-    const wrap = document.createElement('div')
-    wrap.className = 'manage-list'
-    wrap.innerHTML = '<div class="manage-list-header"><span class="col-name">名称</span><span class="col-count">文章数</span><span class="col-action"></span></div>'
-    wrap.addEventListener('contextmenu', function(e) {
-      if (e.target === wrap || e.target.classList.contains('manage-list') || e.target.closest('.manage-list-header')) {
-        e.preventDefault()
-        showContextMenu(e, 'tag', {})
-      }
-    })
-    for (const tag of tags) {
-      const item = document.createElement('div')
-      item.className = 'manage-item tag-manage-item'
-      item.dataset.id = tag.id
-      item.dataset.name = tag.name
-      item.dataset.type = 'tag'
-      item.addEventListener('contextmenu', function(e) {
-        showContextMenu(e, 'tag', { id: tag.id, name: tag.name })
-      })
-      item.innerHTML = `
-        <span class="manage-item-name"><i class="fas fa-tag"></i> ${tag.name}</span>
-        <span class="manage-item-count">${tag.post_count || 0}</span>
-        <button class="btn btn-sm btn-danger" onclick="deleteManagedTag(${tag.id})"><i class="fas fa-trash"></i></button>
-      `
-      wrap.appendChild(item)
-    }
-    list.appendChild(wrap)
+    const [tagsRes] = await Promise.all([fetch('/api/admin/tags')])
+    tagExplorer.tags = await tagsRes.json()
+    const { data: posts } = await supabase.from(DB_TABLE).select('id, title, tags, created_at, published, category').order('created_at', { ascending: false })
+    tagExplorer.allPosts = posts || []
+    renderTagExplorer()
   } catch (e) {
-    $('#tags-manage-loading').style.display = 'none'
-    showTagManageMsg('加载失败: ' + e.message, 'error')
+    content.innerHTML = '<div class="explorer-empty"><i class="fas fa-exclamation-triangle"></i><p>加载失败: ' + e.message + '</p></div>'
   }
 }
 
-window.deleteManagedTag = async function(id) {
-  if (!confirm('确定删除此标签？')) return
+function getTagArticles(tagName) {
+  return tagExplorer.allPosts.filter(p => (p.tags || []).includes(tagName))
+}
+
+function navigateToTag(tag) {
+  tagExplorer.currentTag = tag
+  renderTagExplorer()
+}
+
+function navigateToAllTags() {
+  tagExplorer.currentTag = null
+  renderTagExplorer()
+}
+
+function renderTagExplorer() {
+  const content = $('#tags-explorer-content')
+  if (!content) return
+  content.innerHTML = ''
+  const backBtn = $('#tag-back-btn')
+  const bc = $('#tag-breadcrumb')
+  const curTag = tagExplorer.currentTag
+  if (curTag) {
+    if (backBtn) backBtn.style.display = ''
+    if (bc) bc.innerHTML = '<span class="breadcrumb-item" id="tag-bc-root"><i class="fas fa-tags"></i> 标签管理</span><span class="breadcrumb-sep"><i class="fas fa-chevron-right"></i></span><span class="breadcrumb-item current">' + curTag.name + '</span>'
+    const rootCrumb = document.getElementById('tag-bc-root')
+    if (rootCrumb) rootCrumb.addEventListener('click', navigateToAllTags)
+    const tagArticles = getTagArticles(curTag.name)
+    const section1 = document.createElement('div')
+    section1.className = 'explorer-section'
+    section1.innerHTML = '<div class="explorer-section-title"><i class="fas fa-file-alt"></i> 标签「' + curTag.name + '」下的文章 <span class="muted">(' + tagArticles.length + ')</span></div>'
+    if (tagArticles.length > 0) {
+      const list = document.createElement('div')
+      list.className = 'explorer-articles'
+      for (const article of tagArticles) {
+        list.appendChild(renderTagArticle(article))
+      }
+      section1.appendChild(list)
+    } else {
+      section1.innerHTML += '<div class="explorer-empty"><i class="fas fa-inbox"></i><p>暂无文章使用此标签</p><p class="muted">从下方拖拽文章到标签卡片即可添加</p></div>'
+    }
+    content.appendChild(section1)
+  } else {
+    if (backBtn) backBtn.style.display = 'none'
+    if (bc) bc.innerHTML = '<span class="breadcrumb-item current"><i class="fas fa-tags"></i> 标签管理</span>'
+  }
+  const allSection = document.createElement('div')
+  allSection.className = 'explorer-section'
+  allSection.innerHTML = '<div class="explorer-section-title"><i class="fas fa-tags"></i> 所有标签 <span class="muted">(' + tagExplorer.tags.length + ')</span></div>'
+  if (tagExplorer.tags.length > 0) {
+    const tagGrid = document.createElement('div')
+    tagGrid.className = 'explorer-folders'
+    for (const tag of tagExplorer.tags) {
+      tagGrid.appendChild(renderTagCard(tag))
+    }
+    allSection.appendChild(tagGrid)
+  } else {
+    allSection.innerHTML += '<div class="explorer-empty"><i class="fas fa-tags"></i><p>暂无标签</p><p class="muted">点击上方「新建标签」创建</p></div>'
+  }
+  content.appendChild(allSection)
+  const postsSection = document.createElement('div')
+  postsSection.className = 'explorer-section'
+  const totalPosts = tagExplorer.allPosts.length
+  postsSection.innerHTML = '<div class="explorer-section-title"><i class="fas fa-file-alt"></i> 所有文章 <span class="muted">(' + totalPosts + ')</span></div>'
+  if (totalPosts > 0) {
+    const list = document.createElement('div')
+    list.className = 'explorer-articles'
+    for (const article of tagExplorer.allPosts) {
+      list.appendChild(renderTagArticle(article))
+    }
+    postsSection.appendChild(list)
+  } else {
+    postsSection.innerHTML += '<div class="explorer-empty"><i class="fas fa-file-alt"></i><p>暂无文章</p></div>'
+  }
+  content.appendChild(postsSection)
+  const status = $('#tags-explorer-status')
+  if (status) status.textContent = (curTag ? getTagArticles(curTag.name).length + ' 篇标签文章, ' : '') + totalPosts + ' 篇文章, ' + tagExplorer.tags.length + ' 个标签'
+}
+
+function renderTagCard(tag) {
+  const el = document.createElement('div')
+  el.className = 'explorer-folder explorer-tag-item'
+  const postCount = tag.post_count || 0
+  el.innerHTML = '<div class="explorer-folder-icon explorer-tag-icon"><i class="fas fa-tag"></i></div><div class="explorer-folder-name">' + tag.name + '</div><div class="explorer-folder-count">' + postCount + ' 篇</div><button class="tag-card-delete-btn" title="删除标签"><i class="fas fa-times"></i></button>'
+  el.addEventListener('click', function() {
+    navigateToTag(tag)
+  })
+  el.querySelector('.tag-card-delete-btn').addEventListener('click', function(e) {
+    e.stopPropagation()
+    deleteManagedTag(tag.id)
+  })
+  el.addEventListener('contextmenu', function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    showContextMenu(e, 'tag', { id: tag.id, name: tag.name })
+  })
+  el.addEventListener('dragover', function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    el.classList.add('drop-target')
+  })
+  el.addEventListener('dragleave', function() {
+    el.classList.remove('drop-target')
+  })
+  el.addEventListener('drop', function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    el.classList.remove('drop-target')
+    const postId = e.dataTransfer.getData('text/post-id')
+    if (postId) {
+      addTagToArticle(parseInt(postId), tag.name)
+    }
+  })
+  return el
+}
+
+function renderTagArticle(article) {
+  const el = document.createElement('div')
+  el.className = 'explorer-article'
+  el.draggable = true
+  const isPublished = article.published !== false
+  const cat = (article.category || '').trim()
+  const tags = (article.tags || []).map(function(t) { return '<span class="tag-pill removable-tag" data-tag="' + t.replace(/"/g, '&quot;') + '" data-post-id="' + article.id + '"><i class="fas fa-tag"></i> ' + t + '<i class="fas fa-times tag-pill-remove"></i></span>' }).join('')
+  el.innerHTML = '<div class="explorer-article-drag-handle"><i class="fas fa-grip-vertical"></i></div><div class="explorer-article-info"><div class="explorer-article-title">' + article.title + '</div><div class="explorer-article-meta"><span class="post-item-status"><span class="status-dot ' + (isPublished ? 'published' : 'private') + '"></span>' + (isPublished ? '公开' : '不公开') + '</span><span class="muted">' + new Date(article.created_at).toLocaleDateString('zh-CN') + '</span>' + (cat ? '<span class="post-item-cat"><i class="fas fa-folder"></i> ' + cat + '</span>' : '') + (tags ? '<span class="tag-list">' + tags + '</span>' : '') + '</div></div><div class="explorer-article-actions"><button class="btn btn-sm btn-publish-toggle ' + (isPublished ? 'published' : 'private') + '" onclick="togglePublished(' + article.id + ', ' + isPublished + ')" title="' + (isPublished ? '设为不公开' : '设为公开') + '"><i class="fas fa-eye' + (isPublished ? '' : '-slash') + '"></i></button><button class="btn btn-sm btn-outline" onclick="editPost(' + article.id + ')">编辑</button></div>'
+  el.addEventListener('dragstart', function(e) {
+    e.dataTransfer.setData('text/post-id', article.id.toString())
+    e.dataTransfer.effectAllowed = 'copy'
+    el.classList.add('dragging')
+  })
+  el.addEventListener('dragend', function() {
+    el.classList.remove('dragging')
+  })
+  return el
+}
+
+async function addTagToArticle(postId, tagName) {
+  const post = tagExplorer.allPosts.find(function(p) { return p.id === postId })
+  if (!post) return
+  const currentTags = post.tags || []
+  if (currentTags.includes(tagName)) {
+    showTagManageMsg('此文章已有该标签', 'error')
+    return
+  }
+  const newTags = currentTags.concat([tagName])
   try {
+    const { error } = await supabase.from(DB_TABLE).update({ tags: newTags, updated_at: new Date().toISOString() }).eq('id', postId)
+    if (error) throw error
+    pushUndo({ type: 'add-tag', postId, fromTags: currentTags, toTags: newTags })
+    showTagManageMsg('已为「' + post.title + '」添加标签「' + tagName + '」', 'success')
+    loadTagExplorerData()
+  } catch (e) {
+    showTagManageMsg('添加失败: ' + e.message, 'error')
+  }
+}
+
+async function removeTagFromArticle(postId, tagName) {
+  const post = tagExplorer.allPosts.find(function(p) { return p.id === postId })
+  if (!post) return
+  const currentTags = post.tags || []
+  if (!currentTags.includes(tagName)) return
+  const newTags = currentTags.filter(function(t) { return t !== tagName })
+  try {
+    const { error } = await supabase.from(DB_TABLE).update({ tags: newTags, updated_at: new Date().toISOString() }).eq('id', postId)
+    if (error) throw error
+    pushUndo({ type: 'add-tag', postId, fromTags: currentTags, toTags: newTags })
+    showTagManageMsg('已从文章移除标签「' + tagName + '」', 'success')
+    loadTagExplorerData()
+  } catch (e) {
+    showTagManageMsg('移除失败: ' + e.message, 'error')
+  }
+}
+
+// Delegated click handler for removable tag pills
+document.addEventListener('click', function(e) {
+  const pill = e.target.closest('.removable-tag')
+  if (!pill) return
+  if (!pill.closest('#view-tags.active')) return
+  e.stopPropagation()
+  const tagName = pill.getAttribute('data-tag')
+  const postId = parseInt(pill.getAttribute('data-post-id'))
+  if (tagName && postId) {
+    removeTagFromArticle(postId, tagName)
+  }
+})
+
+let deleteTagCallback = null
+
+window.deleteManagedTag = async function(id) {
+  const tag = tagExplorer.tags.find(function(t) { return t.id === id })
+  const tagName = tag ? tag.name : '未知'
+  const articles = tagExplorer.allPosts.filter(function(p) { return (p.tags || []).includes(tagName) })
+  const body = $('#delete-tag-body')
+  const title = $('#delete-tag-title')
+  if (!body || !title) return
+  title.textContent = '删除标签「' + tagName + '」'
+  if (articles.length > 0) {
+    let html = '<p style="margin:0 0 12px;color:var(--text-secondary);">以下 ' + articles.length + ' 篇文章使用了该标签：</p><div style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">'
+    for (const a of articles) {
+      html += '<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:0.88em;"><i class="fas fa-file-alt" style="color:var(--text-muted);flex-shrink:0;"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + a.title + '</span></div>'
+    }
+    html += '</div>'
+    body.innerHTML = html
+  } else {
+    body.innerHTML = '<p style="margin:0;color:var(--text-secondary);">没有文章使用此标签。</p>'
+  }
+  $('#delete-tag-modal').style.display = 'flex'
+  deleteTagCallback = { id, tagName, articles }
+}
+
+window.confirmDeleteTag = async function() {
+  if (!deleteTagCallback) return
+  const { id, tagName, articles } = deleteTagCallback
+  const confirmBtn = $('#delete-tag-confirm-btn')
+  confirmBtn.disabled = true
+  confirmBtn.textContent = '删除中...'
+  try {
+    const removeFromArticles = $('#delete-tag-remove-articles').checked
+    if (removeFromArticles && articles.length > 0) {
+      for (const a of articles) {
+        const newTags = (a.tags || []).filter(function(t) { return t !== tagName })
+        if (newTags.length !== (a.tags || []).length) {
+          await supabase.from(DB_TABLE).update({ tags: newTags, updated_at: new Date().toISOString() }).eq('id', a.id)
+        }
+      }
+    }
     const res = await fetch('/api/admin/tags/' + id, { method: 'DELETE' })
     const data = await res.json()
     if (data.error) throw new Error(data.error)
-    showTagManageMsg('标签已删除', 'success')
-    loadManagedTags()
+    showTagManageMsg('标签已删除' + (removeFromArticles && articles.length > 0 ? ('，已从 ' + articles.length + ' 篇文章中移除') : ''), 'success')
+    closeDeleteTagDialog()
+    if (tagExplorer.currentTag && tagExplorer.currentTag.id === id) {
+      tagExplorer.currentTag = null
+    }
+    loadTagExplorerData()
   } catch (e) {
     showTagManageMsg('删除失败: ' + e.message, 'error')
+    confirmBtn.disabled = false
+    confirmBtn.textContent = '删除标签'
   }
+}
+
+window.closeDeleteTagDialog = function() {
+  $('#delete-tag-modal').style.display = 'none'
+  $('#delete-tag-confirm-btn').disabled = false
+  $('#delete-tag-confirm-btn').textContent = '删除标签'
+  deleteTagCallback = null
 }
 
 window.renameManagedTag = async function(id, name) {
@@ -833,7 +1192,10 @@ window.renameManagedTag = async function(id, name) {
     const data = await res.json()
     if (data.error) throw new Error(data.error)
     showTagManageMsg('标签已重命名', 'success')
-    loadManagedTags()
+    if (tagExplorer.currentTag && tagExplorer.currentTag.id === id) {
+      tagExplorer.currentTag = { id: id, name: name }
+    }
+    loadTagExplorerData()
   } catch (e) {
     showTagManageMsg('重命名失败: ' + e.message, 'error')
   }
@@ -841,12 +1203,26 @@ window.renameManagedTag = async function(id, name) {
 
 $('#manage-tags-btn').addEventListener('click', () => {
   showView('view-tags')
-  loadManagedTags()
+  tagExplorer.currentTag = null
+  loadTagExplorerData()
 })
 
 window.cancelTagManage = function() {
   showView('view-posts')
 }
+
+$('#tag-back-btn').addEventListener('click', navigateToAllTags)
+
+$('#explorer-new-tag-btn').addEventListener('click', function() {
+  showInputDialog('新建标签：', addTag)
+})
+
+$('#view-tags').addEventListener('contextmenu', function(e) {
+  if (!$('#view-tags').classList.contains('active')) return
+  if (e.target.closest('.explorer-tag-item') || e.target.closest('.explorer-article')) return
+  e.preventDefault()
+  showContextMenu(e, 'tag', {})
+})
 
 // Helper - add tag via API
 async function addTag(name) {
@@ -860,7 +1236,7 @@ async function addTag(name) {
     const data = await res.json()
     if (data.error) throw new Error(data.error)
     showTagManageMsg('标签已添加', 'success')
-    loadManagedTags()
+    loadTagExplorerData()
   } catch (e) {
     showTagManageMsg('添加失败: ' + e.message, 'error')
   }
@@ -878,7 +1254,7 @@ async function addTopCategory(name) {
     const data = await res.json()
     if (data.error) throw new Error(data.error)
     showCatManageMsg('分类已添加', 'success')
-    loadManagedCategories()
+    loadExplorerData()
   } catch (e) {
     showCatManageMsg('添加失败: ' + e.message, 'error')
   }
@@ -896,7 +1272,7 @@ async function addChildCategory(parentId, name) {
     const data = await res.json()
     if (data.error) throw new Error(data.error)
     showCatManageMsg('子分类已添加', 'success')
-    loadManagedCategories()
+    loadExplorerData()
   } catch (e) {
     showCatManageMsg('添加失败: ' + e.message, 'error')
   }
@@ -906,65 +1282,331 @@ async function addChildCategory(parentId, name) {
 
 function showCatManageMsg(text, type) {
   const el = $('#cats-manage-message')
+  if (!el) return
   el.textContent = text
   el.className = 'message-msg ' + type
   el.style.display = 'block'
   setTimeout(() => { el.style.display = 'none' }, 3000)
 }
 
-function renderCategoryTree(tree, container, level) {
-  for (const cat of tree) {
-    const item = document.createElement('div')
-    item.className = 'manage-item cat-tree-item'
-    item.style.paddingLeft = (16 + level * 24) + 'px'
-    item.dataset.id = cat.id
-    item.dataset.name = cat.name
-    item.dataset.path = cat.path || ''
-    item.dataset.type = 'cat'
-    item.addEventListener('contextmenu', function(e) {
-      showContextMenu(e, 'cat', { id: cat.id, name: cat.name, path: cat.path || '' })
-    })
-    const icon = cat.children && cat.children.length ? 'fa-folder-open' : 'fa-folder'
-    item.innerHTML = `
-      <span class="manage-item-name"><i class="fas ${icon}"></i> ${cat.name}</span>
-      <span class="manage-item-path" title="${cat.path}">${cat.path}</span>
-      <span class="manage-item-count">${cat.post_count || 0}</span>
-      <button class="btn btn-sm btn-danger" onclick="deleteManagedCategory(${cat.id})"><i class="fas fa-trash"></i></button>
-    `
-    container.appendChild(item)
-    if (cat.children && cat.children.length) {
-      renderCategoryTree(cat.children, container, level + 1)
-    }
+// ============ Category Explorer ============
+
+const UNCATEGORIZED = { id: -1, name: '未分类', path: '', isVirtual: true, post_count: 0 }
+
+const explorer = {
+  tree: [],
+  flat: [],
+  allPosts: [],
+  currentPath: '',
+  currentId: null,
+  currentName: '',
+  history: []
+}
+
+async function loadExplorerData() {
+  const content = $('#explorer-content')
+  if (!content) return
+  content.innerHTML = '<div class="explorer-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>'
+  try {
+    const [catsRes] = await Promise.all([
+      fetch('/api/admin/categories')
+    ])
+    const catsData = await catsRes.json()
+    explorer.tree = catsData.tree || []
+    explorer.flat = catsData.flat || []
+    const { data: posts } = await supabase.from(DB_TABLE).select('id, title, category, created_at, published, tags').order('created_at', { ascending: false })
+    explorer.allPosts = posts || []
+    UNCATEGORIZED.post_count = explorer.allPosts.filter(p => !p.category || p.category === '').length
+    renderExplorer()
+  } catch (e) {
+    content.innerHTML = '<div class="explorer-empty"><i class="fas fa-exclamation-triangle"></i><p>加载失败: ' + e.message + '</p></div>'
   }
 }
 
-async function loadManagedCategories() {
-  $('#cats-manage-loading').style.display = 'block'
-  $('#cats-manage-list').innerHTML = ''
+function getExplorerContents() {
+  const curPath = explorer.currentPath
+  let folders = []
+  let articles = []
+  if (!curPath) {
+    folders.push({ ...UNCATEGORIZED })
+    for (const cat of explorer.tree) {
+      folders.push(cat)
+    }
+    articles = explorer.allPosts.filter(p => !p.category || p.category === '')
+  } else {
+    const findChildren = (nodes) => {
+      for (const node of nodes) {
+        if (node.path === curPath) return node.children || []
+        if (node.children) {
+          const found = findChildren(node.children)
+          if (found) return found
+        }
+      }
+      return null
+    }
+    const children = findChildren(explorer.tree) || []
+    for (const c of children) { folders.push(c) }
+    articles = explorer.allPosts.filter(p => p.category === curPath)
+  }
+  return { folders, articles }
+}
+
+function isDescendant(folderId, targetId, nodes) {
+  for (const node of nodes) {
+    if (node.id === folderId) {
+      return node.children ? containsId(node.children, targetId) : false
+    }
+    if (node.children && isDescendant(folderId, targetId, node.children)) return true
+  }
+  return false
+}
+
+function containsId(nodes, id) {
+  for (const node of nodes) {
+    if (node.id === id) return true
+    if (node.children && containsId(node.children, id)) return true
+  }
+  return false
+}
+
+async function moveFolderToParent(folderId, newParentId, targetName) {
   try {
-    const res = await fetch('/api/admin/categories')
-    const data = await res.json()
-    $('#cats-manage-loading').style.display = 'none'
-    const { tree, flat } = data
-    if (!tree || tree.length === 0) {
-      $('#cats-manage-list').innerHTML = '<p class="muted" style="text-align:center;padding:40px">暂无分类</p>'
+    const cat = explorer.flat.find(function(c) { return c.id === folderId })
+    const oldParentId = cat ? cat.parent_id : null
+    if (oldParentId === newParentId) return
+    if (isDescendant(folderId, newParentId, explorer.tree)) {
+      showCatManageMsg('不能将文件夹移动到自身或子文件夹中', 'error')
       return
     }
-    const wrap = document.createElement('div')
-    wrap.className = 'manage-list'
-    wrap.innerHTML = '<div class="manage-list-header"><span class="col-name">名称</span><span class="col-path">路径</span><span class="col-count">文章数</span><span class="col-action"></span></div>'
-    wrap.addEventListener('contextmenu', function(e) {
-      if (e.target === wrap || e.target.classList.contains('manage-list') || e.target.closest('.manage-list-header')) {
-        e.preventDefault()
-        showContextMenu(e, 'cat', {})
-      }
+    const res = await fetch('/api/admin/categories/' + folderId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent_id: newParentId })
     })
-    renderCategoryTree(tree, wrap, 0)
-    $('#cats-manage-list').appendChild(wrap)
+    const data = await res.json()
+    if (data.error) throw new Error(data.error)
+    pushUndo({ type: 'move-folder', folderId, fromParentId: oldParentId, toParentId: newParentId })
+    showCatManageMsg('文件夹已移动到「' + targetName + '」', 'success')
+    loadExplorerData()
   } catch (e) {
-    $('#cats-manage-loading').style.display = 'none'
-    showCatManageMsg('加载失败: ' + e.message, 'error')
+    showCatManageMsg('移动失败: ' + e.message, 'error')
   }
+}
+
+function navigateTo(path, id, name) {
+  if (explorer.currentPath !== path || explorer.currentId !== id) {
+    explorer.history.push({ path: explorer.currentPath, id: explorer.currentId, name: explorer.currentName })
+  }
+  explorer.currentPath = path
+  explorer.currentId = id
+  explorer.currentName = name || ''
+  renderExplorer()
+}
+
+function navigateBack() {
+  if (explorer.history.length === 0) return
+  const prev = explorer.history.pop()
+  explorer.currentPath = prev.path
+  explorer.currentId = prev.id
+  explorer.currentName = prev.name
+  renderExplorer()
+}
+
+function navigateToRoot() {
+  explorer.history = []
+  explorer.currentPath = ''
+  explorer.currentId = null
+  explorer.currentName = ''
+  renderExplorer()
+}
+
+function renderExplorer() {
+  const content = $('#explorer-content')
+  if (!content) return
+  content.innerHTML = ''
+  const { folders, articles } = getExplorerContents()
+  if (folders.length > 0) {
+    const section = document.createElement('div')
+    section.className = 'explorer-section'
+    section.innerHTML = '<div class="explorer-section-title"><i class="fas fa-folder"></i> 文件夹 <span class="muted">(' + folders.length + ')</span></div>'
+    const grid = document.createElement('div')
+    grid.className = 'explorer-folders'
+    for (const folder of folders) {
+      grid.appendChild(renderExplorerFolder(folder))
+    }
+    section.appendChild(grid)
+    content.appendChild(section)
+  }
+  if (articles.length > 0) {
+    const section = document.createElement('div')
+    section.className = 'explorer-section'
+    section.innerHTML = '<div class="explorer-section-title"><i class="fas fa-file-alt"></i> 文章 <span class="muted">(' + articles.length + ')</span></div>'
+    const list = document.createElement('div')
+    list.className = 'explorer-articles'
+    for (const article of articles) {
+      list.appendChild(renderExplorerArticle(article))
+    }
+    section.appendChild(list)
+    content.appendChild(section)
+  }
+  if (folders.length === 0 && articles.length === 0) {
+    content.innerHTML = '<div class="explorer-empty"><i class="fas fa-folder-open"></i><p>此文件夹为空</p><p class="muted">点击上方「新建文件夹」创建子分类，或拖拽文章到其他文件夹</p></div>'
+  }
+  renderBreadcrumb()
+  const backBtn = $('#explorer-back-btn')
+  if (backBtn) backBtn.disabled = explorer.history.length === 0
+  renderExplorerStatus(folders.length, articles.length)
+}
+
+function renderExplorerFolder(folder) {
+  const el = document.createElement('div')
+  el.className = 'explorer-folder'
+  const isUncategorized = folder.id === -1 || folder.isVirtual
+  const postCount = folder.post_count || 0
+  el.innerHTML = '<div class="explorer-folder-icon"><i class="fas fa-folder"></i></div><div class="explorer-folder-name">' + folder.name + '</div><div class="explorer-folder-count">' + postCount + ' 篇</div>'
+  if (!isUncategorized) {
+    el.draggable = true
+    el.addEventListener('dragstart', function(e) {
+      e.dataTransfer.setData('text/folder-id', folder.id.toString())
+      e.dataTransfer.effectAllowed = 'move'
+      el.classList.add('dragging')
+    })
+    el.addEventListener('dragend', function() {
+      el.classList.remove('dragging')
+    })
+  }
+  el.addEventListener('click', function(e) {
+    if (e.defaultPrevented) return
+    if (isUncategorized) {
+      navigateTo('', null, '未分类')
+    } else {
+      navigateTo(folder.path || '', folder.id, folder.name)
+    }
+  })
+  if (!isUncategorized) {
+    el.addEventListener('contextmenu', function(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      showContextMenu(e, 'cat', { id: folder.id, name: folder.name, path: folder.path || '' })
+    })
+  }
+  el.addEventListener('dragover', function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    el.classList.add('drop-target')
+  })
+  el.addEventListener('dragleave', function() {
+    el.classList.remove('drop-target')
+  })
+  el.addEventListener('drop', function(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    el.classList.remove('drop-target')
+    const folderId = e.dataTransfer.getData('text/folder-id')
+    const postId = e.dataTransfer.getData('text/post-id')
+    if (folderId && !isUncategorized) {
+      moveFolderToParent(parseInt(folderId), folder.id, folder.name)
+      return
+    }
+    if (postId) {
+      movePostToCategory(parseInt(postId), isUncategorized ? '' : (folder.path || ''), folder.name)
+    }
+  })
+  return el
+}
+
+function renderExplorerArticle(post) {
+  const el = document.createElement('div')
+  el.className = 'explorer-article'
+  el.draggable = true
+  const isPublished = post.published !== false
+  const cat = (post.category || '').trim()
+  const tags = (post.tags || []).map(function(t) { return '<span class="tag-pill"><i class="fas fa-tag"></i> ' + t + '</span>' }).join('')
+  el.innerHTML = '<div class="explorer-article-drag-handle"><i class="fas fa-grip-vertical"></i></div><div class="explorer-article-info"><div class="explorer-article-title">' + post.title + '</div><div class="explorer-article-meta"><span class="post-item-status"><span class="status-dot ' + (isPublished ? 'published' : 'private') + '"></span>' + (isPublished ? '公开' : '不公开') + '</span><span class="muted">' + new Date(post.created_at).toLocaleDateString('zh-CN') + '</span>' + (cat ? '<span class="post-item-cat"><i class="fas fa-folder"></i> ' + cat + '</span>' : '') + (tags ? '<span class="tag-list">' + tags + '</span>' : '') + '</div></div><div class="explorer-article-actions"><button class="btn btn-sm btn-publish-toggle ' + (isPublished ? 'published' : 'private') + '" onclick="togglePublished(' + post.id + ', ' + isPublished + ')" title="' + (isPublished ? '设为不公开' : '设为公开') + '"><i class="fas fa-eye' + (isPublished ? '' : '-slash') + '"></i></button><button class="btn btn-sm btn-outline" onclick="editPost(' + post.id + ')">编辑</button></div>'
+  el.addEventListener('dragstart', function(e) {
+    e.dataTransfer.setData('text/post-id', post.id.toString())
+    e.dataTransfer.effectAllowed = 'move'
+    el.classList.add('dragging')
+  })
+  el.addEventListener('dragend', function() {
+    el.classList.remove('dragging')
+  })
+  return el
+}
+
+async function movePostToCategory(postId, categoryPath, categoryName) {
+  try {
+    const { data: post } = await supabase.from(DB_TABLE).select('category').eq('id', postId).single()
+    const oldCategory = post ? post.category : ''
+    const { error } = await supabase.from(DB_TABLE).update({ category: categoryPath, updated_at: new Date().toISOString() }).eq('id', postId)
+    if (error) throw error
+    pushUndo({ type: 'move-article', postId, fromCategory: oldCategory, toCategory: categoryPath })
+    showCatManageMsg('文章已移动到「' + categoryName + '」', 'success')
+    loadExplorerData()
+  } catch (e) {
+    showCatManageMsg('移动失败: ' + e.message, 'error')
+  }
+}
+
+function makeBreadcrumbDropTarget(el, path, id, name) {
+  el.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); el.classList.add('drop-target') })
+  el.addEventListener('dragleave', function() { el.classList.remove('drop-target') })
+  el.addEventListener('drop', function(e) {
+    e.preventDefault(); e.stopPropagation(); el.classList.remove('drop-target')
+    const folderId = e.dataTransfer.getData('text/folder-id')
+    const postId = e.dataTransfer.getData('text/post-id')
+    if (folderId) moveFolderToParent(parseInt(folderId), id, name)
+    if (postId) movePostToCategory(parseInt(postId), path || '', name)
+  })
+}
+
+function renderBreadcrumb() {
+  const bc = $('#explorer-breadcrumb')
+  if (!bc) return
+  bc.innerHTML = ''
+  const root = document.createElement('span')
+  root.className = 'breadcrumb-item'
+  root.innerHTML = '<i class="fas fa-home"></i> 全部分类'
+  root.addEventListener('click', navigateToRoot)
+  makeBreadcrumbDropTarget(root, '', null, '根目录')
+  bc.appendChild(root)
+  for (let i = 0; i < explorer.history.length; i++) {
+    const item = explorer.history[i]
+    if (item.path || item.name) {
+      const sep = document.createElement('span')
+      sep.className = 'breadcrumb-sep'
+      sep.innerHTML = '<i class="fas fa-chevron-right"></i>'
+      bc.appendChild(sep)
+      const crumb = document.createElement('span')
+      crumb.className = 'breadcrumb-item'
+      crumb.textContent = item.name || '全部分类'
+      const idx = i
+      crumb.addEventListener('click', function() {
+        explorer.history = explorer.history.slice(0, idx)
+        explorer.currentPath = item.path
+        explorer.currentId = item.id
+        explorer.currentName = item.name
+        renderExplorer()
+      })
+      makeBreadcrumbDropTarget(crumb, item.path, item.id, item.name)
+      bc.appendChild(crumb)
+    }
+  }
+  if (explorer.currentName) {
+    const sep = document.createElement('span')
+    sep.className = 'breadcrumb-sep'
+    sep.innerHTML = '<i class="fas fa-chevron-right"></i>'
+    bc.appendChild(sep)
+    const current = document.createElement('span')
+    current.className = 'breadcrumb-item current'
+    current.textContent = explorer.currentName
+    bc.appendChild(current)
+  }
+}
+
+function renderExplorerStatus(folderCount, articleCount) {
+  const status = $('#explorer-status')
+  if (status) status.textContent = folderCount + ' 个文件夹, ' + articleCount + ' 篇文章'
 }
 
 window.deleteManagedCategory = async function(id) {
@@ -974,7 +1616,7 @@ window.deleteManagedCategory = async function(id) {
     const data = await res.json()
     if (data.error) throw new Error(data.error)
     showCatManageMsg('分类已删除', 'success')
-    loadManagedCategories()
+    loadExplorerData()
   } catch (e) {
     showCatManageMsg('删除失败: ' + e.message, 'error')
   }
@@ -990,7 +1632,7 @@ window.renameManagedCategory = async function(id, name) {
     const data = await res.json()
     if (data.error) throw new Error(data.error)
     showCatManageMsg('分类已重命名', 'success')
-    loadManagedCategories()
+    loadExplorerData()
   } catch (e) {
     showCatManageMsg('重命名失败: ' + e.message, 'error')
   }
@@ -1137,12 +1779,41 @@ $('#input-dialog-field').addEventListener('keydown', function(e) {
 
 $('#manage-categories-btn').addEventListener('click', () => {
   showView('view-categories')
-  loadManagedCategories()
+  explorer.history = []
+  explorer.currentPath = ''
+  explorer.currentId = null
+  explorer.currentName = ''
+  loadExplorerData()
 })
 
 window.cancelCatManage = function() {
   showView('view-posts')
 }
+
+$('#explorer-back-btn').addEventListener('click', navigateBack)
+
+$('#explorer-new-folder-btn').addEventListener('click', function() {
+  const parentName = explorer.currentName || '根目录'
+  const parentId = explorer.currentId
+  if (explorer.currentPath) {
+    showInputDialog('在「' + parentName + '」下新建子文件夹：', function(val) {
+      if (val) addChildCategory(parentId, val)
+    })
+  } else {
+    showInputDialog('新建文件夹：', addTopCategory)
+  }
+})
+
+$('#view-categories').addEventListener('contextmenu', function(e) {
+  if (!$('#view-categories').classList.contains('active')) return
+  if (e.target.closest('.explorer-folder') || e.target.closest('.explorer-article')) return
+  e.preventDefault()
+  if (explorer.currentPath && explorer.currentId) {
+    showContextMenu(e, 'cat', { id: explorer.currentId, name: explorer.currentName, path: explorer.currentPath })
+  } else {
+    showContextMenu(e, 'cat', {})
+  }
+})
 
 // ============ Editor Category/Tag Picker ============
 
@@ -1219,6 +1890,20 @@ function updateTagsDisplay() {
 
 // === Category Picker ===
 
+function updatePickerAncestorHighlight(selVal) {
+  if (!selVal) return
+  const body = $('#cat-picker-body')
+  if (!body) return
+  const items = body.querySelectorAll('.picker-item')
+  for (const item of items) {
+    item.classList.remove('picker-item-ancestor')
+    const radio = item.querySelector('input[type="radio"]')
+    if (radio && selVal.startsWith(radio.value + '/') && radio.value !== selVal) {
+      item.classList.add('picker-item-ancestor')
+    }
+  }
+}
+
 function renderPickerCategoryTree(tree, container, level) {
   for (const cat of tree) {
     const item = document.createElement('div')
@@ -1226,17 +1911,22 @@ function renderPickerCategoryTree(tree, container, level) {
     item.style.paddingLeft = (16 + level * 24) + 'px'
     const hasChildren = cat.children && cat.children.length > 0
     const current = selectedCategoryPath
+    const catPath = cat.path || cat.name
+    const isExact = catPath === current
+    const isAncestor = current && current.startsWith(catPath + '/') && catPath !== current
     item.innerHTML = `
       ${hasChildren ? '<span class="picker-toggle"><i class="fas fa-chevron-right"></i></span>' : '<span class="picker-toggle" style="visibility:hidden"><i class="fas fa-chevron-right"></i></span>'}
-      <input type="radio" name="cat-picker" value="${cat.path || cat.name}" ${(cat.path || cat.name) === current ? 'checked' : ''}>
+      <input type="radio" name="cat-picker" value="${catPath}" ${isExact ? 'checked' : ''}>
       <span class="picker-item-name"><i class="fas fa-folder"></i> ${cat.name}</span>
       <span class="picker-item-path">${cat.post_count || 0} 篇</span>
     `
-    // Radio click: select this item
     item.addEventListener('click', function(e) {
       if (e.target.closest('.picker-toggle')) return
       const inp = item.querySelector('input[type="radio"]')
-      if (inp) inp.checked = true
+      if (inp) {
+        inp.checked = true
+        updatePickerAncestorHighlight(inp.value)
+      }
     })
     container.appendChild(item)
 
@@ -1248,6 +1938,10 @@ function renderPickerCategoryTree(tree, container, level) {
       renderPickerCategoryTree(cat.children, childWrap, level + 1)
 
       const toggle = item.querySelector('.picker-toggle')
+      if (isAncestor) {
+        childWrap.style.display = ''
+        toggle.querySelector('i').className = 'fas fa-chevron-down'
+      }
       toggle.addEventListener('click', function(e) {
         e.stopPropagation()
         const expanded = childWrap.style.display !== 'none'
@@ -1270,6 +1964,9 @@ window.openCategoryPicker = function() {
       return
     }
     renderPickerCategoryTree(pickerCategoryTree, body, 0)
+    if (selectedCategoryPath) {
+      updatePickerAncestorHighlight(selectedCategoryPath)
+    }
   })
 }
 
@@ -1290,12 +1987,16 @@ window.confirmCategoryPicker = function() {
 }
 
 window.openNewCategoryFromPicker = function() {
-  showInputDialog('输入新分类名：', function(name) {
+  const checked = document.querySelector('input[name="cat-picker"]:checked')
+  const parentPath = checked ? checked.value : ''
+  const parent = parentPath ? pickerCategories.find(function(c) { return (c.path || c.name) === parentPath }) : null
+  const parentId = parent ? parent.id : null
+  showInputDialog(parent ? ('在「' + parent.name + '」下新建：') : '输入新分类名：', function(name) {
     if (name) {
       fetch('/api/admin/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name })
+        body: JSON.stringify({ name: name, parent_id: parentId })
       }).then(function() {
         openCategoryPicker()
       }).catch(function() {})

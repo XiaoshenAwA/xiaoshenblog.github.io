@@ -41,7 +41,7 @@ const config = {
   BLOG_SUBTITLE: cfg.blog?.subtitle ?? '记录生活，分享思考',
   BLOG_AUTHOR: cfg.blog?.author ?? '博主',
   BLOG_AUTHOR_BIO: cfg.blog?.author_bio ?? '热爱技术，享受生活',
-  PAGE_SIZE: cfg.blog?.page_size ?? 5,
+  PAGE_SIZE: cfg.blog?.page_size ?? 12,
   EXCERPT_LENGTH: cfg.blog?.excerpt_length ?? 200,
   READING_SPEED: cfg.blog?.reading_speed ?? 500,
 

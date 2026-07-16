@@ -25,18 +25,19 @@
           <a href="<%= basePath %>/editor" class="btn btn-primary"><i class="fas fa-pen"></i> <%= locale.home?.empty_button || '开始写作' %></a>
         </div>
       <% } else { %>
-        <div class="recent-post-items">
+        <%
+          var defaultCoverUrl = 'https://t.alcy.cc/fj';
+        %>
+        <div class="recent-post-items" data-page="<%= page %>" data-total-pages="<%= totalPages %>" data-tag="<%= tag %>" data-cat="<%= cat %>">
           <% posts.forEach((post, i) => { %>
             <% var coverLeft = i % 2 === 0; %>
+            <% var defaultCover = 'https://t.alcy.cc/fj?' + post.id; %>
             <article class="recent-post-item reveal" style="animation-delay:<%= (i*0.08) %>s">
               <div class="post_cover <%= coverLeft ? 'left' : 'right' %>">
                 <a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>">
-                  <img class="post-bg" src="<%= post.cover || config.DEFAULT_COVER || 'https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png' %>" alt="<%= post.title %>">
+                  <img class="post-bg" src="<%= post.cover || defaultCover %>" alt="<%= post.title %>">
                 </a>
-                <% if (config.POST_META?.page?.categories !== false && post.category) { %>
-                <% var firstCat = post.category.split('/')[0]; %>
-                <span class="post-cover-category"><%= firstCat %></span>
-                <% } %>
+
               </div>
               <div class="recent-post-info">
                 <a class="article-title" href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>"><%= post.title %></a>
@@ -50,25 +51,24 @@
                     <time datetime="<%= showDate %>"><%= formatDate(showDate) %></time>
                   </span>
                   <% } %>
-                  <% if (config.POST_META?.page?.tags !== false && post.tags && post.tags.length > 0) { %>
-                  <div class="meta-flex-break"></div>
-                  <% post.tags.slice(0, 2).forEach(t => { %>
-                    <% var tagEnc = encodeURIComponent(t) %>
-                    <span class="article-meta">
-                      <i class="fas fa-tag"></i>
-                      <a class="article-meta__categories" href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"><%= t %></a>
-                    </span>
-                  <% }) %>
-                  <% } %>
                   <% if (config.POST_META?.page?.categories !== false && post.category) { %>
-                  <% var catParts = post.category.split('/').filter(Boolean); %>
                   <span class="article-meta">
-                    <i class="fas fa-inbox"></i>
+                    <span class="article-meta-separator">|</span>
+                    <% var catParts = post.category.split('/').filter(Boolean); %>
                     <% catParts.forEach(function(part, idx) { %>
-                    <% if (idx > 0) { %><span class="article-meta-separator">></span><% } %>
+                    <i class="fas fa-inbox"></i>
                     <a class="article-meta__categories" href="<%= basePath %>/categories/<%= catParts.slice(0, idx+1).map(function(s){return encodeURIComponent(s)}).join('/') %>/"><%= part %></a>
+                    <% if (idx < catParts.length - 1) { %><span class="article-meta-separator">&gt;</span><% } %>
                     <% }); %>
                   </span>
+                  <% } %>
+                  <% if (config.POST_META?.page?.tags !== false && post.tags && post.tags.length > 0) { %>
+                  <span class="meta-flex-break"></span>
+                  <div class="post-tags">
+                    <% post.tags.forEach(function(t) { %>
+                    <a href="<%= basePath %><%= isStatic ? '/tag/' + encodeURIComponent(t) + '/' : '/?tag=' + encodeURIComponent(t) %>" class="tag-pill"><i class="fas fa-tag"></i> <%= t %></a>
+                    <% }); %>
+                  </div>
                   <% } %>
                 </div>
                 <div class="content"><%= post.excerptText %></div>
@@ -77,25 +77,28 @@
           <% }) %>
         </div>
 
-        <% if (totalPages > 1) { %>
           <nav id="pagination">
             <div class="pagination">
               <% var pageBase = cat ? (basePath + '/categories/' + cat.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/') : (basePath + '/'); %>
-              <% var pageSuffix = ''; %>
-              <% if (tag && !isStatic) { pageSuffix += (cat ? '&' : '?') + 'tag=' + encodeURIComponent(tag); } %>
+              <% var hasTag = tag && !isStatic; %>
+              <% function pageUrl(p) { var u = pageBase; var h = false; if (hasTag) { u += '?tag=' + encodeURIComponent(tag); h = true; } if (p > 1) { u += (h ? '&' : '?') + 'page=' + p; } return u; } %>
               <% if (page > 1) { %>
-                <a href="<%= pageBase %><%= pageSuffix %><%= (pageSuffix ? '&' : '?') %>page=<%= page-1 %>" class="page-btn extend prev" rel="prev"><i class="fas fa-chevron-left fa-fw"></i></a>
+                <a href="<%= pageUrl(page-1) %>" class="page-btn extend prev" rel="prev"><i class="fas fa-chevron-left fa-fw"></i></a>
               <% } %>
               <% for (let p = 1; p <= totalPages; p++) { %>
-                <a href="<%= pageBase %><%= pageSuffix %><%= (pageSuffix || p > 1 ? (p > 1 ? '&' : '?') : '') %>page=<%= p %>"
-                   class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
+                <a href="<%= pageUrl(p) %>" class="page-btn <%= p === page ? 'active' : '' %>"><%= p %></a>
               <% } %>
               <% if (page < totalPages) { %>
-                <a href="<%= pageBase %><%= pageSuffix %><%= (pageSuffix ? '&' : '?') %>page=<%= page+1 %>" class="page-btn extend next" rel="next"><i class="fas fa-chevron-right fa-fw"></i></a>
+                <a href="<%= pageUrl(page+1) %>" class="page-btn extend next" rel="next"><i class="fas fa-chevron-right fa-fw"></i></a>
               <% } %>
             </div>
           </nav>
-        <% } %>
+
+          <div id="load-more-wrap" style="text-align:center;margin-top:20px;display:<%= page < totalPages ? '' : 'none' %>">
+            <button id="load-more-btn" class="btn btn-primary" style="padding:10px 32px;border-radius:var(--radius-sm);font-size:0.95em;cursor:pointer;border:none;background:var(--accent);color:#fff;transition:opacity 0.2s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              <i class="fas fa-arrow-down"></i> <%= locale.home?.load_more || '加载更多' %>
+            </button>
+          </div>
       <% } %>
     </div>
 
@@ -103,5 +106,82 @@
       <%- include('partials/sidebar') %>
     </div>
   </main>
+
+  <script>
+  try {
+    (function() {
+      var container = document.querySelector('.recent-post-items');
+      var aside = document.querySelector('.aside-content');
+      var wrap = document.getElementById('load-more-wrap');
+      var btn = document.getElementById('load-more-btn');
+      if (!container || !aside) return;
+      var currentPage = parseInt(container.getAttribute('data-page') || '1');
+      var totalPages = parseInt(container.getAttribute('data-total-pages') || '1');
+      var tag = container.getAttribute('data-tag') || '';
+      var cat = container.getAttribute('data-cat') || '';
+
+      function genArticle(p, idx) {
+        var coverLeft = idx % 2 === 0;
+        var defaultCover = 'https://t.alcy.cc/fj?' + p.id;
+        var cats = p.category ? p.category.split('/').filter(Boolean) : [];
+        var tags = p.tags || [];
+        var date = p.updated_at || p.created_at || '';
+        var dateStr = date ? new Date(date).toISOString().slice(0,10) : '';
+        return '<article class="recent-post-item reveal" style="animation-delay:' + (idx*0.08) + 's">' +
+          '<div class="post_cover ' + (coverLeft ? 'left' : 'right') + '">' +
+            '<a href="<%= basePath %>/posts/' + p.id + '" title="' + p.title.replace(/"/g,'&quot;') + '">' +
+              '<img class="post-bg" src="' + (p.cover || defaultCover) + '" alt="' + p.title.replace(/"/g,'&quot;') + '">' +
+            '</a>' +
+          '</div>' +
+          '<div class="recent-post-info">' +
+            '<a class="article-title" href="<%= basePath %>/posts/' + p.id + '" title="' + p.title.replace(/"/g,'&quot;') + '">' + p.title + '</a>' +
+          '<div class="article-meta-wrap">' +
+            '<span class="post-meta-date">' +
+              '<i class="far fa-calendar-alt"></i> ' +
+              '<span class="article-meta-label"><%= locale.home?.published_at || '发表于' %></span> ' +
+              '<time datetime="' + dateStr + '">' + dateStr + '</time>' +
+            '</span>' +
+            (cats.length ? '<span class="article-meta"><span class="article-meta-separator">|</span><a class="article-meta__categories" href="<%= basePath %>/categories/' + p.category.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/">' + cats.join('<span class="article-meta-separator">&gt;</span>') + '</a></span>' : '') +
+            (tags.length ? '<span class="article-meta"><span class="article-meta-separator">|</span>' + tags.map(function(t){return '<a href="<%= basePath %>/?' + (t ? 'tag=' + encodeURIComponent(t) : '') + '" class="tag-pill"><i class="fas fa-tag"></i> ' + t + '</a>'}).join('') + '</span>' : '') +
+          '</div>' +
+          '<div class="content">' + (p.excerptText || '') + '</div>' +
+        '</div></article>';
+      }
+
+      function loadPage(page) {
+        var params = 'page=' + page;
+        if (tag) params += '&tag=' + encodeURIComponent(tag);
+        if (cat) params += '&cat=' + encodeURIComponent(cat);
+        fetch('<%= basePath %>/api/posts?' + params).then(function(r) { return r.json(); }).then(function(data) {
+          data.posts.forEach(function(p, i) {
+            var startIdx = (page - 1) * data.total + i;
+            container.insertAdjacentHTML('beforeend', genArticle(p, startIdx));
+          });
+          currentPage = page;
+          container.setAttribute('data-page', currentPage);
+          if (wrap) wrap.style.display = currentPage >= totalPages ? 'none' : '';
+          checkFill();
+        }).catch(function() {});
+      }
+
+      function checkFill() {
+        var contentH = container.getBoundingClientRect().height;
+        var asideH = aside.getBoundingClientRect().height;
+        if (contentH < asideH && currentPage < totalPages) {
+          loadPage(currentPage + 1);
+        }
+      }
+
+      if (document.readyState === 'complete') { checkFill(); }
+      else { window.addEventListener('load', checkFill); }
+
+      if (btn) {
+        btn.addEventListener('click', function() {
+          if (currentPage < totalPages) loadPage(currentPage + 1);
+        });
+      }
+    })();
+  } catch(e) { console.error(e); }
+  </script>
 
 <%- include('partials/footer') %>

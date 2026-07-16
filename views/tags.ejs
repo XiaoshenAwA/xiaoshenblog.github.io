@@ -1,7 +1,7 @@
 <%- include('partials/header', { title: locale.tags?.title || '标签', subtitle: (locale.tags?.subtitle_prefix || '共 ') + allTagCounts.length + ' ' + (locale.tags?.subtitle_suffix || '个标签') }) %>
 
   <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
-    <div id="tag">
+    <div id="page">
 
       <% if (allTagCounts.length === 0) { %>
         <div class="empty-state reveal">
@@ -9,10 +9,11 @@
           <h3><%= locale.tags?.empty_title || '暂无标签' %></h3>
         </div>
       <% } else { %>
-        <div class="card-tag-cloud tags-page-cloud reveal">
+        <div class="tag-cloud-list text-center">
           <% allTagCounts.forEach(t => { %>
             <% var tagEnc = encodeURIComponent(t.name) %>
-            <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" style="font-size:<%= Math.min(1.8, 0.8 + t.count * 0.15) %>em">
+            <% var hue = Math.floor(Math.random() * 360) %>
+            <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>" style="font-size:<%= Math.min(1.8, 0.8 + t.count * 0.15) %>em;color:hsl(<%= hue %>,55%,45%)">
               <%= t.name %>
             </a>
           <% }) %>

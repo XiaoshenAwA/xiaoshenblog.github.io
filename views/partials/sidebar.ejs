@@ -37,7 +37,7 @@
       <% recentPosts.forEach(p => { %>
         <div class="aside-list-item">
           <a class="thumbnail" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>">
-            <img src="<%= p.cover || config.DEFAULT_COVER || 'https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png' %>" alt="<%= p.title %>">
+            <img src="<%= p.cover || 'https://t.alcy.cc/fj?' + p.id %>" alt="<%= p.title %>">
           </a>
           <div class="content">
             <a class="title" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>"><%= p.title %></a>

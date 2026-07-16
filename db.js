@@ -406,10 +406,32 @@ async function renameManagedCategory(id, name) {
   }
 }
 
+async function moveManagedCategory(id, newParentId) {
+  const db = getAdminDb();
+  const { data: cat } = await db.from('managed_categories').select('*').eq('id', id).single();
+  if (!cat) throw new Error('分类不存在');
+  let newPath = cat.name.trim();
+  if (newParentId) {
+    const { data: parent } = await db.from('managed_categories').select('path').eq('id', newParentId).single();
+    if (parent && parent.path) {
+      newPath = parent.path + '/' + cat.name.trim();
+    }
+  }
+  const { error } = await db.from('managed_categories').update({ parent_id: newParentId || null, path: newPath }).eq('id', id);
+  if (error) throw error;
+  const { data: children } = await db.from('managed_categories').select('id, path').filter('path', 'like', cat.path + '/%');
+  if (children) {
+    for (const child of children) {
+      const childNewPath = child.path.replace(cat.path, newPath);
+      await db.from('managed_categories').update({ path: childNewPath }).eq('id', child.id);
+    }
+  }
+}
+
 async function getManagedCategoriesFlat() {
   const db = getAdminDb();
   const { data } = await db.from('managed_categories').select('*').order('path');
   return data || [];
 }
 
-module.exports = { getDb, getAllTags, getPostsPage, getAllPosts, getAllPostsAdmin, getPost, getPostAdmin, getAdjacentPosts, createPost, updatePost, deletePost, getPostCount, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, rowToPost, onlyPublished, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, getManagedCategoriesFlat };
+module.exports = { getDb, getAdminDb, getAllTags, getPostsPage, getAllPosts, getAllPostsAdmin, getPost, getPostAdmin, getAdjacentPosts, createPost, updatePost, deletePost, getPostCount, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, rowToPost, onlyPublished, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, moveManagedCategory, getManagedCategoriesFlat };

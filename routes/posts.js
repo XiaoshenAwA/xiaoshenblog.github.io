@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const { getAllTags, getPostsPage, getPost, getPostAdmin, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, getManagedCategoriesFlat } = require('../db');
+const { getAllTags, getPostsPage, getPost, getPostAdmin, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, moveManagedCategory, getManagedCategoriesFlat } = require('../db');
 const config = require('../config');
 const { render, excerpt } = require('../markdown');
 
@@ -235,6 +235,32 @@ router.post('/api/stats/view/:id', async (req, res) => {
   }
 });
 
+router.get('/api/posts', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const tag = req.query.tag || '';
+    const cat = req.query.cat || '';
+    const { posts, total } = await getPostsPage(page, tag, config.PAGE_SIZE, cat);
+    const totalPages = Math.ceil(total / config.PAGE_SIZE) || 1;
+    const data = [];
+    for (const p of posts) {
+      data.push({
+        id: p.id,
+        title: p.title,
+        cover: p.cover || config.DEFAULT_COVER || '',
+        category: p.category,
+        tags: p.tags,
+        created_at: p.created_at,
+        updated_at: p.updated_at,
+        excerptText: await excerpt(p.content, config.EXCERPT_LENGTH)
+      });
+    }
+    res.json({ posts: data, page, totalPages, total });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ============ Managed Tags API ============
 
 router.get('/api/admin/tags', async (req, res) => {
@@ -311,9 +337,14 @@ router.delete('/api/admin/categories/:id', async (req, res) => {
 
 router.put('/api/admin/categories/:id', async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name || !name.trim()) return res.status(400).json({ error: '分类名不能为空' });
-    await renameManagedCategory(req.params.id, name);
+    const { name, parent_id } = req.body;
+    if (name !== undefined) {
+      if (!name || !name.trim()) return res.status(400).json({ error: '分类名不能为空' });
+      await renameManagedCategory(req.params.id, name);
+    }
+    if (parent_id !== undefined) {
+      await moveManagedCategory(req.params.id, parent_id);
+    }
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
