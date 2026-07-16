@@ -37,7 +37,8 @@ database:
   anon_key: "sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P"
   # 服务端密钥（service_role key）。拥有完全管理权限，请妥善保管，不要泄露。
   # 此密钥只在服务端使用，不会暴露给前端。
-  service_key: "REMOVED"
+  # 请通过 .env 文件或环境变量 SUPABASE_SERVICE_KEY 设置。
+  service_key: ""
   # 文章数据表名。如果使用不同的表名，请同步修改此处。
   table: "posts"
 
