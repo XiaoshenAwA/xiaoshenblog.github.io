@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
@@ -25,8 +27,9 @@
   
   <meta property="og:image" content="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png">
   
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1784362708397" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1784364498465" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -231,6 +234,7 @@
     }
   </style>
   
+<script>try{!function(){var k='blog_font_settings',s;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s)return;var d=document.documentElement;if(s.fontSize)d.style.setProperty('--font-size-global',s.fontSize+'px');if(s.bodyFont&&s.bodyFont!=='unset')d.style.setProperty('--font-body',"'"+s.bodyFont+"'");else d.style.removeProperty('--font-body');if(s.codeFont&&s.codeFont!=='unset'){d.style.setProperty('--font-code',"'"+s.codeFont+"'");var cs=document.createElement('style');cs.id='__code_font_style';var fn=s.codeFont.replace(/"/g,'\\"');cs.textContent='@font-face{font-family:"'+fn+'";src:local("'+fn+'")}code,pre,.editor-gutter,#editor-input,textarea,.code-wrap,.highlight,.hljs{font-family:"'+fn+'",monospace!important}';document.head.appendChild(cs);var gl=document.createElement('link');gl.rel='stylesheet';gl.id='__code_font_gf';gl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(s.codeFont)+':wght@300;400;500;600;700&display=swap';document.head.appendChild(gl)}else{d.style.removeProperty('--font-code');var og=document.getElementById('__code_font_gf');if(og)og.remove()}if(s.bodyFont&&s.bodyFont!=='unset'){var bs=document.createElement('style');bs.id='__body_font_style';var fnB=s.bodyFont.replace(/"/g,'\\"');bs.textContent='@font-face{font-family:"'+fnB+'";src:local("'+fnB+'")}body,.post-content,.content{font-family:"'+fnB+'",serif!important}';document.head.appendChild(bs);var bl=document.createElement('link');bl.rel='stylesheet';bl.id='__body_font_gf';bl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(s.bodyFont)+':wght@300;400;500;600;700&display=swap';document.head.appendChild(bl)}else{var bs2=document.getElementById('__body_font_style');if(bs2)bs2.textContent='';var bg=document.getElementById('__body_font_gf');if(bg)bg.remove()}}()}catch(e){}</script>
 </head>
 <body>
   
@@ -244,6 +248,7 @@
   <div class="progress-bar" id="progressBar"></div>
 
   <!-- Mobile sidebar -->
+  
   <div id="sidebar">
     <div id="menu-mask"></div>
     <div id="sidebar-menus">
@@ -302,6 +307,7 @@
       </div>
     </div>
   </div>
+  
 
   <!-- Page Header -->
   
@@ -322,47 +328,52 @@
           
             
             <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/"><i class="fas fa-home"></i><span> 首页</span></a>
-            </div>
-            
-          
-            
-            <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/categories"><i class="fas fa-folder-open"></i><span> 分类</span></a>
-            </div>
-            
-          
+               <a class="site-page" href="/xiaoshenblog.github.io/"><i class="fas fa-home"></i><span> 首页</span></a>
+             </div>
+             
+           
             
             <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/archives"><i class="fas fa-archive"></i><span> 归档</span></a>
-            </div>
-            
-          
-            
-            <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/about"><i class="fas fa-user"></i><span> 关于</span></a>
-            </div>
-            
-          
+               <a class="site-page" href="/xiaoshenblog.github.io/categories"><i class="fas fa-folder-open"></i><span> 分类</span></a>
+             </div>
+             
+           
             
             <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/friends"><i class="fas fa-link"></i><span> 友链</span></a>
-            </div>
-            
-          
-            
-            <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/admin"><i class="fas fa-cog"></i><span> 后台管理</span></a>
-            </div>
-            
-          
+               <a class="site-page" href="/xiaoshenblog.github.io/archives"><i class="fas fa-archive"></i><span> 归档</span></a>
+             </div>
+             
+           
             
             <div class="menus_item">
-              <a class="site-page" href="/xiaoshenblog.github.io/editor"><i class="fas fa-pen"></i><span> 编辑器</span></a>
-            </div>
+               <a class="site-page" href="/xiaoshenblog.github.io/about"><i class="fas fa-user"></i><span> 关于</span></a>
+             </div>
+             
+           
             
-          
-        </div>
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/friends"><i class="fas fa-link"></i><span> 友链</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/admin"><i class="fas fa-cog"></i><span> 后台管理</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/editor"><i class="fas fa-pen"></i><span> 编辑器</span></a>
+             </div>
+             
+           
+           
+           <div class="menus_item">
+             <button id="searchBtn" class="site-page search-btn-alt" title="搜索"><i class="fas fa-search"></i><span> 搜索</span></button>
+           </div>
+           
+          </div>
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
       </div>
     </nav>
@@ -372,13 +383,16 @@
       <div id="post-meta">
         <div class="meta-firstline">
           <span class="post-meta-date">
+            
             <i class="far fa-calendar-alt fa-fw post-meta-icon"></i>
             <span class="post-meta-label">发表于</span>
             <time class="post-meta-date-created" datetime="2026-07-14T06:19:58.228491+00:00">2026-07-14</time>
+            
             <span class="post-meta-separator">|</span>
             <i class="fas fa-history fa-fw post-meta-icon"></i>
             <span class="post-meta-label">更新于</span>
             <time class="post-meta-date-updated" datetime="2026-07-16T01:37:24.812+00:00">2026-07-16</time>
+            
           </span>
           
           
@@ -396,19 +410,19 @@
           <span class="post-meta-separator">|</span>
           <span class="post-meta-wordcount">
             <i class="far fa-file-word fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">总字数:</span>
+            <span class="post-meta-label">总字数</span>
             
             <span class="word-count">2.6k</span>
             <span class="post-meta-separator">|</span>
             <i class="far fa-clock fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">阅读时长:</span>
+            <span class="post-meta-label">阅读时长</span>
             <span>6分钟</span>
           </span>
           <span class="post-meta-separator">|</span>
-          <span class="post-meta-pv-cv" id="" data-flag-title="">
+          <span class="post-meta-pv-cv" id="post-pv-display" data-flag-title="">
             <i class="far fa-eye fa-fw post-meta-icon"></i>
             <span class="post-meta-label">浏览量:</span>
-            <span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span>
+            <span id="post-view-count"><i class="fa-solid fa-spinner fa-spin"></i></span>
           </span>
         </div>
       </div>
@@ -540,26 +554,27 @@
 
     <div class="aside-content" id="aside-content">
       
-<div class="card-widget card-info text-center">
-  <div class="avatar-img">
-    <img src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="博主" class=&#34;avatar-effect&#34;>
-  </div>
-  <div class="author-info-name">博主</div>
-  <div class="author-info-description">热爱技术，享受生活</div>
-  <div class="site-data">
-    <a href="/xiaoshenblog.github.io/archives/"><div class="headline">文章</div><div class="length-num">8</div></a>
-    <a href="/xiaoshenblog.github.io/tags/"><div class="headline">标签</div><div class="length-num">3</div></a>
-    <a href="/xiaoshenblog.github.io/categories/"><div class="headline">分类</div><div class="length-num">8</div></a>
-  </div>
-  
-  <a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XiaoshenAwA"><i class="fab fa-github"></i><span>关注我</span></a>
-  
-  <div class="card-info-social-icons">
-    <a class="social-icon" href="https://github.com/XiaoshenAwA" target="_blank" title="Github"><i class="fab fa-github"></i></a>
-    <a class="social-icon" href="#" target="_blank" title="微博"><i class="fab fa-weibo"></i></a>
-    <a class="social-icon" href="https://x.com/XiaoshenAwA" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
-    <a class="social-icon" href="mailto:#" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a>
-  </div>
+<div class="card-widget card-info text-center" id="profileCard">
+      <div class="avatar-img">
+        <img src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="博主" class=&#34;avatar-effect&#34;>
+      </div>
+      <div class="author-info-name">博主</div>
+      <div class="author-info-description">热爱技术，享受生活</div>
+      <div class="site-data">
+        <a href="/xiaoshenblog.github.io/archives/"><div class="headline">文章</div><div class="length-num">8</div></a>
+        <a href="/xiaoshenblog.github.io/tags/"><div class="headline">标签</div><div class="length-num">3</div></a>
+        <a href="/xiaoshenblog.github.io/categories/"><div class="headline">分类</div><div class="length-num">8</div></a>
+      </div>
+      
+      
+      <a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XiaoshenAwA"><i class="fab fa-github"></i><span>关注我</span></a>
+      
+      <div class="card-info-social-icons">
+        <a class="social-icon" href="https://github.com/XiaoshenAwA" target="_blank" title="Github"><i class="fab fa-github"></i></a>
+        
+        <a class="social-icon" href="https://x.com/XiaoshenAwA" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+        
+      </div>
 </div>
 
 
@@ -570,6 +585,15 @@
 </div>
 
 
+<div class="card-widget card-hitokoto" id="hitokotoCard">
+  <div class="item-headline"><i class="fas fa-quote-left"></i><span>一言</span></div>
+  <div class="hitokoto-content">
+    <div class="hitokoto-text" id="hitokotoText">加载中...</div>
+    <div class="hitokoto-from" id="hitokotoFrom"></div>
+  </div>
+  <div class="hitokoto-btn" onclick="fetchHitokoto()"><i class="fas fa-sync-alt"></i></div>
+</div>
+
 <div class="sticky_layout">
   
   <div class="card-widget card-recent-post">
@@ -578,7 +602,9 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/19" title="测试">
-            <img src="https://t.alcy.cc/fj?19" alt="测试">
+            
+            
+            <img src="https://t.alcy.cc/moez?v=19" alt="测试">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/19" title="测试">测试</a>
@@ -588,7 +614,9 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/7" title="测试">
-            <img src="https://t.alcy.cc/fj?7" alt="测试">
+            
+            
+            <img src="https://t.alcy.cc/ycy?v=7" alt="测试">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/7" title="测试">测试</a>
@@ -598,7 +626,9 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/6" title="ddfadfasd">
-            <img src="https://t.alcy.cc/fj?6" alt="ddfadfasd">
+            
+            
+            <img src="https://t.alcy.cc/moez?v=6" alt="ddfadfasd">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/6" title="ddfadfasd">ddfadfasd</a>
@@ -608,7 +638,9 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/5" title="dddaa">
-            <img src="https://t.alcy.cc/fj?5" alt="dddaa">
+            
+            
+            <img src="https://t.alcy.cc/ycy?v=5" alt="dddaa">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/5" title="dddaa">dddaa</a>
@@ -618,7 +650,9 @@
       
         <div class="aside-list-item">
           <a class="thumbnail" href="/xiaoshenblog.github.io/posts/4" title="adsfa">
-            <img src="https://t.alcy.cc/fj?4" alt="adsfa">
+            
+            
+            <img src="https://t.alcy.cc/moez?v=4" alt="adsfa">
           </a>
           <div class="content">
             <a class="title" href="/xiaoshenblog.github.io/posts/4" title="adsfa">adsfa</a>
@@ -789,19 +823,24 @@
       
       
       <div class="webinfo-item">
+        <div class="item-name">运行时间 :</div>
+        <div class="item-count runtime-days" data-start="07/14/2026 00:00:00">计算中...</div>
+      </div>
+      
+      <div class="webinfo-item">
         <div class="item-name">本站总字数 :</div>
         <div class="item-count">13.5k</div>
       </div>
       
       <div class="webinfo-item">
         <div class="item-name">本站访客数 :</div>
-        <div class="item-count">7132</div>
+        <div class="item-count webinfo-visitor-count">7132</div>
       </div>
       
       
       <div class="webinfo-item">
         <div class="item-name">本站总浏览量 :</div>
-        <div class="item-count">8140</div>
+        <div class="item-count webinfo-total-views">8140</div>
       </div>
       
       
@@ -848,6 +887,11 @@
 
   </div><!-- #body-wrap -->
 
+  <div class="jinrishici-container">
+    <div class="jinrishici-text" id="jinrishiciText"></div>
+    <div class="jinrishici-source" id="jinrishiciSource"></div>
+  </div>
+
   <footer id="footer">
     <div id="footer-wrap">
       
@@ -876,7 +920,7 @@
     </div>
   </div>
 
-  <script src="/xiaoshenblog.github.io/assets/main.js?v=1784362708397"></script>
+  <script src="/xiaoshenblog.github.io/assets/main.js?v=1784364498465"></script>
   <script>
     try {
       var h = document.documentElement;
@@ -888,18 +932,6 @@
         
       }
       
-      var t = document.getElementById('themeToggle');
-      if (t) {
-        var i = t.querySelector('i');
-        if (h.getAttribute('data-theme') === 'dark') i.className = 'fas fa-sun';
-        t.addEventListener('click', function() {
-          var c = h.getAttribute('data-theme');
-          var n = c === 'dark' ? 'light' : 'dark';
-          h.setAttribute('data-theme', n);
-          localStorage.setItem('theme', n);
-          i.className = n === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        });
-      }
     } catch(e) {}
 
     try {
@@ -942,21 +974,217 @@
       var lastVisit = localStorage.getItem('blog_last_visit');
       if (lastVisit !== today) {
         localStorage.setItem('blog_last_visit', today);
-        fetch('/xiaoshenblog.github.io/api/stats/visit', { method: 'POST' });
+        
+        fetch('https://eacieurozwzligrxnyos.supabase.co/rest/v1/rpc/increment_stat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P', 'Authorization': 'Bearer sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P' },
+          body: JSON.stringify({ stat_key: 'visitor_count' })
+        });
+        
       }
     } catch(e) {}
+
+    /* 时间问候语 */
+    try {
+      var greetingEl = document.getElementById('greetingText');
+      if (greetingEl) {
+        var greetings = [
+          { text: '🌙 夜深了，早点休息哦', start: 0, end: 5 },
+          { text: '🌅 早上好，新的一天开始啦', start: 6, end: 8 },
+          { text: '☀️ 上午好，工作顺利', start: 9, end: 11 },
+          { text: '🍜 中午好，该吃饭啦', start: 11, end: 13 },
+          { text: '☕ 下午好，喝杯咖啡吧', start: 14, end: 17 },
+          { text: '🌆 傍晚好，放松一下', start: 18, end: 20 },
+          { text: '🌃 晚上好，享受夜晚', start: 21, end: 23 }
+        ];
+        
+        function updateGreeting() {
+          var hour = new Date().getHours();
+          for (var i = 0; i < greetings.length; i++) {
+            if (hour >= greetings[i].start && hour <= greetings[i].end) {
+              greetingEl.textContent = greetings[i].text;
+              greetingEl.style.opacity = '0';
+              setTimeout(function() {
+                greetingEl.style.transition = 'opacity 0.5s';
+                greetingEl.style.opacity = '1';
+              }, 100);
+              break;
+            }
+          }
+        }
+        
+        updateGreeting();
+        setInterval(updateGreeting, 60000);
+      }
+    } catch(e) {}
+
+    /* 标题切换效果 */
+    try {
+      var originalTitle = document.title;
+      document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+          document.title = '(╥﹏╥) 不要走，再看看嘛～';
+        } else {
+          document.title = '(*^▽^*) 欢迎回来！';
+          setTimeout(function() {
+            document.title = originalTitle;
+          }, 2000);
+        }
+      });
+    } catch(e) {}
+
+    /* 今日诗词打字机效果 */
+    try {
+      var poemTextEl = document.getElementById('jinrishiciText');
+      var poemSourceEl = document.getElementById('jinrishiciSource');
+      
+      if (poemTextEl && poemSourceEl) {
+        function fetchPoem() {
+          fetch('https://v1.jinrishici.com/all.json')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data && data.content) {
+                typeWriter(data.content, data.origin || '');
+              }
+            })
+            .catch(function() {
+              typeWriter('人生得意须尽欢，莫使金樽空对月', '李白');
+            });
+        }
+        
+        function typeWriter(text, source) {
+          poemTextEl.textContent = '';
+          poemSourceEl.textContent = '';
+          var index = 0;
+          
+          function type() {
+            if (index < text.length) {
+              poemTextEl.textContent += text.charAt(index);
+              index++;
+              setTimeout(type, 100 + Math.random() * 50);
+            } else {
+              setTimeout(function() {
+                poemSourceEl.textContent = '—— ' + source;
+                poemSourceEl.style.opacity = '1';
+              }, 300);
+            }
+          }
+          
+          poemSourceEl.style.opacity = '0';
+          type();
+        }
+        
+        setTimeout(fetchPoem, 1000);
+        setInterval(fetchPoem, 30000);
+      }
+    } catch(e) {}
+
+    /* 一言卡片功能 (打字机效果) */
+    try {
+      var hitokotoTyping = false;
+
+      window.fetchHitokoto = function() {
+        if (hitokotoTyping) return;
+
+        var textEl = document.getElementById('hitokotoText');
+        var fromEl = document.getElementById('hitokotoFrom');
+        
+        if (!textEl || !fromEl) return;
+
+        hitokotoTyping = true;
+        textEl.style.opacity = '0';
+        fromEl.style.opacity = '0';
+        
+        fetch('https://v1.hitokoto.cn/?c=i&c=d')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            setTimeout(function() {
+              typeHitokoto(data.hitokoto, '—— 《' + data.from + '》');
+            }, 300);
+          })
+          .catch(function() {
+            setTimeout(function() {
+              typeHitokoto('生活就像一盒巧克力，你永远不知道下一颗是什么味道。', '—— 《阿甘正传》');
+            }, 300);
+          });
+      };
+
+      function typeHitokoto(text, from) {
+        var textEl = document.getElementById('hitokotoText');
+        var fromEl = document.getElementById('hitokotoFrom');
+        if (!textEl || !fromEl) return;
+
+        textEl.textContent = '';
+        textEl.style.opacity = '1';
+        fromEl.style.opacity = '0';
+        var index = 0;
+
+        function type() {
+          if (index < text.length) {
+            textEl.textContent += text.charAt(index);
+            index++;
+            setTimeout(type, 80 + Math.random() * 40);
+          } else {
+            setTimeout(function() {
+              fromEl.textContent = from;
+              fromEl.style.transition = 'opacity 0.5s';
+              fromEl.style.opacity = '1';
+              hitokotoTyping = false;
+            }, 400);
+          }
+        }
+
+        type();
+      }
+      
+      fetchHitokoto();
+    } catch(e) {}
+
+    /* 作者卡片翻转效果 - 已移除 */
 
     try {
       var postId = window.location.pathname.match(/\/posts\/(\d+)/);
       if (postId) {
-        fetch('/xiaoshenblog.github.io/api/stats/view/' + postId[1], { method: 'POST' });
+        
+        fetch('https://eacieurozwzligrxnyos.supabase.co/rest/v1/rpc/increment_stat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P', 'Authorization': 'Bearer sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P' },
+          body: JSON.stringify({ stat_key: 'total_views' })
+        });
+        
       }
     } catch(e) {}
 
     try {
-      document.getElementById('menuToggle').addEventListener('click', function() {
-        document.getElementById('mobileMenu').classList.toggle('open');
-      });
+      var pvEl = document.getElementById('post-view-count');
+      if (pvEl) {
+        
+        fetch('https://eacieurozwzligrxnyos.supabase.co/rest/v1/site_stats?select=key,value', {
+          headers: { 'apikey': 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P', 'Authorization': 'Bearer sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P' }
+        }).then(function(r) { return r.json(); }).then(function(rows) {
+          var stats = {};
+          (rows || []).forEach(function(r) { stats[r.key] = r.value; });
+          pvEl.textContent = stats.total_views || 0;
+        })['catch'](function() { pvEl.textContent = '-'; });
+        
+      }
+    } catch(e) {}
+
+    try {
+      var webinfoVisitor = document.querySelector('.webinfo-visitor-count');
+      var webinfoViews = document.querySelector('.webinfo-total-views');
+      if (webinfoVisitor || webinfoViews) {
+        
+        fetch('https://eacieurozwzligrxnyos.supabase.co/rest/v1/site_stats?select=key,value', {
+          headers: { 'apikey': 'sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P', 'Authorization': 'Bearer sb_publishable_owez1XlLUfQiJOkzi23zng_B-A_Ez0P' }
+        }).then(function(r) { return r.json(); }).then(function(rows) {
+          var stats = {};
+          (rows || []).forEach(function(r) { stats[r.key] = r.value; });
+          if (webinfoVisitor) webinfoVisitor.textContent = stats.visitor_count || 0;
+          if (webinfoViews) webinfoViews.textContent = stats.total_views || 0;
+        })['catch'](function() {});
+        
+      }
     } catch(e) {}
 
     try {
@@ -984,6 +1212,7 @@
       });
     } catch(e) {}
 
+    
     try {
       document.addEventListener('click', function(e) {
         var btn = e.target.closest('.copy-btn');
@@ -1002,7 +1231,9 @@
         });
       });
     } catch(e) {}
+    
 
+    
     try {
       document.addEventListener('click', function(e) {
         var btn = e.target.closest('.shrink-btn');
@@ -1020,19 +1251,87 @@
         }
       });
     } catch(e) {}
+    
 
+    
     try {
+      var fullpageState = { fig: null, backdrop: null, dragMoved: false };
+
+      function closeFullpage() {
+        var st = fullpageState;
+        if (!st.fig) return;
+        st.fig.remove();
+        document.body.classList.remove('code-fullpage-active');
+        if (st.backdrop && st.backdrop.parentNode) {
+          st.backdrop.parentNode.removeChild(st.backdrop);
+        }
+        st.backdrop = null;
+        st.fig = null;
+      }
+
       document.addEventListener('click', function(e) {
+        if (fullpageState.dragMoved) return;
         var btn = e.target.closest('.fullpage-btn');
         if (!btn) return;
         var fig = btn.closest('.highlight');
         if (!fig) return;
-        fig.classList.toggle('code-fullpage');
-        document.body.classList.toggle('code-fullpage-active', fig.classList.contains('code-fullpage'));
-        var icon = fig.querySelector('.fullpage-btn i');
-        if (icon) icon.className = fig.classList.contains('code-fullpage') ? 'fas fa-compress' : 'fas fa-expand';
+        var st = fullpageState;
+
+        if (fig.classList.contains('code-fullpage')) {
+          closeFullpage();
+          return;
+        }
+
+        st.fig = fig.cloneNode(true);
+        st.fig.classList.add('code-fullpage');
+        st.fig.style.background = '#e1e4e8';
+        st.fig.style.setProperty('--shiki-light-bg', '#e1e4e8');
+        st.fig.style.setProperty('--shiki-dark-bg', '#e1e4e8');
+
+        var bd = document.createElement('div');
+        bd.className = 'fullpage-backdrop';
+        document.body.appendChild(bd);
+        st.backdrop = bd;
+
+        document.body.appendChild(st.fig);
+        document.body.classList.add('code-fullpage-active');
+
+        var icon = st.fig.querySelector('.fullpage-btn i');
+        if (icon) icon.className = 'fas fa-compress';
+      });
+
+      (function() {
+        var dragState = null;
+        document.addEventListener('mousedown', function(e) {
+          var tools = e.target.closest('.code-fullpage .highlight-tools');
+          if (!tools) return;
+          var fig = tools.closest('.highlight');
+          if (!fig || !fig.classList.contains('code-fullpage')) return;
+          e.preventDefault();
+          var rect = fig.getBoundingClientRect();
+          fullpageState.dragMoved = false;
+          dragState = { fig: fig, startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
+        });
+        document.addEventListener('mousemove', function(e) {
+          if (!dragState) return;
+          var dx = e.clientX - dragState.startX;
+          var dy = e.clientY - dragState.startY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) fullpageState.dragMoved = true;
+          dragState.fig.style.setProperty('transform', 'none', 'important');
+          dragState.fig.style.setProperty('left', (dragState.origLeft + dx) + 'px', 'important');
+          dragState.fig.style.setProperty('top', (dragState.origTop + dy) + 'px', 'important');
+        });
+        document.addEventListener('mouseup', function() {
+          dragState = null;
+          setTimeout(function() { fullpageState.dragMoved = false; }, 100);
+        });
+      })();
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeFullpage();
       });
     } catch(e) {}
+    
 
     /* Right-side buttons */
     try {
@@ -1041,6 +1340,7 @@
       });
     } catch(e) {}
 
+    
     try {
       document.getElementById('darkmode').addEventListener('click', function() {
         var c = document.documentElement.getAttribute('data-theme');
@@ -1049,6 +1349,7 @@
         localStorage.setItem('theme', n);
       });
     } catch(e) {}
+    
 
     try {
       document.getElementById('hide-aside-btn').addEventListener('click', function() {
@@ -1110,6 +1411,7 @@
     try {
       var nav = document.getElementById('nav');
       if (nav) {
+        
         window.addEventListener('scroll', function() {
           if (window.scrollY > 60) {
             nav.classList.add('fixed');
@@ -1117,7 +1419,65 @@
             nav.classList.remove('fixed');
           }
         });
+        
       }
+    } catch(e) {}
+
+    /* 卡片入场动画 (IntersectionObserver + transition) */
+    try {
+      var animItems = document.querySelectorAll('.recent-post-item, .card-widget, .tag-filter-bar, .empty-state');
+
+      animItems.forEach(function(el) {
+        el.classList.remove('reveal');
+        el.style.animation = 'none';
+        el.style.opacity = '0';
+      });
+
+      function setInitialState(el, index, isCard) {
+        el.style.transition = 'none';
+        if (isCard) {
+          el.style.transform = 'translateX(40px)';
+        } else {
+          el.style.transform = 'translateY(30px)';
+        }
+        el.style.transitionDelay = (index * 0.12) + 's';
+      }
+
+      var articleIndex = 0;
+      var widgetIndex = 0;
+      var otherIndex = 0;
+
+      animItems.forEach(function(el) {
+        var isCard = el.classList.contains('recent-post-item');
+        var isWidget = el.classList.contains('card-widget');
+        var delay = 0;
+        if (isCard) { delay = articleIndex; articleIndex++; }
+        else if (isWidget) { delay = widgetIndex; widgetIndex++; }
+        else { delay = otherIndex; otherIndex++; }
+        setInitialState(el, delay, isCard);
+      });
+
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var el = entry.target;
+            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            el.style.opacity = '1';
+            el.style.transform = 'translate(0, 0)';
+            el.addEventListener('transitionend', function handler() {
+              el.style.transition = '';
+              el.style.opacity = '';
+              el.style.transform = '';
+              el.style.transitionDelay = '';
+              el.classList.add('card-animated');
+              el.removeEventListener('transitionend', handler);
+            });
+            observer.unobserve(el);
+          }
+        });
+      }, { threshold: 0.05 });
+
+      animItems.forEach(function(el) { observer.observe(el); });
     } catch(e) {}
 
 
@@ -1128,6 +1488,8 @@
     } catch(e) {}
     
   </script>
+  
+  <script src="/xiaoshenblog.github.io/js/background.js" defer></script>
 
   <div id="font-settings-overlay" class="settings-overlay">
     <div class="settings-dialog">
@@ -1178,33 +1540,123 @@
   try {
     (function() {
       var FONT_KEY = 'blog_font_settings';
-      var defaults = { fontSize: 16, bodyFont: '', codeFont: '' };
+      var defaults = { fontSize: null, bodyFont: '', codeFont: '' };
       var saved;
       try { saved = JSON.parse(localStorage.getItem(FONT_KEY)); } catch(e) {}
       var settings = saved || defaults;
 
-      function applySettings(s) {
-        document.documentElement.style.setProperty('--font-size-global', s.fontSize + 'px');
-        if (s.bodyFont === 'unset') document.documentElement.style.removeProperty('--font-body');
-        else if (s.bodyFont) document.documentElement.style.setProperty('--font-body', s.bodyFont);
-        else document.documentElement.style.removeProperty('--font-body');
-        if (s.codeFont === 'unset') document.documentElement.style.removeProperty('--font-code');
-        else if (s.codeFont) document.documentElement.style.setProperty('--font-code', s.codeFont);
-        else document.documentElement.style.removeProperty('--font-code');
-        try { localStorage.setItem(FONT_KEY, JSON.stringify(s)); } catch(e) {}
+      function quoteFont(v) {
+        if (!v || v === 'unset') return v;
+        if (v.indexOf(',') !== -1 || v.indexOf("'") !== -1 || v.indexOf('"') !== -1) return v;
+        return "'" + v + "'";
+      }
+
+      function applySettings(s, persist) {
+        if (persist !== false) {
+          try { localStorage.setItem(FONT_KEY, JSON.stringify(s)); } catch(e) {}
+        }
+        var d = document.documentElement;
+        if (s.fontSize != null) d.style.setProperty('--font-size-global', s.fontSize + 'px');
+        else d.style.removeProperty('--font-size-global');
+        if (s.bodyFont === 'unset') d.style.removeProperty('--font-body');
+        else if (s.bodyFont) d.style.setProperty('--font-body', quoteFont(s.bodyFont));
+        else d.style.removeProperty('--font-body');
+        if (s.codeFont === 'unset') d.style.removeProperty('--font-code');
+        else if (s.codeFont) d.style.setProperty('--font-code', quoteFont(s.codeFont));
+        else d.style.removeProperty('--font-code');
+        // Update CSS style tag so ALL elements (including dynamic ones) get the font
+        var cs = document.getElementById('__code_font_style');
+        if (!cs) {
+          cs = document.createElement('style');
+          cs.id = '__code_font_style';
+          document.head.appendChild(cs);
+        }
+        if (s.codeFont && s.codeFont !== 'unset') {
+          var fn = s.codeFont.replace(/"/g, '\\"');
+          cs.textContent = '@font-face{font-family:"' + fn + '";src:local("' + fn + '")}code,pre,.editor-gutter,#editor-input,textarea,.code-wrap,.highlight,.hljs,.font-local-item{font-family:"' + fn + '",monospace!important}';
+          var gl = document.getElementById('__code_font_gf');
+          if (!gl) { gl = document.createElement('link'); gl.rel = 'stylesheet'; gl.id = '__code_font_gf'; document.head.appendChild(gl); }
+          gl.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(s.codeFont) + ':wght@300;400;500;600;700&display=swap';
+        } else {
+          cs.textContent = '';
+          var glRm = document.getElementById('__code_font_gf'); if (glRm) glRm.remove();
+        }
+        // Also apply direct DOM for immediate visual effect
+        if (s.codeFont && s.codeFont !== 'unset') {
+          var targets = document.querySelectorAll('code, pre, .editor-gutter, #editor-input, textarea, .gutter, .code-wrap, .highlight, .hljs, .font-local-item');
+          for (var i = 0; i < targets.length; i++) {
+            targets[i].style.setProperty('font-family', '"' + s.codeFont + '",monospace', 'important');
+          }
+        }
+        if (s.bodyFont && s.bodyFont !== 'unset') {
+          var bs = document.getElementById('__body_font_style');
+          if (!bs) {
+            bs = document.createElement('style');
+            bs.id = '__body_font_style';
+            document.head.appendChild(bs);
+          }
+          var fnB = s.bodyFont.replace(/"/g, '\\"');
+          bs.textContent = '@font-face{font-family:"' + fnB + '";src:local("' + fnB + '")}body,.post-content,.content{font-family:"' + fnB + '",serif!important}';
+          var bl = document.getElementById('__body_font_gf');
+          if (!bl) { bl = document.createElement('link'); bl.rel = 'stylesheet'; bl.id = '__body_font_gf'; document.head.appendChild(bl); }
+          bl.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(s.bodyFont) + ':wght@300;400;500;600;700&display=swap';
+        } else {
+          var bs = document.getElementById('__body_font_style');
+          if (bs) bs.textContent = '';
+          var blRm = document.getElementById('__body_font_gf'); if (blRm) blRm.remove();
+        }
         var bi = document.getElementById('font-body-input');
         var ci = document.getElementById('font-code-input');
         if (bi && bi !== document.activeElement) bi.value = s.bodyFont === 'unset' ? '' : s.bodyFont;
         if (ci && ci !== document.activeElement) ci.value = s.codeFont === 'unset' ? '' : s.codeFont;
+        updatePresetActive(s);
       }
 
-      applySettings(settings);
+      function updatePresetActive(s) {
+        var ov = document.getElementById('font-settings-overlay');
+        if (!ov) return;
+        ov.querySelectorAll('.settings-group').forEach(function(group) {
+          var bBody = group.querySelector('[data-bodyfont]');
+          var bCode = group.querySelector('[data-codefont]');
+          if (!bBody && !bCode) return;
+          group.querySelectorAll('.settings-opt').forEach(function(b) { b.classList.remove('active'); });
+          if (bBody) {
+            var val = s.bodyFont || '';
+            group.querySelectorAll('[data-bodyfont]').forEach(function(b) {
+              if (b.getAttribute('data-bodyfont') === val) b.classList.add('active');
+            });
+          }
+          if (bCode) {
+            var val = s.codeFont || '';
+            group.querySelectorAll('[data-codefont]').forEach(function(b) {
+              if (b.getAttribute('data-codefont') === val) b.classList.add('active');
+            });
+          }
+        });
+      }
+
+      function syncUI() {
+        var s;
+        try { s = JSON.parse(localStorage.getItem(FONT_KEY)); } catch(e) {}
+        if (!s) s = defaults;
+        settings = s;
+        applySettings(s, false);
+        var bi = document.getElementById('font-body-input');
+        var ci = document.getElementById('font-code-input');
+        if (bi) bi.value = s.bodyFont === 'unset' ? '' : s.bodyFont;
+        if (ci) ci.value = s.codeFont === 'unset' ? '' : s.codeFont;
+      }
 
       var overlay = document.getElementById('font-settings-overlay');
       var openBtn = document.getElementById('font-settings-btn');
       var closeBtn = overlay ? overlay.querySelector('.settings-close') : null;
+
+      syncUI();
       if (openBtn && overlay) {
-        openBtn.addEventListener('click', function() { overlay.style.display = 'flex'; });
+        openBtn.addEventListener('click', function() {
+          syncUI();
+          overlay.style.display = 'flex';
+        });
       }
       if (closeBtn && overlay) {
         closeBtn.addEventListener('click', function() { overlay.style.display = 'none'; });
@@ -1258,45 +1710,100 @@
       var _allFonts = {};
       function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+      var _fallbackFontMap = {
+        'Microsoft YaHei': '微软雅黑', 'SimSun': '宋体', 'SimHei': '黑体',
+        'FangSong': '仿宋', 'KaiTi': '楷体', 'DengXian': '等线',
+        'NSimSun': '新宋体', 'YouYuan': '幼圆', 'LiSu': '隶书',
+        'STXihei': '华文细黑', 'STKaiti': '华文楷体', 'STSong': '华文宋体',
+        'STFangsong': '华文仿宋', 'STHeiti': '华文黑体', 'STLiti': '华文隶书',
+        'PMingLiU': '新细明体', 'MingLiU': '细明体', 'DFKai-SB': '标楷体',
+        'PMingLiU-ExtB': '细明体-ExtB', 'MingLiU-ExtB': '细明体-ExtB',
+        'Simsun (PMingLiU)': '宋体 (新细明体)', 'FangSong_GB2312': '仿宋_GB2312',
+        'Kaiti_GB2312': '楷体_GB2312', 'Stkaiti': '华文楷体',
+        'Source Han Sans CN': '思源黑体', 'Source Han Serif CN': '思源宋体',
+        'Noto Sans CJK SC': 'Noto Sans CJK 简体', 'Noto Sans CJK TC': 'Noto Sans CJK 繁体',
+        'Noto Serif CJK SC': 'Noto Serif CJK 简体', 'Noto Serif CJK TC': 'Noto Serif CJK 繁体',
+        'PingFang SC': '苹方简体', 'PingFang TC': '苹方繁体', 'PingFang HK': '苹方港版',
+        'Hiragino Sans GB': '冬青黑体', 'STXingkai': '华文行楷',
+        'AR PL UMing CN': '文鼎PL细上海宋', 'AR PL UKai CN': '文鼎PL中楷',
+        'WenQuanYi Micro Hei': '文泉驿微米黑', 'WenQuanYi Zen Hei': '文泉驿正黑',
+        'Droid Sans Fallback': 'Droid Sans 回退字体',
+        'Microsoft YaHei Light': '微软雅黑 细体', 'Microsoft YaHei UI': '微软雅黑 UI',
+        'Microsoft YaHei UI Light': '微软雅黑 UI 细体', 'SimSun-ExtB': '宋体-ExtB',
+        'Kaiti SC': '华文楷体 SC', 'Songti SC': '华文宋体 SC', 'Heiti SC': '华文黑体 SC',
+        'Lantinghei SC': '华文兰亭黑 SC', 'STLantinghei SC': '华文兰亭黑',
+        'STLantinghei SC Light': '华文兰亭黑 细体'
+      };
+
+      var _zhFontMapLoaded = null;
+      function loadZhFontMap() {
+        if (_zhFontMapLoaded) return _zhFontMapLoaded;
+        _zhFontMapLoaded = (window._zhFontMapCache ? Promise.resolve(window._zhFontMapCache) : fetch('https://cdn.jsdelivr.net/gh/Moonvy/FontMetaDB@master/data/fontFamilyNameMap.zh.json').then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })).then(function(data) {
+          if (!data || typeof data !== 'object') return _fallbackFontMap;
+          var merged = {};
+          for (var k in _fallbackFontMap) merged[k] = _fallbackFontMap[k];
+          for (var k in data) if (typeof data[k] === 'string' && data[k]) merged[k] = data[k];
+          window._zhFontMapCache = merged;
+          return merged;
+        }).catch(function() {
+          window._zhFontMapCache = _fallbackFontMap;
+          return _fallbackFontMap;
+        });
+        return _zhFontMapLoaded;
+      }
+
+      function getDisplayName(engName, map) {
+        return map && map[engName] ? engName + ' (' + map[engName] + ')' : engName;
+      }
+      function getSearchText(engName, map) {
+        var zh = map && map[engName] ? map[engName] : '';
+        return (engName + ' ' + zh).toLowerCase();
+      }
+
       function showLocalFonts(target) {
         var list = document.getElementById('font-' + target + '-list');
         if (!list) return;
         if (list.dataset.loaded) { list.style.display = list.style.display === 'none' ? 'block' : 'none'; return; }
         list.style.display = 'block';
         list.dataset.loaded = '1';
-        list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">扫描中...</div>';
-        var doScan = function(fonts) {
-          var names = [...new Set(fonts.map(function(f) { return f.family; }))].filter(function(n) { return n && n.trim(); }).sort(function(a,b) { return a.localeCompare(b); });
-          _allFonts[target] = names;
-          if (names.length === 0) {
-            list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">未检测到可用字体</div>';
-            return;
-          }
-          list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '">';
-          names.forEach(function(n) {
-            var el = document.createElement('div');
-            el.className = 'font-local-item';
-            el.setAttribute('data-target', target);
-            el.setAttribute('data-font', n);
-            el.textContent = n;
-            list.appendChild(el);
-          });
-          document.getElementById('font-search-' + target).addEventListener('input', function() {
-            var q = this.value.toLowerCase();
-            var items = list.querySelectorAll('.font-local-item');
-            items.forEach(function(el) {
-              if (el.textContent.toLowerCase().indexOf(q) !== -1) el.style.display = '';
-              else el.style.display = 'none';
+        list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体（支持中文名）..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">正在加载字体库...</div>';
+        loadZhFontMap().then(function(zhFontMap) {
+          list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体（支持中文名）..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">扫描中...</div>';
+          var doScan = function(fonts) {
+            var names = [...new Set(fonts.map(function(f) { return f.family; }))].filter(function(n) { return n && n.trim(); }).sort(function(a,b) { return a.localeCompare(b, 'en'); });
+            _allFonts[target] = names;
+            if (names.length === 0) {
+              list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体（支持中文名）..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">未检测到可用字体</div>';
+              return;
+            }
+            list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体（支持中文名）..." id="font-search-' + target + '">';
+            names.forEach(function(n) {
+              var el = document.createElement('div');
+              el.className = 'font-local-item';
+              el.setAttribute('data-target', target);
+              el.setAttribute('data-font', n);
+              el.setAttribute('data-search', getSearchText(n, zhFontMap));
+              el.textContent = getDisplayName(n, zhFontMap);
+              list.appendChild(el);
             });
-          });
-        };
-        if ('queryLocalFonts' in window) {
-          window.queryLocalFonts().then(doScan).catch(function() {
-            list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">权限被拒绝或浏览器不支持</div>';
-          });
-        } else {
-          list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">当前浏览器不支持扫描本地字体</div>';
-        }
+            document.getElementById('font-search-' + target).addEventListener('input', function() {
+              var q = this.value.toLowerCase();
+              var items = list.querySelectorAll('.font-local-item');
+              items.forEach(function(el) {
+                var searchText = el.getAttribute('data-search');
+                if (searchText.indexOf(q) !== -1) el.style.display = '';
+                else el.style.display = 'none';
+              });
+            });
+          };
+          if ('queryLocalFonts' in window) {
+            window.queryLocalFonts().then(doScan).catch(function() {
+              list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">权限被拒绝或浏览器不支持</div>';
+            });
+          } else {
+            list.innerHTML = '<input class="font-local-search" type="text" placeholder="搜索字体..." id="font-search-' + target + '"><div style="padding:8px 0;text-align:center;color:var(--text-muted);font-size:0.85em">当前浏览器不支持扫描本地字体</div>';
+          }
+        });
       }
 
       overlay.addEventListener('click', function(e) {
@@ -1341,7 +1848,6 @@
       var input = document.getElementById('searchInput');
       var closeBtn = document.querySelector('.search-close-button');
       var searchBtn = document.getElementById('searchBtn');
-      var navSearchBtn = document.getElementById('navSearchBtn');
       var resultsEl = document.getElementById('local-search-results');
       var statsEl = document.getElementById('local-search-stats');
       if (!overlay || !input) return;
@@ -1387,7 +1893,6 @@
       }
 
       if (searchBtn) searchBtn.addEventListener('click', openSearch);
-      if (navSearchBtn) navSearchBtn.addEventListener('click', openSearch);
       if (closeBtn) closeBtn.addEventListener('click', closeSearch);
       if (mask) mask.addEventListener('click', closeSearch);
 
