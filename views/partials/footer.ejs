@@ -1045,5 +1045,30 @@
     })();
   </script>
   <% } %>
+  <script>
+  try {
+    (function() {
+      var MAX_RETRY = 2;
+      var covers = <%- JSON.stringify(Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']) %>;
+      function retryImg(img) {
+        var retries = parseInt(img.getAttribute('data-retry') || '0');
+        if (retries >= MAX_RETRY || !img.getAttribute('data-origin-src')) return;
+        img.setAttribute('data-retry', retries + 1);
+        var url = covers[Math.floor(Math.random() * covers.length)];
+        var sep = url.includes('?') ? '&' : '?';
+        img.src = url + sep + 'v=' + Date.now() + '_' + retries;
+      }
+      document.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'IMG') {
+          var img = e.target;
+          if (!img.getAttribute('data-origin-src')) {
+            img.setAttribute('data-origin-src', img.src);
+          }
+          setTimeout(function() { retryImg(img); }, 500 * (parseInt(img.getAttribute('data-retry') || '0') + 1));
+        }
+      }, true);
+    })();
+  } catch(e) {}
+  </script>
 </body>
 </html>
