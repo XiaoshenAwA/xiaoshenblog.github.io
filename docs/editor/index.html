@@ -26,7 +26,7 @@
   <meta property="og:image" content="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png">
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1784354564738" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1784360086577" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -392,9 +392,9 @@
     <button class="toolbar-btn" data-md="- " data-wrap="" title="无序列表"><i class="fas fa-list-ul"></i></button>
     <button class="toolbar-btn" data-md="1. " data-wrap="" title="有序列表"><i class="fas fa-list-ol"></i></button>
     <span class="toolbar-divider"></span>
-    <button class="toolbar-btn" data-md="```\n" data-wrap="\n```" title="代码块"><i class="fas fa-code"></i></button>
-    <button class="toolbar-btn" data-md="[" data-wrap="](url)" title="链接"><i class="fas fa-link"></i></button>
-    <button class="toolbar-btn" data-md="![" data-wrap="](url)" title="图片"><i class="fas fa-image"></i></button>
+    <button class="toolbar-btn" data-md="```\n" data-wrap="\n```" data-action="code" title="代码块"><i class="fas fa-code"></i></button>
+    <button class="toolbar-btn" data-md="[" data-wrap="](url)" data-action="link" title="链接"><i class="fas fa-link"></i></button>
+    <button class="toolbar-btn" data-md="![" data-wrap="](url)" data-action="image" title="图片"><i class="fas fa-image"></i></button>
     <button class="toolbar-btn" data-md="---" data-wrap="" title="分割线"><i class="fas fa-minus"></i></button>
     <span class="toolbar-divider"></span>
     <button class="toolbar-btn" id="editor-download" title="下载为 Markdown"><i class="fas fa-download"></i></button>
@@ -404,6 +404,8 @@
     <button class="toolbar-btn view-mode-btn active" data-mode="split" title="分栏"><i class="fas fa-columns"></i></button>
     <button class="toolbar-btn view-mode-btn" data-mode="edit" title="仅编辑"><i class="fas fa-pen"></i></button>
     <button class="toolbar-btn view-mode-btn" data-mode="preview" title="仅预览"><i class="fas fa-eye"></i></button>
+    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" id="editor-fullscreen" title="全屏"><i class="fas fa-expand"></i></button>
   </div>
   <div class="editor-container">
     <div class="editor-pane">
@@ -417,6 +419,109 @@
     </div>
   </div>
 </div>
+
+<!-- Insert Link Modal -->
+<div id="insert-link-modal" class="picker-modal" style="display:none;">
+  <div class="picker-overlay" onclick="document.getElementById('insert-link-modal').style.display='none'"></div>
+  <div class="picker-dialog" style="width:480px;">
+    <div class="picker-header">
+      <span>插入链接</span>
+      <button type="button" class="picker-close" onclick="document.getElementById('insert-link-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="picker-body" style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">链接文本</label>
+      <input type="text" id="link-text" placeholder="显示文本" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;"></div>
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">URL</label>
+      <input type="url" id="link-url" placeholder="https://example.com" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;"></div>
+    </div>
+    <div class="picker-footer" style="justify-content:flex-end;">
+      <div>
+        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('insert-link-modal').style.display='none'">取消</button>
+        <button type="button" class="btn btn-sm btn-primary" id="link-confirm">插入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Insert Image Modal -->
+<div id="insert-image-modal" class="picker-modal" style="display:none;">
+  <div class="picker-overlay" onclick="document.getElementById('insert-image-modal').style.display='none'"></div>
+  <div class="picker-dialog" style="width:480px;">
+    <div class="picker-header">
+      <span>插入图片</span>
+      <button type="button" class="picker-close" onclick="document.getElementById('insert-image-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="picker-body" style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">图片地址 (URL)</label>
+      <input type="url" id="image-url" placeholder="https://example.com/image.png" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;"></div>
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">替代文本 (Alt)</label>
+      <input type="text" id="image-alt" placeholder="图片描述" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;"></div>
+    </div>
+    <div class="picker-footer" style="justify-content:flex-end;">
+      <div>
+        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('insert-image-modal').style.display='none'">取消</button>
+        <button type="button" class="btn btn-sm btn-primary" id="image-confirm">插入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Insert Code Block Modal -->
+<div id="insert-code-modal" class="picker-modal" style="display:none;">
+  <div class="picker-overlay" onclick="document.getElementById('insert-code-modal').style.display='none'"></div>
+  <div class="picker-dialog" style="width:720px;max-width:95vw;">
+    <div class="picker-header">
+      <span>插入代码块</span>
+      <button type="button" class="picker-close" onclick="document.getElementById('insert-code-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="picker-body" style="padding:18px;display:flex;flex-direction:column;gap:14px;">
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">编程语言</label>
+      <select id="code-lang" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;">
+        <option value="">纯文本</option>
+        <option value="javascript">JavaScript</option>
+        <option value="typescript">TypeScript</option>
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="cpp">C++</option>
+        <option value="c">C</option>
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="bash">Bash / Shell</option>
+        <option value="sql">SQL</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="json">JSON</option>
+        <option value="yaml">YAML</option>
+        <option value="xml">XML</option>
+        <option value="markdown">Markdown</option>
+        <option value="php">PHP</option>
+        <option value="ruby">Ruby</option>
+        <option value="swift">Swift</option>
+        <option value="kotlin">Kotlin</option>
+        <option value="dart">Dart</option>
+        <option value="r">R</option>
+        <option value="lua">Lua</option>
+        <option value="makefile">Makefile</option>
+        <option value="dockerfile">Dockerfile</option>
+      </select></div>
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">代码内容</label>
+      <div class="code-editor-wrap" id="code-editor-wrap">
+        <div class="code-gutter" id="code-gutter">1</div>
+        <div class="code-editor-body">
+          <pre class="code-highlight" id="code-highlight"></pre>
+          <textarea class="code-input" id="code-input" placeholder="在此输入代码..."></textarea>
+        </div>
+      </div></div>
+    </div>
+    <div class="picker-footer" style="justify-content:flex-end;">
+      <div>
+        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('insert-code-modal').style.display='none'">取消</button>
+        <button type="button" class="btn btn-sm btn-primary" id="code-confirm">插入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 window.__CONFIG__ = {
   EDITOR_DOWNLOAD_FILENAME: 'document.md',
@@ -424,7 +529,7 @@ window.__CONFIG__ = {
   EDITOR_INDENT_MODE: 'tab'
 };
 </script>
-<script type="module" src="/xiaoshenblog.github.io/assets/editor.js" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="/xiaoshenblog.github.io/assets/editor.js?v=1784360086577" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
   </div><!-- #body-wrap -->
 
   <footer id="footer">
@@ -455,7 +560,7 @@ window.__CONFIG__ = {
     </div>
   </div>
 
-  <script src="/xiaoshenblog.github.io/assets/main.js?v=1784354564738"></script>
+  <script src="/xiaoshenblog.github.io/assets/main.js?v=1784360086577"></script>
   <script>
     try {
       var h = document.documentElement;
