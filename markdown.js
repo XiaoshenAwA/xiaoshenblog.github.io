@@ -1,5 +1,10 @@
 const katex = require('katex');
+const createDOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
 const config = require('./config');
+
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 const katexOptions = {
   throwOnError: false,
@@ -236,7 +241,15 @@ async function init() {
 
 async function render(content) {
   await init();
-  return md.render(content || '');
+  const raw = md.render(content || '');
+  return DOMPurify.sanitize(raw, {
+    ALLOWED_TAGS: false,
+    ALLOWED_ATTR: false,
+    ADD_TAGS: ['math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'mfrac', 'msqrt', 'mover', 'munder', 'mstyle', 'merror', 'mpadded', 'mphantom', 'menclose', 'mlabeledtr', 'mtable', 'mtr', 'mtd', 'mprescripts', 'none'],
+    ADD_ATTR: ['class', 'id', 'style', 'src', 'href', 'alt', 'title', 'target', 'rel', 'width', 'height', 'loading', 'datetime', 'open', 'data-*'],
+    FORBID_TAGS: ['style', 'script', 'iframe', 'embed', 'object', 'applet', 'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'frameset', 'frame', 'marquee'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onkeydown', 'onkeypress', 'onkeyup', 'onsubmit', 'onreset', 'onfocus', 'onblur', 'onchange', 'onselect', 'onabort', 'onbeforeunload', 'onhashchange', 'onpopstate', 'onstorage'],
+  });
 }
 
 async function excerpt(content, maxLen = 200) {

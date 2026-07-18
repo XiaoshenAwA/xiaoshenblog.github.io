@@ -163,6 +163,24 @@ async function build() {
   console.log('\u6B63\u5728\u751F\u6210 Markdown \u7F16\u8F91\u5668\u9875\u9762...');
   await render('editor.ejs', { title: 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');
 
+  console.log('\u6B63\u5728\u751F\u6210 Sitemap...');
+  var siteUrl = 'https://xiaoshenblog.github.io';
+  var sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  function addUrl(loc, priority) {
+    sitemap += '  <url>\n    <loc>' + siteUrl + loc + '</loc>\n    <priority>' + priority + '</priority>\n  </url>\n';
+  }
+  addUrl('/', '1.0');
+  for (var pi = 0; pi < allPosts.length; pi++) {
+    addUrl('/posts/' + allPosts[pi].id + '/', '0.8');
+  }
+  addUrl('/archives/', '0.6');
+  addUrl('/categories/', '0.6');
+  addUrl('/tags/', '0.6');
+  addUrl('/about/', '0.5');
+  addUrl('/friends/', '0.4');
+  sitemap += '</urlset>';
+  writeFile(path.join(dist, 'sitemap.xml'), sitemap);
+
   console.log('\u6B63\u5728\u590D\u5236\u9759\u6001\u8D44\u6E90...');
   copyDirSync(path.join(__dirname, 'public'), dist);
 

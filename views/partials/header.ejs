@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof title !== 'undefined' && title ? title + ' | ' : '' %><%= config.BLOG_NAME %></title>
+  <% if (typeof metaDesc !== 'undefined' && metaDesc) { %><meta name="description" content="<%= metaDesc %>"><% } else if (typeof post !== 'undefined' && post && post.content) { %><meta name="description" content="<%= post.content.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,160) %>"><% } else { %><meta name="description" content="<%= config.BLOG_SUBTITLE %>"><% } %>
   <% if (config.FAVICON) { %>
   <link rel="icon" href="<%= basePath %><%= config.FAVICON %>">
   <% } %>
@@ -20,10 +21,11 @@
   <meta property="og:site_name" content="<%= config.BLOG_NAME %>">
   <meta property="og:type" content="<%= typeof title !== 'undefined' && title ? 'article' : 'website' %>">
   <meta property="og:url" content="<%= basePath %>/">
+  <meta property="og:description" content="<%= typeof metaDesc !== 'undefined' && metaDesc ? metaDesc : (typeof post !== 'undefined' && post && post.content ? post.content.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,160) : config.BLOG_SUBTITLE) %>">
   <meta name="twitter:card" content="<%= config.OG_TWITTER_CARD %>">
   <% if (config.OG_TWITTER_ID) { %><meta name="twitter:site" content="<%= config.OG_TWITTER_ID %>"><% } %>
   <% if (config.OG_FB_APP_ID) { %><meta property="fb:app_id" content="<%= config.OG_FB_APP_ID %>"><% } %>
-  <% if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
+  <% if (typeof post !== 'undefined' && post && post.cover) { %><meta property="og:image" content="<%= url(post.cover) %>"><% } else if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
   <% } %>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="<%= config.CDN.FONT_AWESOME %>" crossorigin="anonymous">

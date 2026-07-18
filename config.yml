@@ -328,7 +328,7 @@ nav:
 
 images:
   # 网站 Favicon 图标路径。显示在浏览器标签页上。
-  favicon: "/img/favicon.png"
+  favicon: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
   # 头像设置
   avatar:
     # 头像图片路径。留空则使用 FontAwesome 图标占位。
