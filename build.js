@@ -65,7 +65,7 @@ async function build() {
   async function render(template, data, outPath) {
     const html = await ejs.renderFile(
       path.join(__dirname, 'views', template),
-      { ...data, basePath, url, isStatic, config, formatDate, locale: config.locale, cssVersion },
+      { ...data, basePath, url, isStatic, config, formatDate, locale: config.locale, cssVersion, supabaseUrl: config.SUPABASE_URL, supabaseAnonKey: config.SUPABASE_ANON_KEY },
       { views: [path.join(__dirname, 'views')] }
     );
     writeFile(path.join(dist, outPath), html);
