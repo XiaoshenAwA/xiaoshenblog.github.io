@@ -91,8 +91,178 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 const DEPLOY_HOOK_URL = cfg.DEPLOY_HOOK_URL || ''
 const SAVE_REDIRECT_DELAY = cfg.ADMIN_SAVE_REDIRECT_DELAY || 1500
 const CHANGE_PW_REDIRECT_DELAY = cfg.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000
+const ADMIN_PAGE_SIZE = cfg.ADMIN_PAGE_SIZE || 20
+const ADMIN_MAX_UNDO = cfg.ADMIN_MAX_UNDO || 50
 const DB_TABLE = cfg.DB_TABLE || 'posts'
+const TAGS_TABLE = cfg.DB_TAGS_TABLE || 'managed_tags'
+const CATEGORIES_TABLE = cfg.DB_CATEGORIES_TABLE || 'managed_categories'
 const L = cfg.LOCALE || {}
+
+// ============ Client-side Supabase helpers for Tags & Categories ============
+
+function buildClientCategoryTree(catList) {
+  const map = {}
+  const roots = []
+  for (const cat of catList) {
+    cat.children = []
+    map[cat.id] = cat
+  }
+  for (const cat of catList) {
+    if (cat.parent_id && map[cat.parent_id]) {
+      map[cat.parent_id].children.push(cat)
+    } else {
+      roots.push(cat)
+    }
+  }
+  return roots
+}
+
+function aggregateClientCounts(nodes) {
+  for (const node of nodes) {
+    if (node.children && node.children.length) {
+      aggregateClientCounts(node.children)
+      for (const child of node.children) {
+        node.post_count += child.post_count
+      }
+    }
+  }
+}
+
+async function clientGetManagedTags() {
+  const { data: tags } = await supabase.from(TAGS_TABLE).select('*').order('name')
+  const { data: posts } = await supabase.from(DB_TABLE).select('tags')
+  const countMap = {}
+  if (posts) {
+    for (const row of posts) {
+      if (row.tags && Array.isArray(row.tags)) {
+        for (const t of row.tags) {
+          if (t) countMap[t] = (countMap[t] || 0) + 1
+        }
+      }
+    }
+  }
+  return (tags || []).map(t => ({ ...t, post_count: countMap[t.name] || 0 }))
+}
+
+async function clientGetManagedCategories() {
+  const { data: cats } = await supabase.from(CATEGORIES_TABLE).select('*').order('sort_order')
+  const { data: posts } = await supabase.from(DB_TABLE).select('category')
+  const countMap = {}
+  if (posts) {
+    for (const row of posts) {
+      if (row.category) {
+        countMap[row.category] = (countMap[row.category] || 0) + 1
+      }
+    }
+  }
+  const catList = (cats || []).map(c => ({
+    ...c,
+    post_count: countMap[c.path || c.name] || 0
+  }))
+  const tree = buildClientCategoryTree(catList)
+  aggregateClientCounts(tree)
+  return { tree, flat: catList }
+}
+
+async function clientCreateManagedTag(name) {
+  const { data, error } = await supabase.from(TAGS_TABLE).insert({ name: name.trim() }).select().single()
+  if (error) throw error
+  return data
+}
+
+async function clientDeleteManagedTag(id) {
+  const { error } = await supabase.from(TAGS_TABLE).delete().eq('id', id)
+  if (error) throw error
+}
+
+async function clientRenameManagedTag(id, name) {
+  const { error } = await supabase.from(TAGS_TABLE).update({ name: name.trim() }).eq('id', id)
+  if (error) throw error
+}
+
+async function clientCreateManagedCategory(name, parentId) {
+  let path = name.trim()
+  if (parentId) {
+    const { data: parent } = await supabase.from(CATEGORIES_TABLE).select('path').eq('id', parentId).single()
+    if (parent && parent.path) {
+      path = parent.path + '/' + name.trim()
+    }
+  }
+  const { data, error } = await supabase.from(CATEGORIES_TABLE).insert({
+    name: name.trim(),
+    parent_id: parentId || null,
+    path
+  }).select().single()
+  if (error) throw error
+  return data
+}
+
+async function clientDeleteManagedCategory(id) {
+  const { error } = await supabase.from(CATEGORIES_TABLE).delete().eq('id', id)
+  if (error) throw error
+}
+
+async function clientRenameManagedCategory(id, name) {
+  const { data: cat } = await supabase.from(CATEGORIES_TABLE).select('*').eq('id', id).single()
+  if (!cat) throw new Error('分类不存在')
+  let newPath = name.trim()
+  if (cat.parent_id) {
+    const { data: parent } = await supabase.from(CATEGORIES_TABLE).select('path').eq('id', cat.parent_id).single()
+    if (parent && parent.path) {
+      newPath = parent.path + '/' + name.trim()
+    }
+  }
+  const { error } = await supabase.from(CATEGORIES_TABLE).update({ name: name.trim(), path: newPath }).eq('id', id)
+  if (error) throw error
+  const { data: children } = await supabase.from(CATEGORIES_TABLE).select('id, path').filter('path', 'like', cat.path + '/%')
+  if (children) {
+    for (const child of children) {
+      const childNewPath = child.path.replace(cat.path, newPath)
+      await supabase.from(CATEGORIES_TABLE).update({ path: childNewPath }).eq('id', child.id)
+    }
+  }
+}
+
+async function clientMoveManagedCategory(id, newParentId) {
+  const { data: cat } = await supabase.from(CATEGORIES_TABLE).select('*').eq('id', id).single()
+  if (!cat) throw new Error('分类不存在')
+  if (String(newParentId) === String(id)) throw new Error('不能将文件夹移动到自身')
+  let newPath = cat.name.trim()
+  if (newParentId) {
+    const { data: parent } = await supabase.from(CATEGORIES_TABLE).select('path').eq('id', newParentId).single()
+    if (parent && parent.path) {
+      newPath = parent.path + '/' + cat.name.trim()
+    }
+  }
+  const oldPath = cat.path || cat.name.trim()
+  const { error } = await supabase.from(CATEGORIES_TABLE).update({ parent_id: newParentId || null, path: newPath }).eq('id', id)
+  if (error) throw error
+  const { data: children } = await supabase.from(CATEGORIES_TABLE).select('id, path').filter('path', 'like', oldPath + '/%')
+  if (children) {
+    for (const child of children) {
+      const childNewPath = child.path.replace(oldPath, newPath)
+      await supabase.from(CATEGORIES_TABLE).update({ path: childNewPath }).eq('id', child.id)
+    }
+  }
+  const { data: posts } = await supabase.from(DB_TABLE).select('id, category').filter('category', 'like', oldPath + '/%')
+  if (posts) {
+    for (const post of posts) {
+      const postNewCategory = post.category.replace(oldPath, newPath)
+      await supabase.from(DB_TABLE).update({ category: postNewCategory, updated_at: new Date().toISOString() }).eq('id', post.id)
+    }
+  }
+  const { data: directPosts } = await supabase.from(DB_TABLE).select('id, category').eq('category', oldPath)
+  if (directPosts) {
+    for (const post of directPosts) {
+      await supabase.from(DB_TABLE).update({ category: newPath, updated_at: new Date().toISOString() }).eq('id', post.id)
+    }
+  }
+}
+
+async function clientReorderCategory(id, newSortOrder) {
+  const { error } = await supabase.from(CATEGORIES_TABLE).update({ sort_order: newSortOrder }).eq('id', id)
+  if (error) throw error
+}
 
 function triggerDeploy() {
   if (DEPLOY_HOOK_URL) fetch(DEPLOY_HOOK_URL, { method: 'POST' }).catch(() => {})
@@ -148,7 +318,7 @@ $('#login-form').addEventListener('submit', async e => {
     $('#login-error').textContent = L.login_failed_prefix || '登录失败: ' + error.message
   } else {
     try { sessionStorage.setItem('admin', 'true') } catch(e) {}
-    loadPosts()
+    location.reload()
   }
 })
 
@@ -307,29 +477,232 @@ aboutForm.addEventListener('submit', async e => {
 })
 
 // Toolbar buttons (supports textarea with data-target)
+let currentModalTa = null
+
+function adminInsertWrapAtCursor(ta, md, wrap) {
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const sel = ta.value.substring(start, end)
+  const before = ta.value.substring(0, start)
+  const after = ta.value.substring(end)
+  if (sel) {
+    ta.value = before + md + sel + wrap + after
+    ta.selectionStart = start + md.length
+    ta.selectionEnd = start + md.length + sel.length
+  } else {
+    ta.value = before + md + wrap + after
+    const pos = start + md.length
+    ta.selectionStart = ta.selectionEnd = pos
+  }
+  ta.focus()
+  ta.dispatchEvent(new Event('input'))
+}
+
+function adminHljsHighlight(code, lang) {
+  if (lang && hljs.getLanguage(lang)) {
+    try { return hljs.highlight(code, { language: lang }).value } catch {}
+  }
+  try { return hljs.highlightAuto(code).value } catch {}
+  return code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
 document.querySelectorAll('.editor-toolbar .toolbar-btn[data-md]').forEach(btn => {
   btn.addEventListener('click', () => {
     const ta = document.getElementById(btn.dataset.target)
     if (!ta) return
-    const md = btn.dataset.md
-    const wrap = btn.dataset.wrap
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    const sel = ta.value.substring(start, end)
-    const before = ta.value.substring(0, start)
-    const after = ta.value.substring(end)
-    if (sel) {
-      ta.value = before + md + sel + wrap + after
-      ta.selectionStart = start + md.length
-      ta.selectionEnd = start + md.length + sel.length
-    } else {
-      ta.value = before + md + wrap + after
-      const pos = start + md.length
-      ta.selectionStart = ta.selectionEnd = pos
+    const action = btn.dataset.action
+
+    if (action === 'link') {
+      currentModalTa = ta
+      const sel = ta.value.substring(ta.selectionStart, ta.selectionEnd)
+      document.getElementById('link-text').value = sel || ''
+      document.getElementById('link-url').value = ''
+      document.getElementById('insert-link-modal').style.display = ''
+      setTimeout(() => { document.getElementById(sel ? 'link-url' : 'link-text').focus() }, 80)
+      return
     }
-    ta.focus()
-    ta.dispatchEvent(new Event('input'))
+
+    if (action === 'image') {
+      currentModalTa = ta
+      document.getElementById('image-url').value = ''
+      document.getElementById('image-alt').value = ''
+      document.getElementById('insert-image-modal').style.display = ''
+      setTimeout(() => document.getElementById('image-url').focus(), 80)
+      return
+    }
+
+    if (action === 'code') {
+      currentModalTa = ta
+      document.getElementById('code-input').value = ''
+      document.getElementById('code-highlight').innerHTML = ''
+      document.getElementById('code-gutter').textContent = '1'
+      document.getElementById('code-lang').value = ''
+      document.getElementById('insert-code-modal').style.display = ''
+      setTimeout(() => document.getElementById('code-input').focus(), 80)
+      return
+    }
+
+    adminInsertWrapAtCursor(ta, btn.dataset.md, btn.dataset.wrap)
   })
+})
+
+function adminInsertAtCursor(ta, text) {
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const before = ta.value.substring(0, start)
+  const after = ta.value.substring(end)
+  ta.value = before + text + after
+  ta.selectionStart = ta.selectionEnd = start + text.length
+  ta.focus()
+  ta.dispatchEvent(new Event('input'))
+}
+
+document.getElementById('link-confirm').addEventListener('click', () => {
+  if (!currentModalTa) return
+  const url = document.getElementById('link-url').value.trim()
+  if (!url) return
+  const text = document.getElementById('link-text').value.trim() || url
+  const ta = currentModalTa
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const before = ta.value.substring(0, start)
+  const after = ta.value.substring(end)
+  const insertion = '[' + text + '](' + url + ')'
+  ta.value = before + insertion + after
+  ta.selectionStart = start + 1
+  ta.selectionEnd = start + 1 + text.length
+  ta.focus()
+  ta.dispatchEvent(new Event('input'))
+  document.getElementById('insert-link-modal').style.display = 'none'
+})
+
+document.getElementById('image-confirm').addEventListener('click', () => {
+  if (!currentModalTa) return
+  const url = document.getElementById('image-url').value.trim()
+  if (!url) return
+  const alt = document.getElementById('image-alt').value.trim() || '图片'
+  const ta = currentModalTa
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const before = ta.value.substring(0, start)
+  const after = ta.value.substring(end)
+  const insertion = '![' + alt + '](' + url + ')'
+  ta.value = before + insertion + after
+  ta.selectionStart = start + 2
+  ta.selectionEnd = start + 2 + alt.length
+  ta.focus()
+  ta.dispatchEvent(new Event('input'))
+  document.getElementById('insert-image-modal').style.display = 'none'
+})
+
+document.getElementById('code-confirm').addEventListener('click', () => {
+  if (!currentModalTa) return
+  const lang = document.getElementById('code-lang').value
+  const code = document.getElementById('code-input').value
+  const block = '```' + lang + '\n' + code + '\n```'
+  adminInsertAtCursor(currentModalTa, block)
+  document.getElementById('insert-code-modal').style.display = 'none'
+})
+
+const adminCodeInput = document.getElementById('code-input')
+const adminCodeHighlight = document.getElementById('code-highlight')
+const adminCodeLang = document.getElementById('code-lang')
+const adminCodeGutter = document.getElementById('code-gutter')
+
+function adminUpdateCodeLineNumbers() {
+  const lines = (adminCodeInput.value || '').split('\n')
+  adminCodeGutter.textContent = Array.from({ length: Math.max(lines.length, 1) }, (_, i) => i + 1).join('\n')
+}
+
+function adminSyncCodeScroll() {
+  adminCodeHighlight.scrollTop = adminCodeInput.scrollTop
+  adminCodeHighlight.scrollLeft = adminCodeInput.scrollLeft
+  adminCodeGutter.scrollTop = adminCodeInput.scrollTop
+}
+
+function adminUpdateCodeHighlight() {
+  const code = adminCodeInput.value || ''
+  const lang = adminCodeLang.value
+  adminCodeHighlight.innerHTML = adminHljsHighlight(code, lang) + '\n'
+  adminUpdateCodeLineNumbers()
+}
+adminCodeInput.addEventListener('input', adminUpdateCodeHighlight)
+adminCodeInput.addEventListener('scroll', adminSyncCodeScroll)
+adminCodeLang.addEventListener('change', adminUpdateCodeHighlight)
+
+const adminCodePairs = { '{': '}', '(': ')', '[': ']', '"': '"', "'": "'", '`': '`' }
+const adminCodeClosers = Object.values(adminCodePairs)
+const adminCodePairsNoTick = { '{': '}', '(': ')', '[': ']', '"': '"', "'": "'" }
+
+adminCodeInput.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault()
+    const s = adminCodeInput.selectionStart
+    const end = adminCodeInput.selectionEnd
+    if (!document.execCommand('insertText', false, '  ')) {
+      adminCodeInput.value = adminCodeInput.value.substring(0, s) + '  ' + adminCodeInput.value.substring(end)
+      adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + 2
+    }
+    adminUpdateCodeHighlight(); return
+  }
+  if (e.key === 'Enter' && adminCodeInput.selectionStart === adminCodeInput.selectionEnd) {
+    const s = adminCodeInput.selectionStart
+    const val = adminCodeInput.value
+    const lineStart = val.lastIndexOf('\n', s - 1) + 1
+    const curLine = val.substring(lineStart, s)
+    const indent = curLine.match(/^(\s*)/)[1]
+    const lastChar = curLine.trimEnd().slice(-1)
+    const after = val.substring(s)
+
+    if (lastChar === '{' || lastChar === '(' || lastChar === '[' || lastChar === ':') {
+      e.preventDefault()
+      const deep = indent + '  '
+      const next = after.trimStart()[0]
+      if (next !== undefined && next === (adminCodePairsNoTick[lastChar] || '')) {
+        adminCodeInput.value = val.substring(0, s) + '\n' + deep + '\n' + indent + after
+        adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + 1 + deep.length
+      } else {
+        adminCodeInput.value = val.substring(0, s) + '\n' + deep + after
+        adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + 1 + deep.length
+      }
+      adminUpdateCodeHighlight(); return
+    }
+
+    if (indent.length > 0) {
+      e.preventDefault()
+      adminCodeInput.value = val.substring(0, s) + '\n' + indent + after
+      adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + 1 + indent.length
+      adminUpdateCodeHighlight(); return
+    }
+  }
+  if (e.key in adminCodePairsNoTick) {
+    e.preventDefault()
+    const s = adminCodeInput.selectionStart
+    const end = adminCodeInput.selectionEnd
+    adminCodeInput.value = adminCodeInput.value.substring(0, s) + e.key + adminCodePairsNoTick[e.key] + adminCodeInput.value.substring(end)
+    adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + 1
+    adminUpdateCodeHighlight(); return
+  }
+  if (')' === e.key || ']' === e.key || '}' === e.key || '"' === e.key || "'" === e.key) {
+    if (adminCodeInput.value[adminCodeInput.selectionStart] === e.key) {
+      e.preventDefault()
+      adminCodeInput.selectionStart = adminCodeInput.selectionEnd = adminCodeInput.selectionStart + 1
+      return
+    }
+  }
+  if (e.key === 'Backspace') {
+    const s = adminCodeInput.selectionStart
+    if (s > 0 && s <= adminCodeInput.value.length) {
+      const before = adminCodeInput.value[s - 1]
+      const after = adminCodeInput.value[s]
+      if (adminCodePairsNoTick[before] === after || (before === '`' && after === '`')) {
+        e.preventDefault()
+        adminCodeInput.value = adminCodeInput.value.substring(0, s - 1) + adminCodeInput.value.substring(s + 1)
+        adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s - 1
+        adminUpdateCodeHighlight()
+      }
+    }
+  }
 })
 
 // Live Markdown preview
@@ -559,7 +932,7 @@ function setupAutoClose(ta, updateFn) {
 
       if (inCode && (lastLineChar === '{' || lastLineChar === '(' || lastLineChar === '[' || lastLineChar === ':')) {
         e.preventDefault()
-        const deep = indent + '  '
+      const deep = indent + getIndent()
         const nextChar = afterCursor.trimStart()[0]
         if (nextChar === pair[lastLineChar]) {
           if (!document.execCommand('insertText', false, '\n' + deep + '\n' + indent)) {
@@ -623,7 +996,6 @@ setTimeout(() => {
 let allPosts = []
 let currentPage = 1
 let totalPages = 1
-const PAGE_SIZE = 20
 
 function renderPosts(posts) {
   $('#posts-list').innerHTML = ''
@@ -634,11 +1006,11 @@ function renderPosts(posts) {
     if (paginationBar) paginationBar.style.display = 'none'
     return
   }
-  totalPages = Math.ceil(posts.length / PAGE_SIZE)
+  totalPages = Math.ceil(posts.length / ADMIN_PAGE_SIZE)
   if (currentPage < 1) currentPage = 1
   if (currentPage > totalPages) currentPage = totalPages
-  const start = (currentPage - 1) * PAGE_SIZE
-  const pagePosts = posts.slice(start, start + PAGE_SIZE)
+  const start = (currentPage - 1) * ADMIN_PAGE_SIZE
+  const pagePosts = posts.slice(start, start + ADMIN_PAGE_SIZE)
   empty.style.display = 'none'
   for (const post of pagePosts) {
     const d = document.createElement('div')
@@ -670,7 +1042,7 @@ function renderPagination(total) {
   const bar = $('#pagination-bar')
   const info = $('#page-info')
   if (!bar || !info) return
-  if (totalPages <= 1 && total <= PAGE_SIZE) { bar.style.display = 'none'; return }
+  if (totalPages <= 1 && total <= ADMIN_PAGE_SIZE) { bar.style.display = 'none'; return }
   bar.style.display = 'flex'
   info.textContent = total + ' 篇，第 ' + currentPage + ' / ' + totalPages + ' 页'
   const prev = $('#page-prev-btn')
@@ -814,7 +1186,7 @@ window.deletePost = async function (id) {
 
 const undoStack = []
 const redoStack = []
-const MAX_UNDO = 50
+const MAX_UNDO = ADMIN_MAX_UNDO
 
 function pushUndo(action) {
   undoStack.push(action)
@@ -847,13 +1219,7 @@ async function applyAction(action) {
       break
     }
     case 'move-folder': {
-      const res = await fetch('/api/admin/categories/' + action.folderId, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parent_id: action.toParentId })
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      await clientMoveManagedCategory(action.folderId, action.toParentId)
       break
     }
   }
@@ -925,8 +1291,7 @@ async function loadTagExplorerData() {
   if (!content) return
   content.innerHTML = '<div class="explorer-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>'
   try {
-    const [tagsRes] = await Promise.all([fetch('/api/admin/tags')])
-    tagExplorer.tags = await tagsRes.json()
+    tagExplorer.tags = await clientGetManagedTags()
     const { data: posts } = await supabase.from(DB_TABLE).select('id, title, tags, created_at, published, category').order('created_at', { ascending: false })
     tagExplorer.allPosts = posts || []
     renderTagExplorer()
@@ -1159,9 +1524,7 @@ window.confirmDeleteTag = async function() {
         }
       }
     }
-    const res = await fetch('/api/admin/tags/' + id, { method: 'DELETE' })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientDeleteManagedTag(id)
     showTagManageMsg('标签已删除' + (removeFromArticles && articles.length > 0 ? ('，已从 ' + articles.length + ' 篇文章中移除') : ''), 'success')
     closeDeleteTagDialog()
     if (tagExplorer.currentTag && tagExplorer.currentTag.id === id) {
@@ -1184,13 +1547,7 @@ window.closeDeleteTagDialog = function() {
 
 window.renameManagedTag = async function(id, name) {
   try {
-    const res = await fetch('/api/admin/tags/' + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientRenameManagedTag(id, name)
     showTagManageMsg('标签已重命名', 'success')
     if (tagExplorer.currentTag && tagExplorer.currentTag.id === id) {
       tagExplorer.currentTag = { id: id, name: name }
@@ -1224,17 +1581,11 @@ $('#view-tags').addEventListener('contextmenu', function(e) {
   showContextMenu(e, 'tag', {})
 })
 
-// Helper - add tag via API
+// Helper - add tag via Supabase
 async function addTag(name) {
   if (!name) return
   try {
-    const res = await fetch('/api/admin/tags', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientCreateManagedTag(name)
     showTagManageMsg('标签已添加', 'success')
     loadTagExplorerData()
   } catch (e) {
@@ -1242,17 +1593,11 @@ async function addTag(name) {
   }
 }
 
-// Helper - add top-level category via API
+// Helper - add top-level category via Supabase
 async function addTopCategory(name) {
   if (!name) return
   try {
-    const res = await fetch('/api/admin/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, parent_id: null })
-    })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientCreateManagedCategory(name, null)
     showCatManageMsg('分类已添加', 'success')
     loadExplorerData()
   } catch (e) {
@@ -1260,17 +1605,11 @@ async function addTopCategory(name) {
   }
 }
 
-// Helper - add child category via API
+// Helper - add child category via Supabase
 async function addChildCategory(parentId, name) {
   if (!name) return
   try {
-    const res = await fetch('/api/admin/categories', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, parent_id: parentId })
-    })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientCreateManagedCategory(name, parentId)
     showCatManageMsg('子分类已添加', 'success')
     loadExplorerData()
   } catch (e) {
@@ -1308,10 +1647,7 @@ async function loadExplorerData() {
   if (!content) return
   content.innerHTML = '<div class="explorer-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>'
   try {
-    const [catsRes] = await Promise.all([
-      fetch('/api/admin/categories')
-    ])
-    const catsData = await catsRes.json()
+    const catsData = await clientGetManagedCategories()
     explorer.tree = catsData.tree || []
     explorer.flat = catsData.flat || []
     const { data: posts } = await supabase.from(DB_TABLE).select('id, title, category, created_at, published, tags').order('created_at', { ascending: false })
@@ -1374,17 +1710,15 @@ async function moveFolderToParent(folderId, newParentId, targetName) {
     const cat = explorer.flat.find(function(c) { return c.id === folderId })
     const oldParentId = cat ? cat.parent_id : null
     if (oldParentId === newParentId) return
-    if (isDescendant(folderId, newParentId, explorer.tree)) {
-      showCatManageMsg('不能将文件夹移动到自身或子文件夹中', 'error')
+    if (folderId === newParentId) {
+      showCatManageMsg('不能将文件夹移动到自身', 'error')
       return
     }
-    const res = await fetch('/api/admin/categories/' + folderId, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ parent_id: newParentId })
-    })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    if (isDescendant(folderId, newParentId, explorer.tree)) {
+      showCatManageMsg('不能将文件夹移动到自身的子文件夹中', 'error')
+      return
+    }
+    await clientMoveManagedCategory(folderId, newParentId)
     pushUndo({ type: 'move-folder', folderId, fromParentId: oldParentId, toParentId: newParentId })
     showCatManageMsg('文件夹已移动到「' + targetName + '」', 'success')
     loadExplorerData()
@@ -1612,9 +1946,7 @@ function renderExplorerStatus(folderCount, articleCount) {
 window.deleteManagedCategory = async function(id) {
   if (!confirm('确定删除此分类？子分类也会被删除。')) return
   try {
-    const res = await fetch('/api/admin/categories/' + id, { method: 'DELETE' })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientDeleteManagedCategory(id)
     showCatManageMsg('分类已删除', 'success')
     loadExplorerData()
   } catch (e) {
@@ -1624,17 +1956,40 @@ window.deleteManagedCategory = async function(id) {
 
 window.renameManagedCategory = async function(id, name) {
   try {
-    const res = await fetch('/api/admin/categories/' + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name })
-    })
-    const data = await res.json()
-    if (data.error) throw new Error(data.error)
+    await clientRenameManagedCategory(id, name)
     showCatManageMsg('分类已重命名', 'success')
     loadExplorerData()
   } catch (e) {
     showCatManageMsg('重命名失败: ' + e.message, 'error')
+  }
+}
+
+async function sortCategory(id, direction) {
+  const siblings = explorer.currentPath
+    ? (function findSiblings(nodes, path) {
+        for (const node of nodes) {
+          if (node.path === path) return node.children || []
+          if (node.children) {
+            const found = findSiblings(node.children, path)
+            if (found) return found
+          }
+        }
+        return null
+      })(explorer.tree, explorer.currentPath)
+    : explorer.tree
+  const idx = siblings.findIndex(function(c) { return c.id === id })
+  if (idx < 0) return
+  const targetIdx = idx + direction
+  if (targetIdx < 0 || targetIdx >= siblings.length) return
+  const a = siblings[idx]
+  const b = siblings[targetIdx]
+  try {
+    await clientReorderCategory(a.id, b.sort_order || 0)
+    await clientReorderCategory(b.id, a.sort_order || 0)
+    showCatManageMsg('排序已更新', 'success')
+    loadExplorerData()
+  } catch (e) {
+    showCatManageMsg('排序失败: ' + e.message, 'error')
   }
 }
 
@@ -1667,6 +2022,8 @@ window.showContextMenu = function(e, type, data) {
   menu.querySelector('[data-action="new-tag"]').style.display = 'none'
   menu.querySelector('[data-action="add-child"]').style.display = 'none'
   menu.querySelector('[data-action="rename"]').style.display = 'none'
+  menu.querySelector('[data-action="sort-up"]').style.display = 'none'
+  menu.querySelector('[data-action="sort-down"]').style.display = 'none'
   menu.querySelector('[data-action="rename-tag"]').style.display = 'none'
   menu.querySelector('[data-action="delete"]').style.display = 'none'
   sep.style.display = 'none'
@@ -1674,6 +2031,8 @@ window.showContextMenu = function(e, type, data) {
     if (type === 'cat') {
       menu.querySelector('[data-action="add-child"]').style.display = ''
       menu.querySelector('[data-action="rename"]').style.display = ''
+      menu.querySelector('[data-action="sort-up"]').style.display = ''
+      menu.querySelector('[data-action="sort-down"]').style.display = ''
       menu.querySelector('[data-action="delete"]').style.display = ''
       sep.style.display = ''
     } else {
@@ -1720,6 +2079,12 @@ $('#context-menu').addEventListener('click', function(e) {
         showInputDialog('重命名分类：', function(val) {
           if (val) renameManagedCategory(target.id, val)
         }, target.name)
+        break
+      case 'sort-up':
+        sortCategory(target.id, -1)
+        break
+      case 'sort-down':
+        sortCategory(target.id, 1)
         break
       case 'delete':
         deleteManagedCategory(target.id)
@@ -1825,12 +2190,8 @@ let selectedTags = []
 
 async function loadPickerData() {
   try {
-    const [tagsRes, catsRes] = await Promise.all([
-      fetch('/api/admin/tags'),
-      fetch('/api/admin/categories')
-    ])
-    pickerTags = await tagsRes.json()
-    const catsData = await catsRes.json()
+    pickerTags = await clientGetManagedTags()
+    const catsData = await clientGetManagedCategories()
     pickerCategories = catsData.flat || []
     pickerCategoryTree = catsData.tree || []
   } catch (e) {
@@ -1993,11 +2354,7 @@ window.openNewCategoryFromPicker = function() {
   const parentId = parent ? parent.id : null
   showInputDialog(parent ? ('在「' + parent.name + '」下新建：') : '输入新分类名：', function(name) {
     if (name) {
-      fetch('/api/admin/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, parent_id: parentId })
-      }).then(function() {
+      clientCreateManagedCategory(name, parentId).then(function() {
         openCategoryPicker()
       }).catch(function() {})
     }
@@ -2053,11 +2410,7 @@ window.confirmTagPicker = function() {
 window.openNewTagFromPicker = function() {
   showInputDialog('输入新标签名：', function(name) {
     if (name) {
-      fetch('/api/admin/tags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name })
-      }).then(function() {
+      clientCreateManagedTag(name).then(function() {
         openTagPicker()
       }).catch(function() {})
     }

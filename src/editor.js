@@ -208,100 +208,75 @@ function updateIndentBtns() {
   })
 }
 
-function handleTab(ta, updateFn) {
-  ta.addEventListener('keydown', e => {
-    if (e.key === 'Tab') {
-      e.preventDefault()
-      const indent = getIndent()
-      const start = ta.selectionStart
-      const end = ta.selectionEnd
-      if (!document.execCommand('insertText', false, indent)) {
-        ta.value = ta.value.substring(0, start) + indent + ta.value.substring(end)
-        ta.selectionStart = ta.selectionEnd = start + indent.length
-      }
-      if (updateFn) updateFn()
-    }
-  })
-}
+const pair = { '{': '}', '(': ')', '[': ']' }
+const closers = new Set(Object.values(pair))
 
-function isInCodeBlock(text, pos) {
-  const before = text.substring(0, pos)
-  let fences = 0
-  for (const line of before.split('\n')) {
-    if (/^\s*`{3,}/.test(line) || /^\s*~{3,}/.test(line)) fences++
+textarea.addEventListener('keydown', function(e) {
+  if (e.ctrlKey || e.metaKey) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const val = textarea.value
+
+  if (e.key === 'Tab') {
+    e.preventDefault()
+    const ind = getIndent()
+    textarea.value = val.substring(0, start) + ind + val.substring(end)
+    textarea.selectionStart = textarea.selectionEnd = start + ind.length
+    update(); return
   }
-  return fences % 2 === 1
-}
 
-function setupAutoClose(ta, updateFn) {
-  ta.addEventListener('keydown', e => {
-    const start = ta.selectionStart
-    const end = ta.selectionEnd
-    const val = ta.value
-    const pair = { '{': '}', '(': ')', '[': ']' }
-    const closers = Object.values(pair)
+  if (e.key in pair && start === end) {
+    e.preventDefault()
+    textarea.value = val.substring(0, start) + e.key + pair[e.key] + val.substring(end)
+    textarea.selectionStart = textarea.selectionEnd = start + 1
+    update(); return
+  }
 
-    if (e.key in pair) {
+  if (closers.has(e.key) && val[start] === e.key) {
+    e.preventDefault()
+    textarea.selectionStart = textarea.selectionEnd = start + 1
+    update(); return
+  }
+
+  if (e.key === 'Backspace' && start > 0 && start < val.length && pair[val[start - 1]] === val[start]) {
+    e.preventDefault()
+    textarea.value = val.substring(0, start - 1) + val.substring(start + 1)
+    textarea.selectionStart = textarea.selectionEnd = start - 1
+    update(); return
+  }
+
+  if (e.key === 'Enter' && start === end) {
+    const lineStart = val.lastIndexOf('\n', start - 1) + 1
+    const curLine = val.substring(lineStart, start)
+    const indent = curLine.match(/^(\s*)/)[1]
+    const lastChar = curLine.trimEnd().slice(-1)
+    const after = val.substring(end)
+
+    if (lastChar === '{' || lastChar === '(' || lastChar === '[' || lastChar === ':') {
       e.preventDefault()
-      if (!document.execCommand('insertText', false, e.key + pair[e.key])) {
-        ta.value = val.substring(0, start) + e.key + pair[e.key] + val.substring(end)
+      const deep = indent + getIndent()
+      const next = after.trimStart()[0]
+      if (next !== undefined && next === pair[lastChar]) {
+        textarea.value = val.substring(0, start) + '\n' + deep + '\n' + indent + val.substring(end)
+        textarea.selectionStart = textarea.selectionEnd = start + 1 + deep.length
+      } else {
+        textarea.value = val.substring(0, start) + '\n' + deep + val.substring(end)
+        textarea.selectionStart = textarea.selectionEnd = start + 1 + deep.length
       }
-      ta.selectionStart = ta.selectionEnd = start + 1
-      if (updateFn) updateFn(); return
+      update(); return
     }
 
-    if (closers.includes(e.key) && val[start] === e.key) {
+    if (indent.length > 0) {
       e.preventDefault()
-      ta.selectionStart = ta.selectionEnd = start + 1
-      if (updateFn) updateFn(); return
+      textarea.value = val.substring(0, start) + '\n' + indent + val.substring(end)
+      textarea.selectionStart = textarea.selectionEnd = start + 1 + indent.length
+      update(); return
     }
-
-    if (e.key === 'Backspace' && start > 0 && start < val.length && pair[val[start - 1]] === val[start]) {
-      e.preventDefault()
-      ta.value = val.substring(0, start - 1) + val.substring(start + 1)
-      ta.selectionStart = ta.selectionEnd = start - 1
-      if (updateFn) updateFn(); return
-    }
-
-    if (e.key === 'Enter' && start === end) {
-      const inCode = isInCodeBlock(val, start)
-      const lineStart = val.lastIndexOf('\n', start - 1) + 1
-      const curLine = val.substring(lineStart, start)
-      const indent = curLine.match(/^(\s*)/)[1]
-      const lastLineChar = curLine.trimEnd().slice(-1)
-      const afterCursor = val.substring(end)
-
-      if (inCode && (lastLineChar === '{' || lastLineChar === '(' || lastLineChar === '[' || lastLineChar === ':')) {
-        e.preventDefault()
-        const deep = indent + '  '
-        const nextChar = afterCursor.trimStart()[0]
-        if (nextChar === pair[lastLineChar]) {
-          if (!document.execCommand('insertText', false, '\n' + deep + '\n' + indent)) {
-            ta.value = val.substring(0, start) + '\n' + deep + '\n' + indent + val.substring(end)
-          }
-          ta.selectionStart = ta.selectionEnd = start + 1 + deep.length
-        } else {
-          document.execCommand('insertText', false, '\n' + deep)
-        }
-        if (updateFn) updateFn(); return
-      }
-
-      if (indent.length > 0) {
-        e.preventDefault()
-        if (!document.execCommand('insertText', false, '\n' + indent)) {
-          ta.value = val.substring(0, start) + '\n' + indent + val.substring(end)
-          ta.selectionStart = ta.selectionEnd = start + 1 + indent.length
-        }
-        if (updateFn) updateFn()
-      }
-    }
-  })
-}
+  }
+})
 
 textarea.addEventListener('input', update)
 textarea.addEventListener('scroll', syncGutterScroll)
-handleTab(textarea, update)
-setupAutoClose(textarea, update)
 update()
 
 const indentBtn = document.getElementById('indent-toggle')
@@ -316,27 +291,223 @@ if (indentBtn) {
 updateIndentBtns()
 
 // toolbar buttons
+function insertAtCursor(ta, text) {
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const before = ta.value.substring(0, start)
+  const after = ta.value.substring(end)
+  ta.value = before + text + after
+  ta.selectionStart = ta.selectionEnd = start + text.length
+  ta.focus()
+  update()
+}
+
+function insertWrapAtCursor(ta, md, wrap) {
+  const start = ta.selectionStart
+  const end = ta.selectionEnd
+  const sel = textarea.value.substring(start, end)
+  const before = ta.value.substring(0, start)
+  const after = ta.value.substring(end)
+  if (sel) {
+    ta.value = before + md + sel + wrap + after
+    ta.selectionStart = start + md.length
+    ta.selectionEnd = start + md.length + sel.length
+  } else {
+    ta.value = before + md + wrap + after
+    const pos = start + md.length
+    ta.selectionStart = ta.selectionEnd = pos
+  }
+  ta.focus()
+  update()
+}
+
+function hljsHighlight(code, lang) {
+  if (lang && hljs.getLanguage(lang)) {
+    try { return hljs.highlight(code, { language: lang }).value } catch {}
+  }
+  try { return hljs.highlightAuto(code).value } catch {}
+  return code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+const linkModal = document.getElementById('insert-link-modal')
+const imageModal = document.getElementById('insert-image-modal')
+const codeModal = document.getElementById('insert-code-modal')
+
 document.querySelectorAll('.toolbar-btn[data-md]').forEach(btn => {
   btn.addEventListener('click', () => {
-    const md = btn.dataset.md
-    const wrap = btn.dataset.wrap
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const sel = textarea.value.substring(start, end)
-    const before = textarea.value.substring(0, start)
-    const after = textarea.value.substring(end)
-    if (sel) {
-      textarea.value = before + md + sel + wrap + after
-      textarea.selectionStart = start + md.length
-      textarea.selectionEnd = start + md.length + sel.length
-    } else {
-      textarea.value = before + md + wrap + after
-      const pos = start + md.length
-      textarea.selectionStart = textarea.selectionEnd = pos
+    const action = btn.dataset.action
+
+    if (action === 'link') {
+      const sel = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd)
+      document.getElementById('link-text').value = sel || ''
+      document.getElementById('link-url').value = ''
+      linkModal.style.display = ''
+      setTimeout(() => { document.getElementById(sel ? 'link-url' : 'link-text').focus() }, 80)
+      return
     }
-    textarea.focus()
-    update()
+
+    if (action === 'image') {
+      document.getElementById('image-url').value = ''
+      document.getElementById('image-alt').value = ''
+      imageModal.style.display = ''
+      setTimeout(() => document.getElementById('image-url').focus(), 80)
+      return
+    }
+
+    if (action === 'code') {
+      document.getElementById('code-input').value = ''
+      document.getElementById('code-highlight').innerHTML = ''
+      document.getElementById('code-gutter').textContent = '1'
+      document.getElementById('code-lang').value = ''
+      codeModal.style.display = ''
+      setTimeout(() => document.getElementById('code-input').focus(), 80)
+      return
+    }
+
+    insertWrapAtCursor(textarea, btn.dataset.md, btn.dataset.wrap)
   })
+})
+
+document.getElementById('link-confirm').addEventListener('click', () => {
+  const url = document.getElementById('link-url').value.trim()
+  if (!url) return
+  const text = document.getElementById('link-text').value.trim() || url
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const before = textarea.value.substring(0, start)
+  const after = textarea.value.substring(end)
+  const insertion = '[' + text + '](' + url + ')'
+  textarea.value = before + insertion + after
+  textarea.selectionStart = start + 1
+  textarea.selectionEnd = start + 1 + text.length
+  textarea.focus()
+  update()
+  linkModal.style.display = 'none'
+})
+
+document.getElementById('image-confirm').addEventListener('click', () => {
+  const url = document.getElementById('image-url').value.trim()
+  if (!url) return
+  const alt = document.getElementById('image-alt').value.trim() || '图片'
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const before = textarea.value.substring(0, start)
+  const after = textarea.value.substring(end)
+  const insertion = '![' + alt + '](' + url + ')'
+  textarea.value = before + insertion + after
+  textarea.selectionStart = start + 2
+  textarea.selectionEnd = start + 2 + alt.length
+  textarea.focus()
+  update()
+  imageModal.style.display = 'none'
+})
+
+document.getElementById('code-confirm').addEventListener('click', () => {
+  const lang = document.getElementById('code-lang').value
+  const code = document.getElementById('code-input').value
+  const block = '```' + lang + '\n' + code + '\n```'
+  insertAtCursor(textarea, block)
+  codeModal.style.display = 'none'
+})
+
+const codeInput = document.getElementById('code-input')
+const codeHighlight = document.getElementById('code-highlight')
+const codeLang = document.getElementById('code-lang')
+const codeGutter = document.getElementById('code-gutter')
+
+function updateCodeLineNumbers() {
+  const lines = (codeInput.value || '').split('\n')
+  codeGutter.textContent = Array.from({ length: Math.max(lines.length, 1) }, (_, i) => i + 1).join('\n')
+}
+
+function syncCodeScroll() {
+  codeHighlight.scrollTop = codeInput.scrollTop
+  codeHighlight.scrollLeft = codeInput.scrollLeft
+  codeGutter.scrollTop = codeInput.scrollTop
+}
+
+function updateCodeHighlight() {
+  const code = codeInput.value || ''
+  const lang = codeLang.value
+  codeHighlight.innerHTML = hljsHighlight(code, lang) + '\n'
+  updateCodeLineNumbers()
+}
+codeInput.addEventListener('input', updateCodeHighlight)
+codeInput.addEventListener('scroll', syncCodeScroll)
+codeLang.addEventListener('change', updateCodeHighlight)
+
+const codePairs = { '{': '}', '(': ')', '[': ']', '"': '"', "'": "'", '`': '`' }
+const codeClosers = Object.values(codePairs)
+const codePairsNoTick = { '{': '}', '(': ')', '[': ']', '"': '"', "'": "'" }
+
+codeInput.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault()
+    const s = codeInput.selectionStart
+    const end = codeInput.selectionEnd
+    const ind = getIndent()
+    codeInput.value = codeInput.value.substring(0, s) + ind + codeInput.value.substring(end)
+    codeInput.selectionStart = codeInput.selectionEnd = s + ind.length
+    updateCodeHighlight(); return
+  }
+  if (e.key === 'Enter' && codeInput.selectionStart === codeInput.selectionEnd) {
+    const s = codeInput.selectionStart
+    const val = codeInput.value
+    const lineStart = val.lastIndexOf('\n', s - 1) + 1
+    const curLine = val.substring(lineStart, s)
+    const indent = curLine.match(/^(\s*)/)[1]
+    const lastChar = curLine.trimEnd().slice(-1)
+    const after = val.substring(s)
+
+    if (lastChar === '{' || lastChar === '(' || lastChar === '[' || lastChar === ':') {
+      e.preventDefault()
+      const deep = indent + getIndent()
+      const next = after.trimStart()[0]
+      if (next !== undefined && next === (codePairsNoTick[lastChar] || '')) {
+        codeInput.value = val.substring(0, s) + '\n' + deep + '\n' + indent + after
+        codeInput.selectionStart = codeInput.selectionEnd = s + 1 + deep.length
+      } else {
+        codeInput.value = val.substring(0, s) + '\n' + deep + after
+        codeInput.selectionStart = codeInput.selectionEnd = s + 1 + deep.length
+      }
+      updateCodeHighlight(); return
+    }
+
+    if (indent.length > 0) {
+      e.preventDefault()
+      codeInput.value = val.substring(0, s) + '\n' + indent + after
+      codeInput.selectionStart = codeInput.selectionEnd = s + 1 + indent.length
+      updateCodeHighlight(); return
+    }
+  }
+  if (e.key in codePairsNoTick) {
+    e.preventDefault()
+    const s = codeInput.selectionStart
+    const end = codeInput.selectionEnd
+    codeInput.value = codeInput.value.substring(0, s) + e.key + codePairsNoTick[e.key] + codeInput.value.substring(end)
+    codeInput.selectionStart = codeInput.selectionEnd = s + 1
+    updateCodeHighlight(); return
+  }
+  if (')' === e.key || ']' === e.key || '}' === e.key || '"' === e.key || "'" === e.key) {
+    if (codeInput.value[codeInput.selectionStart] === e.key) {
+      e.preventDefault()
+      codeInput.selectionStart = codeInput.selectionEnd = codeInput.selectionStart + 1
+      return
+    }
+  }
+  if (e.key === 'Backspace') {
+    const s = codeInput.selectionStart
+    if (s > 0 && s <= codeInput.value.length) {
+      const before = codeInput.value[s - 1]
+      const after = codeInput.value[s]
+      if (codePairsNoTick[before] === after || (before === '`' && after === '`')) {
+        e.preventDefault()
+        codeInput.value = codeInput.value.substring(0, s - 1) + codeInput.value.substring(s + 1)
+        codeInput.selectionStart = codeInput.selectionEnd = s - 1
+        updateCodeHighlight()
+      }
+    }
+  }
 })
 
 // view mode toggle
@@ -359,3 +530,28 @@ document.getElementById('editor-download').addEventListener('click', () => {
   a.click()
   URL.revokeObjectURL(url)
 })
+
+// fullscreen toggle
+const fullscreenBtn = document.getElementById('editor-fullscreen')
+if (fullscreenBtn) {
+  fullscreenBtn.addEventListener('click', () => {
+    const page = document.querySelector('.editor-page')
+    if (!document.fullscreenElement) {
+      page.requestFullscreen().then(() => {
+        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>'
+        fullscreenBtn.classList.add('active')
+      }).catch(() => {})
+    } else {
+      document.exitFullscreen().then(() => {
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>'
+        fullscreenBtn.classList.remove('active')
+      })
+    }
+  })
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>'
+      fullscreenBtn.classList.remove('active')
+    }
+  })
+}

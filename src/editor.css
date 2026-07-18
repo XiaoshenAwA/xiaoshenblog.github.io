@@ -1,11 +1,47 @@
+header#page-header {
+  background-image: none !important;
+  background: var(--bg) !important;
+  height: auto !important;
+  min-height: auto !important;
+}
+header#page-header #post-info,
+header#page-header #page-site-info,
+header#page-header #scroll-down {
+  display: none !important;
+}
+header#page-header #nav {
+  background: transparent !important;
+  box-shadow: none !important;
+  position: sticky !important;
+  top: 0;
+  z-index: 9999;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+header#page-header #blog-info a {
+  color: var(--text) !important;
+}
+header#page-header #blog-info a:hover {
+  color: var(--accent) !important;
+}
+header#page-header .menus_item .site-page {
+  color: var(--text-secondary) !important;
+}
+header#page-header .menus_item .site-page:hover {
+  color: var(--accent) !important;
+  background: var(--accent-light) !important;
+}
 .editor-page {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 61px);
+  height: calc(100vh - 60px);
   max-width: 100%;
   margin: 0;
   padding: 0;
   background: var(--bg);
+}
+.editor-page:fullscreen {
+  height: 100vh;
 }
 .editor-page ~ .site-footer { display: none; }
 
@@ -59,9 +95,9 @@
   overflow: hidden;
 }
 .editor-gutter {
-  padding: 20px 10px 20px 12px;
+  padding: 0 10px 20px 12px;
   text-align: right;
-  font-family: 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-code);
   font-size: 14px;
   line-height: 1.8;
   color: var(--text-secondary);
@@ -71,14 +107,16 @@
   min-width: 46px;
   border-right: 1px solid var(--border);
   box-sizing: border-box;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 #editor-input {
   flex: 1;
   border: none;
   border-radius: 0;
-  padding: 20px 16px;
-  font-family: 'Fira Code', 'Consolas', monospace;
+  padding: 0 16px 20px;
+  font-family: var(--font-code);
+  font-feature-settings: "liga", "calt";
   font-size: 14px;
   line-height: 1.8;
   tab-size: 2;
@@ -86,14 +124,15 @@
   background: transparent;
   color: var(--text);
   outline: none;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
   overflow-y: auto;
   overflow-x: auto;
 }
 #editor-preview {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 24px;
+  padding: 0 24px 20px;
   font-size: 0.95em;
   line-height: 1.75;
   background: var(--bg);
@@ -122,13 +161,123 @@
 [data-theme="dark"] #editor-preview .hljs-addition { color: #aff5b4; background: #033a16; }
 
 .view-mode-btn.active { background: var(--accent-light); color: var(--accent); }
+#editor-fullscreen.active { background: var(--accent-light); color: var(--accent); }
 .editor-container.mode-edit .editor-pane:last-child { display: none; }
 .editor-container.mode-preview .editor-pane:first-child { display: none; }
 .editor-container.mode-edit { grid-template-columns: 1fr; }
 .editor-container.mode-preview { grid-template-columns: 1fr; }
 
+/* Code Editor Modal */
+.code-editor-wrap {
+  display: flex;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--input-bg);
+  transition: border-color 0.2s;
+  height: 400px;
+}
+.code-editor-wrap:focus-within { border-color: var(--accent); }
+.code-gutter {
+  padding: 14px 8px 14px 12px;
+  text-align: right;
+  font-family: var(--font-code, 'Menlo,Monaco,Consolas,monospace');
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  background: var(--input-bg);
+  user-select: none;
+  overflow: hidden;
+  min-width: 42px;
+  border-right: 1px solid var(--border);
+  box-sizing: border-box;
+  white-space: pre;
+}
+.code-editor-body {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.code-highlight {
+  margin: 0;
+  padding: 14px;
+  font-family: var(--font-code, 'Menlo,Monaco,Consolas,monospace');
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+  pointer-events: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow: auto;
+  color: var(--text);
+  background: transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.code-highlight::-webkit-scrollbar { display: none; }
+.code-input {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+  border: none;
+  font-family: var(--font-code, 'Menlo,Monaco,Consolas,monospace');
+  font-size: 13px;
+  line-height: 1.6;
+  tab-size: 2;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text);
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: auto;
+  position: relative;
+  z-index: 1;
+}
+.code-input::placeholder { color: var(--text-muted); }
+
+/* Picker Modal (shared with admin) */
+.picker-modal { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+.picker-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+.picker-dialog {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: 12px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+}
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.picker-close { background: none; border: none; font-size: 1.4em; cursor: pointer; color: var(--text-muted); padding: 0 4px; }
+.picker-close:hover { color: var(--text); }
+.picker-body { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 200px; }
+.picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+}
+.picker-footer > div { display: flex; gap: 8px; }
+
 @media (max-width: 768px) {
-  .editor-page { height: auto; min-height: calc(100vh - 61px); }
+  .editor-page { height: auto; min-height: calc(100vh - 60px); }
   .editor-container { grid-template-columns: 1fr; }
   .editor-pane + .editor-pane { border-left: none; border-top: 1px solid var(--border); }
   #editor-input { min-height: 40vh; }
