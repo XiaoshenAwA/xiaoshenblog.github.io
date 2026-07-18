@@ -1,4 +1,6 @@
-<%- include('partials/header', { title: post.title, top_img: (!config.DISABLE_TOP_IMG && post.cover) ? post.cover : config.DEFAULT_TOP_IMG || '', post: post }) %>
+<% var _shArr = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']; %>
+<% var _shUrl = _shArr[Math.floor(Math.random() * _shArr.length)]; %>
+<%- include('partials/header', { title: post.title, top_img: (!config.DISABLE_TOP_IMG && post.cover) ? post.cover : (config.DEFAULT_TOP_IMG || _shUrl + (_shUrl.includes('?') ? '&' : '?') + 'v=' + post.id), post: post }) %>
 
   <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
     <div id="post">

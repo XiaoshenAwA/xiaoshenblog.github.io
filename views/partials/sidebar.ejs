@@ -1,24 +1,34 @@
 <% if (config.ASIDE_CARD_AUTHOR) { %>
-<div class="card-widget card-info text-center">
-  <div class="avatar-img">
-    <img src="<%= url(config.AVATAR_IMG) || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>"<%= config.AVATAR_EFFECT ? ' class="avatar-effect"' : '' %>>
-  </div>
-  <div class="author-info-name"><%= config.BLOG_AUTHOR %></div>
-  <div class="author-info-description"><%= config.BLOG_AUTHOR_BIO %></div>
-  <div class="site-data">
-    <a href="<%= basePath %>/archives/"><div class="headline"><%= locale.sidebar?.post_count_label || '文章' %></div><div class="length-num"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div></a>
-    <a href="<%= basePath %>/tags/"><div class="headline"><%= locale.sidebar?.tag_count_label || '标签' %></div><div class="length-num"><%= typeof allTags !== 'undefined' ? allTags.length : 0 %></div></a>
-    <a href="<%= basePath %>/categories/"><div class="headline"><%= locale.sidebar?.category_count_label || '分类' %></div><div class="length-num"><%= typeof allCategories !== 'undefined' ? allCategories.length : 0 %></div></a>
-  </div>
-  <% if (config.SOCIAL_GITHUB) { %>
-  <a id="card-info-btn" target="_blank" rel="noopener" href="<%= config.SOCIAL_GITHUB %>"><i class="fab fa-github"></i><span><%= locale.nav?.follow_me || '关注我' %></span></a>
-  <% } %>
-  <div class="card-info-social-icons">
-    <% if (config.SOCIAL_GITHUB) { %><a class="social-icon" href="<%= config.SOCIAL_GITHUB %>" target="_blank" title="Github"><i class="fab fa-github"></i></a><% } %>
-    <% if (config.SOCIAL_WEIBO) { %><a class="social-icon" href="<%= config.SOCIAL_WEIBO %>" target="_blank" title="微博"><i class="fab fa-weibo"></i></a><% } %>
-    <% if (config.SOCIAL_TWITTER) { %><a class="social-icon" href="<%= config.SOCIAL_TWITTER %>" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a><% } %>
-    <% if (config.SOCIAL_EMAIL) { %><a class="social-icon" href="mailto:<%= config.SOCIAL_EMAIL %>" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a><% } %>
-  </div>
+<div class="card-widget card-info text-center" id="profileCard">
+      <div class="avatar-img">
+        <img src="<%= url(config.AVATAR_IMG) || '/img/avatar.png' %>" alt="<%= config.BLOG_AUTHOR %>"<%= config.AVATAR_EFFECT ? ' class="avatar-effect"' : '' %>>
+      </div>
+      <div class="author-info-name"><%= config.BLOG_AUTHOR %></div>
+      <div class="author-info-description"><%= config.BLOG_AUTHOR_BIO %></div>
+      <div class="site-data">
+        <a href="<%= basePath %>/archives/"><div class="headline"><%= locale.sidebar?.post_count_label || '文章' %></div><div class="length-num"><%= typeof postCount !== 'undefined' ? postCount : 0 %></div></a>
+        <a href="<%= basePath %>/tags/"><div class="headline"><%= locale.sidebar?.tag_count_label || '标签' %></div><div class="length-num"><%= typeof allTags !== 'undefined' ? allTags.length : 0 %></div></a>
+        <a href="<%= basePath %>/categories/"><div class="headline"><%= locale.sidebar?.category_count_label || '分类' %></div><div class="length-num"><%= typeof allCategories !== 'undefined' ? allCategories.length : 0 %></div></a>
+      </div>
+      <%
+        var followPlatform = config.ASIDE_FOLLOW_ME_PLATFORM || 'github';
+        var followUrl = '';
+        var followIcon = '';
+        if (followPlatform === 'github' && config.SOCIAL_GITHUB) { followUrl = config.SOCIAL_GITHUB; followIcon = 'fab fa-github'; }
+        else if (followPlatform === 'twitter' && config.SOCIAL_TWITTER) { followUrl = config.SOCIAL_TWITTER; followIcon = 'fab fa-twitter'; }
+        else if (followPlatform === 'weibo' && config.SOCIAL_WEIBO) { followUrl = config.SOCIAL_WEIBO; followIcon = 'fab fa-weibo'; }
+        else if (followPlatform === 'email' && config.SOCIAL_EMAIL) { followUrl = 'mailto:' + config.SOCIAL_EMAIL; followIcon = 'fas fa-envelope'; }
+        else { followUrl = config.SOCIAL_GITHUB; followIcon = 'fab fa-github'; }
+      %>
+      <% if (followUrl) { %>
+      <a id="card-info-btn" target="_blank" rel="noopener" href="<%= followUrl %>"><i class="<%= followIcon %>"></i><span><%= locale.nav?.follow_me || '关注我' %></span></a>
+      <% } %>
+      <div class="card-info-social-icons">
+        <% if (config.SOCIAL_GITHUB) { %><a class="social-icon" href="<%= config.SOCIAL_GITHUB %>" target="_blank" title="Github"><i class="fab fa-github"></i></a><% } %>
+        <% if (config.SOCIAL_WEIBO) { %><a class="social-icon" href="<%= config.SOCIAL_WEIBO %>" target="_blank" title="微博"><i class="fab fa-weibo"></i></a><% } %>
+        <% if (config.SOCIAL_TWITTER) { %><a class="social-icon" href="<%= config.SOCIAL_TWITTER %>" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a><% } %>
+        <% if (config.SOCIAL_EMAIL) { %><a class="social-icon" href="mailto:<%= config.SOCIAL_EMAIL %>" target="_blank" title="邮箱"><i class="fas fa-envelope"></i></a><% } %>
+      </div>
 </div>
 <% } %>
 
@@ -29,6 +39,15 @@
 </div>
 <% } %>
 
+<div class="card-widget card-hitokoto" id="hitokotoCard">
+  <div class="item-headline"><i class="fas fa-quote-left"></i><span>一言</span></div>
+  <div class="hitokoto-content">
+    <div class="hitokoto-text" id="hitokotoText">加载中...</div>
+    <div class="hitokoto-from" id="hitokotoFrom"></div>
+  </div>
+  <div class="hitokoto-btn" onclick="fetchHitokoto()"><i class="fas fa-sync-alt"></i></div>
+</div>
+
 <div class="sticky_layout">
   <% if (config.ASIDE_CARD_RECENT_POST && typeof recentPosts !== 'undefined' && recentPosts.length > 0) { %>
   <div class="card-widget card-recent-post">
@@ -37,7 +56,9 @@
       <% recentPosts.forEach(p => { %>
         <div class="aside-list-item">
           <a class="thumbnail" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>">
-            <img src="<%= p.cover || 'https://t.alcy.cc/fj?' + p.id %>" alt="<%= p.title %>">
+            <% var _sbArr = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']; %>
+            <% var _sbUrl = _sbArr[Math.floor(Math.random() * _sbArr.length)]; %>
+            <img src="<%= p.cover || _sbUrl + (_sbUrl.includes('?') ? '&' : '?') + 'v=' + p.id %>" alt="<%= p.title %>">
           </a>
           <div class="content">
             <a class="title" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>"><%= p.title %></a>
@@ -100,9 +121,9 @@
   <div class="card-widget card-tags">
     <div class="item-headline"><i class="fas fa-tags"></i><span><%= locale.sidebar?.tags_title || '标签' %></span></div>
     <div class="card-tag-cloud">
-      <% allTags.slice(0, config.ASIDE_TAGS_LIMIT || 30).forEach(t => { %>
+      <% allTags.slice(0, config.ASIDE_TAGS_LIMIT || 30).forEach((t, ti) => { %>
         <% var tagEnc = encodeURIComponent(t) %>
-        <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"><%= t %></a>
+        <a href="<%= basePath %><%= isStatic ? '/tag/' + tagEnc + '/' : '/?tag=' + tagEnc %>"<%= config.ASIDE_TAGS_COLOR ? ' style="color:hsl(' + ((ti * 137 + 220) % 360) + ',60%,45%)"' : '' %>><%= t %></a>
       <% }) %>
     </div>
   </div>
@@ -117,8 +138,8 @@
     <ul class="card-archive-list">
       <% archives.slice(0, config.ASIDE_ARCHIVES_LIMIT || 8).forEach(a => { %>
         <li class="card-archive-list-item">
-          <a class="card-archive-list-link" href="<%= basePath %>/archives#<%= a.year %>-<%= String(a.month).padStart(2,'0') %>">
-            <span class="card-archive-list-date"><%= a.year %> <%= locale.sidebar?.year_suffix || '年' %> <%= a.month %> <%= locale.sidebar?.month_suffix || '月' %></span>
+          <a class="card-archive-list-link" href="<%= basePath %>/archives#<%= a.year %>-<%= a.month ? String(a.month).padStart(2,'0') : '' %>">
+            <span class="card-archive-list-date"><%= a.year %> <%= locale.sidebar?.year_suffix || '年' %><%= a.month ? ' ' + a.month + ' ' + (locale.sidebar?.month_suffix || '月') : '' %></span>
             <span class="card-archive-list-count"><%= a.count %></span>
           </a>
         </li>
@@ -150,13 +171,13 @@
       <% if (config.ASIDE_WEBINFO_VISITOR_COUNT) { %>
       <div class="webinfo-item">
         <div class="item-name"><%= locale.sidebar?.webinfo_visitor_count || '本站访客数 :' %></div>
-        <div class="item-count"><%= typeof visitorCount !== 'undefined' ? visitorCount : 0 %></div>
+        <div class="item-count webinfo-visitor-count"><%= typeof visitorCount !== 'undefined' ? visitorCount : 0 %></div>
       </div>
       <% } %>
       <% if (config.ASIDE_WEBINFO_TOTAL_VIEWS) { %>
       <div class="webinfo-item">
         <div class="item-name"><%= locale.sidebar?.webinfo_total_views || '本站总浏览量 :' %></div>
-        <div class="item-count"><%= typeof totalViews !== 'undefined' ? totalViews : 0 %></div>
+        <div class="item-count webinfo-total-views"><%= typeof totalViews !== 'undefined' ? totalViews : 0 %></div>
       </div>
       <% } %>
       <% if (config.ASIDE_WEBINFO_LAST_UPDATE) { %>

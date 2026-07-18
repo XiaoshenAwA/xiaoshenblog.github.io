@@ -15,7 +15,9 @@
             <% a.posts.forEach(p => { %>
               <div class="article-sort-item">
                 <a class="article-sort-item-img" href="<%= basePath %>/posts/<%= p.id %>" title="<%= p.title %>">
-                  <img src="<%= p.cover || 'https://t.alcy.cc/fj?' + p.id %>" alt="<%= p.title %>">
+                  <% var _arArr = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']; %>
+                  <% var _arUrl = _arArr[Math.floor(Math.random() * _arArr.length)]; %>
+                  <img src="<%= p.cover || _arUrl + (_arUrl.includes('?') ? '&' : '?') + 'v=' + p.id %>" alt="<%= p.title %>">
                 </a>
                 <div class="article-sort-item-info">
                   <div class="article-sort-item-time"><i class="far fa-calendar-alt"></i><time datetime="<%= p.created_at %>"><%= formatDate(p.created_at) %></time></div>

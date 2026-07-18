@@ -25,6 +25,7 @@
   <% if (config.OG_FB_APP_ID) { %><meta property="fb:app_id" content="<%= config.OG_FB_APP_ID %>"><% } %>
   <% if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
   <% } %>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="<%= config.CDN.FONT_AWESOME %>" crossorigin="anonymous">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="<%= config.CDN.KATEX_CSS %>" crossorigin="anonymous">
@@ -231,6 +232,7 @@
     }
   </style>
   <% } %>
+<script>try{!function(){var k='blog_font_settings',s;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s)return;var d=document.documentElement;if(s.fontSize)d.style.setProperty('--font-size-global',s.fontSize+'px');if(s.bodyFont&&s.bodyFont!=='unset')d.style.setProperty('--font-body',"'"+s.bodyFont+"'");else d.style.removeProperty('--font-body');if(s.codeFont&&s.codeFont!=='unset'){d.style.setProperty('--font-code',"'"+s.codeFont+"'");var cs=document.createElement('style');cs.id='__code_font_style';var fn=s.codeFont.replace(/"/g,'\\"');cs.textContent='@font-face{font-family:"'+fn+'";src:local("'+fn+'")}code,pre,.editor-gutter,#editor-input,textarea,.code-wrap,.highlight,.hljs{font-family:"'+fn+'",monospace!important}';document.head.appendChild(cs);var gl=document.createElement('link');gl.rel='stylesheet';gl.id='__code_font_gf';gl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(s.codeFont)+':wght@300;400;500;600;700&display=swap';document.head.appendChild(gl)}else{d.style.removeProperty('--font-code');var og=document.getElementById('__code_font_gf');if(og)og.remove()}if(s.bodyFont&&s.bodyFont!=='unset'){var bs=document.createElement('style');bs.id='__body_font_style';var fnB=s.bodyFont.replace(/"/g,'\\"');bs.textContent='@font-face{font-family:"'+fnB+'";src:local("'+fnB+'")}body,.post-content,.content{font-family:"'+fnB+'",serif!important}';document.head.appendChild(bs);var bl=document.createElement('link');bl.rel='stylesheet';bl.id='__body_font_gf';bl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(s.bodyFont)+':wght@300;400;500;600;700&display=swap';document.head.appendChild(bl)}else{var bs2=document.getElementById('__body_font_style');if(bs2)bs2.textContent='';var bg=document.getElementById('__body_font_gf');if(bg)bg.remove()}}()}catch(e){}</script>
 </head>
 <body>
   <% if (config.PRELOADER_ENABLE) { %>
@@ -244,6 +246,7 @@
   <div class="progress-bar" id="progressBar"></div>
 
   <!-- Mobile sidebar -->
+  <% if (config.ASIDE_MOBILE) { %>
   <div id="sidebar">
     <div id="menu-mask"></div>
     <div id="sidebar-menus">
@@ -275,16 +278,20 @@
       </div>
     </div>
   </div>
+  <% } %>
 
   <!-- Page Header -->
   <% if (typeof pageType !== 'undefined' && pageType === 'home') { %>
-  <header class="full_page" id="page-header" style="background-image: url('<%= config.INDEX_IMG || '' %>'); background-size: cover; background-position: center;">
+  <header class="full_page" id="page-header" style="<%= !config.DISABLE_TOP_IMG ? 'background-image: url(' + (config.INDEX_IMG || '') + '); background-size: cover; background-position: center;' : '' %>">
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="<%= basePath %>/">
           <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= url(config.NAV_LOGO) %>" alt="Logo"><% } %>
-          <span class="site-name"><%= config.BLOG_NAME %></span>
+          <% if (config.NAV_DISPLAY_TITLE) { %><span class="site-name"><%= config.BLOG_NAME %></span><% } %>
         </a>
+        <span class="greeting-wrapper">
+          <span class="greeting-text" id="greetingText"></span>
+        </span>
       </span>
       <div id="menus">
         <div class="menus_items">
@@ -304,7 +311,11 @@
             </div>
             <% } %>
           <% }) %>
-        </div>
+          <% if (config.SEARCH_ENABLE) { %>
+          <div class="menus_item">
+            <button id="searchBtn" class="site-page" title="<%= locale.search?.title || '搜索' %>"><i class="fas fa-search"></i><span> <%= locale.search?.title || '搜索' %></span></button>
+          </div>
+          <% } %>
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
       </div>
     </nav>
@@ -350,7 +361,7 @@
       <span id="blog-info">
         <a class="nav-site-title" href="<%= basePath %>/">
           <% if (config.NAV_LOGO) { %><img class="site-icon" src="<%= url(config.NAV_LOGO) %>" alt="Logo"><% } %>
-          <span class="site-name"><%= config.BLOG_NAME %></span>
+          <% if (config.NAV_DISPLAY_TITLE) { %><span class="site-name"><%= config.BLOG_NAME %></span><% } %>
         </a>
         <a class="nav-page-title" href="<%= basePath %>/">
           <span class="site-name"><%= typeof title !== 'undefined' && title ? title : config.BLOG_NAME %></span>
@@ -370,11 +381,16 @@
             </div>
             <% } else { %>
             <div class="menus_item">
-              <a class="site-page" href="<%= basePath %><%= item.path %>"><i class="<%= item.icon %>"></i><span> <%= item.label %></span></a>
-            </div>
-            <% } %>
-          <% }) %>
-        </div>
+               <a class="site-page" href="<%= basePath %><%= item.path %>"><i class="<%= item.icon %>"></i><span> <%= item.label %></span></a>
+             </div>
+             <% } %>
+           <% }) %>
+           <% if (config.SEARCH_ENABLE) { %>
+           <div class="menus_item">
+             <button id="searchBtn" class="site-page search-btn-alt" title="<%= locale.search?.title || '搜索' %>"><i class="fas fa-search"></i><span> <%= locale.search?.title || '搜索' %></span></button>
+           </div>
+           <% } %>
+          </div>
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
       </div>
     </nav>
@@ -384,13 +400,16 @@
       <div id="post-meta">
         <div class="meta-firstline">
           <span class="post-meta-date">
+            <% var dateType = (config.POST_META?.post?.date_type || 'both'); %>
             <i class="far fa-calendar-alt fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">发表于</span>
+            <span class="post-meta-label"><%= locale.post?.published_at || '发表于' %></span>
             <time class="post-meta-date-created" datetime="<%= post.created_at %>"><%= formatDate(post.created_at) %></time>
+            <% if (dateType !== 'created') { %>
             <span class="post-meta-separator">|</span>
             <i class="fas fa-history fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">更新于</span>
+            <span class="post-meta-label"><%= locale.post?.updated_at || '更新于' %></span>
             <time class="post-meta-date-updated" datetime="<%= post.updated_at %>"><%= formatDate(post.updated_at) %></time>
+            <% } %>
           </span>
           <% if (post.category) { %>
           <% var catParts = post.category.split('/').filter(Boolean); %>
@@ -410,7 +429,7 @@
           <span class="post-meta-separator">|</span>
           <span class="post-meta-wordcount">
             <i class="far fa-file-word fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">总字数:</span>
+            <span class="post-meta-label"><%= locale.post?.word_count_label || '总字数:' %></span>
             <%
               var wc = post.word_count || post.content.length;
               var wcDisplay = wc >= 1000 ? (wc / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : wc;
@@ -418,14 +437,14 @@
             <span class="word-count"><%= wcDisplay %></span>
             <span class="post-meta-separator">|</span>
             <i class="far fa-clock fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">阅读时长:</span>
-            <span><%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %>分钟</span>
+            <span class="post-meta-label"><%= locale.post?.reading_time || '阅读时长:' %></span>
+            <span><%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %><%= locale.post?.reading_time_unit || '分钟' %></span>
           </span>
           <span class="post-meta-separator">|</span>
-          <span class="post-meta-pv-cv" id="" data-flag-title="">
+          <span class="post-meta-pv-cv" id="post-pv-display" data-flag-title="">
             <i class="far fa-eye fa-fw post-meta-icon"></i>
-            <span class="post-meta-label">浏览量:</span>
-            <span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span>
+            <span class="post-meta-label"><%= locale.sidebar?.webinfo_total_views || '浏览量:' %></span>
+            <span id="post-view-count"><i class="fa-solid fa-spinner fa-spin"></i></span>
           </span>
         </div>
       </div>

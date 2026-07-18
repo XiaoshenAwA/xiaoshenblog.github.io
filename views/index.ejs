@@ -28,10 +28,12 @@
         <%
           var defaultCoverUrl = 'https://t.alcy.cc/fj';
         %>
-        <div class="recent-post-items" data-page="<%= page %>" data-total-pages="<%= totalPages %>" data-tag="<%= tag %>" data-cat="<%= cat %>">
+        <div class="recent-post-items" data-page="<%= page %>" data-total-pages="<%= totalPages %>" data-tag="<%= tag %>" data-cat="<%= cat %>" data-default-covers="<%= JSON.stringify(Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']) %>">
           <% posts.forEach((post, i) => { %>
             <% var coverLeft = i % 2 === 0; %>
-            <% var defaultCover = 'https://t.alcy.cc/fj?' + post.id; %>
+            <% var _dcArr = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']; %>
+            <% var _dcUrl = _dcArr[Math.floor(Math.random() * _dcArr.length)]; %>
+            <% var defaultCover = _dcUrl + (_dcUrl.includes('?') ? '&' : '?') + 'v=' + post.id; %>
             <article class="recent-post-item reveal" style="animation-delay:<%= (i*0.08) %>s">
               <div class="post_cover <%= coverLeft ? 'left' : 'right' %>">
                 <a href="<%= basePath %>/posts/<%= post.id %><%= isStatic ? '/' : '' %>" title="<%= post.title %>">
@@ -122,7 +124,9 @@
 
       function genArticle(p, idx) {
         var coverLeft = idx % 2 === 0;
-        var defaultCover = 'https://t.alcy.cc/fj?' + p.id;
+        var _dcArr = JSON.parse(document.querySelector('.recent-post-items').dataset.defaultCovers || '[]');
+        var _dcUrl = _dcArr.length ? _dcArr[Math.floor(Math.random() * _dcArr.length)] : 'https://t.alcy.cc/fj';
+        var defaultCover = _dcUrl + (_dcUrl.includes('?') ? '&' : '?') + 'v=' + p.id;
         var cats = p.category ? p.category.split('/').filter(Boolean) : [];
         var tags = p.tags || [];
         var date = p.updated_at || p.created_at || '';

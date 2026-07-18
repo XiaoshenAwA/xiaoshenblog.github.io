@@ -28,6 +28,9 @@ const config = {
   SUPABASE_ANON_KEY: env('SUPABASE_ANON_KEY', cfg.database?.anon_key ?? ''),
   SUPABASE_SERVICE_KEY: env('SUPABASE_SERVICE_KEY', cfg.database?.service_key ?? ''),
   DB_TABLE: cfg.database?.table ?? 'posts',
+  DB_STATS_TABLE: cfg.database?.stats_table ?? 'site_stats',
+  DB_TAGS_TABLE: cfg.database?.tags_table ?? 'managed_tags',
+  DB_CATEGORIES_TABLE: cfg.database?.categories_table ?? 'managed_categories',
 
   // 部署
   BASE_PATH: env('BASE_PATH', cfg.deploy?.base_path ?? ''),
@@ -50,6 +53,7 @@ const config = {
   NAV_LOGO: cfg.nav?.logo ?? '',
   NAV_DISPLAY_TITLE: cfg.nav?.display_title !== false,
   NAV_FIXED: cfg.nav?.fixed === true,
+  NAV_SCROLL_THRESHOLD: cfg.nav?.scroll_threshold ?? 60,
   NAV_MENU: cfg.nav?.menu ?? [],
 
   // 图片
@@ -61,6 +65,7 @@ const config = {
   DISABLE_TOP_IMG: cfg.images?.disable_top_img === true,
   DEFAULT_TOP_IMG: cfg.images?.default_top_img ?? '',
   INDEX_IMG: cfg.images?.index_img ?? '',
+  FALLBACK_COVER: cfg.images?.fallback_cover ?? 'https://t.alcy.cc/fj',
 
   // 代码块
   CODE_BLOCKS: cfg.code_blocks ?? {},
@@ -116,6 +121,7 @@ const config = {
   ASIDE_ENABLE: cfg.aside?.enable !== false,
   ASIDE_MOBILE: cfg.aside?.mobile !== false,
   ASIDE_POSITION: cfg.aside?.position ?? 'right',
+  ASIDE_FOLLOW_ME_PLATFORM: cfg.aside?.follow_me_platform ?? 'github',
   ASIDE_CARD_AUTHOR: cfg.aside?.card_author?.enable !== false,
   ASIDE_CARD_ANNOUNCEMENT: cfg.aside?.card_announcement?.enable === true,
   ASIDE_ANNOUNCEMENT_CONTENT: cfg.aside?.card_announcement?.content ?? '',
@@ -209,6 +215,8 @@ const config = {
   ADMIN_MIN_PASSWORD_LENGTH: cfg.admin?.min_password_length ?? 6,
   ADMIN_SAVE_REDIRECT_DELAY: cfg.admin?.save_redirect_delay ?? 1500,
   ADMIN_CHANGE_PW_REDIRECT_DELAY: cfg.admin?.change_pw_redirect_delay ?? 2000,
+  ADMIN_PAGE_SIZE: cfg.admin?.page_size ?? 20,
+  ADMIN_MAX_UNDO: cfg.admin?.max_undo ?? 50,
 
   // 侧边栏附属配置
   SIDEBAR_RECENT_COUNT: cfg.aside?.card_recent_post?.limit ?? 5,
@@ -217,11 +225,11 @@ const config = {
   FRIEND_LINKS: cfg.friend_links ?? [],
 
   // 社交
-  SOCIAL_GITHUB: cfg.social?.github ?? '#',
-  SOCIAL_WEIBO: cfg.social?.weibo ?? '#',
-  SOCIAL_TWITTER: cfg.social?.twitter ?? '#',
-  SOCIAL_RSS: cfg.social?.rss ?? '#',
-  SOCIAL_EMAIL: cfg.social?.email ?? '#',
+  SOCIAL_GITHUB: cfg.social?.github ?? '',
+  SOCIAL_WEIBO: cfg.social?.weibo ?? '',
+  SOCIAL_TWITTER: cfg.social?.twitter ?? '',
+  SOCIAL_RSS: cfg.social?.rss ?? '',
+  SOCIAL_EMAIL: cfg.social?.email ?? '',
 
   // about
   ABOUT_TAGLINE: cfg.about?.tagline ?? '一名热爱技术的开发者',
