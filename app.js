@@ -83,7 +83,8 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.basePath = config.BASE_PATH;
   res.locals.url = function(p) {
-    if (!p || p.startsWith('http://') || p.startsWith('https://') || p.startsWith('//')) return p || '';
+    p = String(p || '');
+    if (!p || p.startsWith('http://') || p.startsWith('https://') || p.startsWith('//')) return p;
     return config.BASE_PATH + p;
   };
   res.locals.isStatic = false;

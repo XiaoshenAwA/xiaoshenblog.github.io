@@ -4,7 +4,14 @@ const config = require('./config');
 let supabase = null;
 let supabaseAdmin = null;
 
+const isConfigured = !!(config.SUPABASE_URL && config.SUPABASE_ANON_KEY);
+
+if (!isConfigured) {
+  console.warn('[db] SUPABASE_URL 或 SUPABASE_ANON_KEY 未配置，数据库功能不可用');
+}
+
 function getDb() {
+  if (!isConfigured) return null;
   if (!supabase) {
     supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
   }
@@ -12,6 +19,7 @@ function getDb() {
 }
 
 function getAdminDb() {
+  if (!isConfigured) return null;
   if (!supabaseAdmin) {
     supabaseAdmin = createClient(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY || config.SUPABASE_ANON_KEY);
   }
@@ -41,6 +49,7 @@ function onlyPublished(arr) {
 
 async function getAllTags() {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('tags, published');
   const allTags = new Set();
   if (data) {
@@ -55,6 +64,7 @@ async function getAllTags() {
 
 async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '') {
   const db = getDb();
+  if (!db) return { posts: [], total: 0 };
   let query = db.from(table()).select('*', { count: 'exact' }).eq('published', true).order('created_at', { ascending: false });
   if (tag) {
     query = query.contains('tags', [tag]);
@@ -71,18 +81,21 @@ async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '') {
 
 async function getAllPosts() {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('*').order('created_at', { ascending: false });
   return onlyPublished((data || []).map(rowToPost));
 }
 
 async function getAllPostsAdmin() {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('*').order('created_at', { ascending: false });
   return (data || []).map(rowToPost);
 }
 
 async function getPost(id) {
   const db = getDb();
+  if (!db) return null;
   const { data } = await db.from(table()).select('*').eq('id', id).single();
   const p = data ? rowToPost(data) : null;
   return (p && p.published !== false) ? p : null;
@@ -90,12 +103,14 @@ async function getPost(id) {
 
 async function getPostAdmin(id) {
   const db = getDb();
+  if (!db) return null;
   const { data } = await db.from(table()).select('*').eq('id', id).single();
   return data ? rowToPost(data) : null;
 }
 
 async function getAdjacentPosts(id) {
   const db = getDb();
+  if (!db) return { prev: null, next: null };
   const { data: current } = await db.from(table()).select('created_at, published').eq('id', id).single();
   if (!current || current.published === false) return { prev: null, next: null };
 
@@ -121,6 +136,7 @@ async function getAdjacentPosts(id) {
 
 async function createPost({ title, content, tags, cover, category, published }) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const tagsArr = tags ? tags.split(',').filter(Boolean).map(t => t.trim()) : [];
   const { data } = await db.from(table()).insert({
     title, content, tags: tagsArr, cover: cover || '', category: category || '',
@@ -132,6 +148,7 @@ async function createPost({ title, content, tags, cover, category, published }) 
 
 async function updatePost(id, { title, content, tags, cover, category, published }) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const tagsArr = tags ? tags.split(',').filter(Boolean).map(t => t.trim()) : [];
   const updates = {
     title, content, tags: tagsArr, cover: cover || '', category: category || '',
@@ -144,17 +161,20 @@ async function updatePost(id, { title, content, tags, cover, category, published
 
 async function deletePost(id) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   await db.from(table()).delete().eq('id', id);
 }
 
 async function getPostCount() {
   const db = getDb();
+  if (!db) return 0;
   const { count } = await db.from(table()).select('id', { count: 'exact', head: true }).eq('published', true);
   return count || 0;
 }
 
 async function getAllCategories() {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('category, published');
   const catMap = {};
   if (data) {
@@ -169,6 +189,7 @@ async function getAllCategories() {
 
 async function getCategoryTree() {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('category, published');
   const root = {};
   if (data) {
@@ -203,6 +224,7 @@ async function getCategoryTree() {
 
 async function getArchives() {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('id, title, created_at, published').order('created_at', { ascending: false });
   const months = {};
   if (data) {
@@ -220,6 +242,7 @@ async function getArchives() {
 
 async function getRecentPosts(limit = 5) {
   const db = getDb();
+  if (!db) return [];
   const { data } = await db.from(table()).select('id, title, cover, created_at, published').order('created_at', { ascending: false });
   const all = (data || []).filter(r => r.published !== false).slice(0, limit);
   return all.map(r => ({ id: r.id, title: r.title, cover: r.cover || '', created_at: r.created_at }));
@@ -227,6 +250,7 @@ async function getRecentPosts(limit = 5) {
 
 async function getTotalWordCount() {
   const db = getDb();
+  if (!db) return 0;
   const { data } = await db.from(table()).select('word_count, published');
   let total = 0;
   if (data) {
@@ -239,6 +263,7 @@ async function getTotalWordCount() {
 
 async function getSiteStats() {
   const db = getDb();
+  if (!db) return { visitor_count: 0, total_views: 0 };
   const { data } = await db.from('site_stats').select('key, value');
   const stats = { visitor_count: 0, total_views: 0 };
   if (data) {
@@ -251,6 +276,7 @@ async function getSiteStats() {
 
 async function incrementVisitorCount() {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { data } = await db.from('site_stats').select('value').eq('key', 'visitor_count').single();
   const newValue = (data?.value || 0) + 1;
   await db.from('site_stats').upsert({ key: 'visitor_count', value: newValue, updated_at: new Date().toISOString() });
@@ -259,6 +285,7 @@ async function incrementVisitorCount() {
 
 async function incrementViewCount(postId) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { data } = await db.from('site_stats').select('value').eq('key', 'total_views').single();
   const newValue = (data?.value || 0) + 1;
   await db.from('site_stats').upsert({ key: 'total_views', value: newValue, updated_at: new Date().toISOString() });
@@ -267,6 +294,7 @@ async function incrementViewCount(postId) {
 
 async function getLastPostUpdateTime() {
   const db = getDb();
+  if (!db) return null;
   const { data } = await db.from(table()).select('updated_at, published').order('updated_at', { ascending: false });
   if (data) {
     const published = data.filter(r => r.published !== false);
@@ -279,6 +307,7 @@ async function getLastPostUpdateTime() {
 
 async function getManagedTags() {
   const db = getAdminDb();
+  if (!db) return [];
   const { data: tags, error: tagError } = await db.from('managed_tags').select('*').order('name');
   if (tagError) return [];
 
@@ -298,6 +327,7 @@ async function getManagedTags() {
 
 async function createManagedTag(name) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { data, error } = await db.from('managed_tags').insert({ name: name.trim() }).select().single();
   if (error) throw error;
   return data;
@@ -305,12 +335,14 @@ async function createManagedTag(name) {
 
 async function deleteManagedTag(id) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { error } = await db.from('managed_tags').delete().eq('id', id);
   if (error) throw error;
 }
 
 async function renameManagedTag(id, name) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { error } = await db.from('managed_tags').update({ name: name.trim() }).eq('id', id);
   if (error) throw error;
 }
@@ -319,6 +351,7 @@ async function renameManagedTag(id, name) {
 
 async function getManagedCategories() {
   const db = getAdminDb();
+  if (!db) return [];
   const { data: cats, error: catError } = await db.from('managed_categories').select('*').order('sort_order');
   if (catError) return [];
 
@@ -373,6 +406,7 @@ function buildCategoryTree(catList) {
 
 async function createManagedCategory(name, parentId) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   let path = name.trim();
   if (parentId) {
     const { data: parent } = await db.from('managed_categories').select('path').eq('id', parentId).single();
@@ -391,12 +425,14 @@ async function createManagedCategory(name, parentId) {
 
 async function deleteManagedCategory(id) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { error } = await db.from('managed_categories').delete().eq('id', id);
   if (error) throw error;
 }
 
 async function renameManagedCategory(id, name) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { data: cat } = await db.from('managed_categories').select('*').eq('id', id).single();
   if (!cat) throw new Error('分类不存在');
   let newPath = name.trim();
@@ -420,6 +456,7 @@ async function renameManagedCategory(id, name) {
 
 async function moveManagedCategory(id, newParentId) {
   const db = getAdminDb();
+  if (!db) throw new Error('数据库未配置');
   const { data: cat } = await db.from('managed_categories').select('*').eq('id', id).single();
   if (!cat) throw new Error('分类不存在');
   let newPath = cat.name.trim();
@@ -442,6 +479,7 @@ async function moveManagedCategory(id, newParentId) {
 
 async function getManagedCategoriesFlat() {
   const db = getAdminDb();
+  if (!db) return [];
   const { data } = await db.from('managed_categories').select('*').order('path');
   return data || [];
 }

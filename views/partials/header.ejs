@@ -28,7 +28,7 @@
   <% if (typeof post !== 'undefined' && post && post.cover) { %><meta property="og:image" content="<%= url(post.cover) %>"><% } else if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
   <% } %>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
-  <link rel="stylesheet" href="<%= config.CDN.FONT_AWESOME %>" crossorigin="anonymous">
+  <link rel="stylesheet" href="<%= basePath %>/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
   <link rel="stylesheet" href="<%= config.CDN.KATEX_CSS %>" crossorigin="anonymous">
 

@@ -22,6 +22,7 @@ router.get('/', async (req, res) => {
 
     res.render('index', { posts, page, totalPages, total, tag, cat, ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'home' });
   } catch (e) {
+    console.error('[首页错误]', e.message);
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
@@ -44,6 +45,7 @@ router.get('/posts/:id', async (req, res) => {
     const { prev, next } = await getAdjacentPosts(post.id);
     res.render('show', { post, ...sidebar, prevPost: prev, nextPost: next, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
+    console.error('[文章详情错误]', e.message);
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
