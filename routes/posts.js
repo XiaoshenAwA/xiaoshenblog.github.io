@@ -5,6 +5,7 @@ const path = require('path');
 const { getAllTags, getPostsPage, getPost, getPostAdmin, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, moveManagedCategory, getManagedCategoriesFlat } = require('../db');
 const config = require('../config');
 const { render, excerpt } = require('../markdown');
+const adminAuth = require('../middleware/adminAuth');
 
 router.get('/', async (req, res) => {
   try {
@@ -47,7 +48,7 @@ router.get('/posts/:id', async (req, res) => {
   }
 });
 
-router.post('/posts', async (req, res) => {
+router.post('/posts', adminAuth, async (req, res) => {
   try {
     const { title, content, tags, cover, category } = req.body;
     if (!title || !content) return res.status(400).send(config.locale?.common?.empty_error || '标题和内容不能为空');
@@ -58,7 +59,7 @@ router.post('/posts', async (req, res) => {
   }
 });
 
-router.delete('/posts/:id', async (req, res) => {
+router.delete('/posts/:id', adminAuth, async (req, res) => {
   try {
     await deletePost(req.params.id);
     res.redirect(config.BASE_PATH || '/');
@@ -79,7 +80,7 @@ router.get('/posts/:id/edit', async (req, res) => {
   }
 });
 
-router.put('/posts/:id', async (req, res) => {
+router.put('/posts/:id', adminAuth, async (req, res) => {
   try {
     const { title, content, tags, cover, category } = req.body;
     if (!title || !content) return res.status(400).send(config.locale?.common?.empty_error || '标题和内容不能为空');
@@ -101,7 +102,7 @@ router.get('/about/raw', (req, res) => {
   }
 });
 
-router.post('/about', (req, res) => {
+router.post('/about', adminAuth, (req, res) => {
   try {
     const { content } = req.body;
     if (!content) return res.status(400).send('内容不能为空');
@@ -226,6 +227,15 @@ router.post('/api/stats/visit', async (req, res) => {
   }
 });
 
+router.get('/api/stats', async (req, res) => {
+  try {
+    const stats = await getSiteStats();
+    res.json({ visitor_count: stats.visitor_count || 0, total_views: stats.total_views || 0 });
+  } catch (e) {
+    res.status(500).json({ error: '获取统计失败' });
+  }
+});
+
 router.post('/api/stats/view/:id', async (req, res) => {
   try {
     const count = await incrementViewCount(req.params.id);
@@ -263,7 +273,7 @@ router.get('/api/posts', async (req, res) => {
 
 // ============ Managed Tags API ============
 
-router.get('/api/admin/tags', async (req, res) => {
+router.get('/api/admin/tags', adminAuth, async (req, res) => {
   try {
     const tags = await getManagedTags();
     res.json(tags);
@@ -272,7 +282,7 @@ router.get('/api/admin/tags', async (req, res) => {
   }
 });
 
-router.post('/api/admin/tags', async (req, res) => {
+router.post('/api/admin/tags', adminAuth, async (req, res) => {
   try {
     const { name } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: '标签名不能为空' });
@@ -283,7 +293,7 @@ router.post('/api/admin/tags', async (req, res) => {
   }
 });
 
-router.delete('/api/admin/tags/:id', async (req, res) => {
+router.delete('/api/admin/tags/:id', adminAuth, async (req, res) => {
   try {
     await deleteManagedTag(req.params.id);
     res.json({ success: true });
@@ -292,7 +302,7 @@ router.delete('/api/admin/tags/:id', async (req, res) => {
   }
 });
 
-router.put('/api/admin/tags/:id', async (req, res) => {
+router.put('/api/admin/tags/:id', adminAuth, async (req, res) => {
   try {
     const { name } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: '标签名不能为空' });
@@ -305,7 +315,7 @@ router.put('/api/admin/tags/:id', async (req, res) => {
 
 // ============ Managed Categories API ============
 
-router.get('/api/admin/categories', async (req, res) => {
+router.get('/api/admin/categories', adminAuth, async (req, res) => {
   try {
     const tree = await getManagedCategories();
     const flat = await getManagedCategoriesFlat();
@@ -315,7 +325,7 @@ router.get('/api/admin/categories', async (req, res) => {
   }
 });
 
-router.post('/api/admin/categories', async (req, res) => {
+router.post('/api/admin/categories', adminAuth, async (req, res) => {
   try {
     const { name, parent_id } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: '分类名不能为空' });
@@ -326,7 +336,7 @@ router.post('/api/admin/categories', async (req, res) => {
   }
 });
 
-router.delete('/api/admin/categories/:id', async (req, res) => {
+router.delete('/api/admin/categories/:id', adminAuth, async (req, res) => {
   try {
     await deleteManagedCategory(req.params.id);
     res.json({ success: true });
@@ -335,7 +345,7 @@ router.delete('/api/admin/categories/:id', async (req, res) => {
   }
 });
 
-router.put('/api/admin/categories/:id', async (req, res) => {
+router.put('/api/admin/categories/:id', adminAuth, async (req, res) => {
   try {
     const { name, parent_id } = req.body;
     if (name !== undefined) {

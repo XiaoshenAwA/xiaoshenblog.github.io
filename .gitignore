@@ -7,3 +7,7 @@ public/assets/
 .DS_Store
 Thumbs.db
 .env
+config.yml
+data/
+test_error.js
+server.err

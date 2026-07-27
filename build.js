@@ -84,8 +84,11 @@ async function build() {
     const offset = (page - 1) * config.PAGE_SIZE;
     const posts = await preparePosts(allPosts.slice(offset, offset + config.PAGE_SIZE));
     const data = { posts, page, totalPages, total: allPosts.length, tag: '', cat: '', ...sidebarData, pageType: 'home' };
-    if (page === 1) await render('index.ejs', data, 'index.html');
-    if (totalPages > 1) await render('index.ejs', data, `page/${page}/index.html`);
+    if (page === 1) {
+      await render('index.ejs', data, 'index.html');
+    } else {
+      await render('index.ejs', data, `page/${page}/index.html`);
+    }
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u6807\u7B7E\u9875\u9762...');
@@ -164,7 +167,7 @@ async function build() {
   await render('editor.ejs', { title: 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210 Sitemap...');
-  var siteUrl = 'https://xiaoshenblog.github.io';
+  var siteUrl = config.SITE_URL || 'https://xiaoshenblog.github.io';
   var sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
   function addUrl(loc, priority) {
     sitemap += '  <url>\n    <loc>' + siteUrl + loc + '</loc>\n    <priority>' + priority + '</priority>\n  </url>\n';

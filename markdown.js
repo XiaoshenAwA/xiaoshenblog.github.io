@@ -14,6 +14,7 @@ const katexOptions = {
 
 let md = null;
 let ready = false;
+let initPromise = null;
 
 const langDisplay = {
   vue: 'Vue', vuejs: 'Vue',
@@ -39,6 +40,8 @@ const langDisplay = {
 
 async function init() {
   if (ready) return;
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
 
   const shiki = await import('shiki');
   const { fromHighlighter } = await import('@shikijs/markdown-it/core');
@@ -224,30 +227,33 @@ async function init() {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: false });
       } catch (e) {
-        return `<span style="color:${config.MD_KATEX_ERROR_COLOR}">[公式错误: ${e.message}]</span>`;
+        const msg = String(e.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<span style="color:${config.MD_KATEX_ERROR_COLOR}">[公式错误: ${msg}]</span>`;
       }
     },
     blockRenderer: (str) => {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: true });
       } catch (e) {
-        return `<span style="color:${config.MD_KATEX_ERROR_COLOR}" class="katex-error katex-display">[公式错误: ${e.message}]</span>`;
+        const msg = String(e.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<span style="color:${config.MD_KATEX_ERROR_COLOR}" class="katex-error katex-display">[公式错误: ${msg}]</span>`;
       }
     }
   });
 
   ready = true;
+  })().catch(err => { initPromise = null; throw err; });
+  await initPromise;
 }
 
 async function render(content) {
   await init();
   const raw = md.render(content || '');
   return DOMPurify.sanitize(raw, {
-    ALLOWED_TAGS: false,
-    ALLOWED_ATTR: false,
-    ADD_TAGS: ['math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'mfrac', 'msqrt', 'mover', 'munder', 'mstyle', 'merror', 'mpadded', 'mphantom', 'menclose', 'mlabeledtr', 'mtable', 'mtr', 'mtd', 'mprescripts', 'none'],
-    ADD_ATTR: ['class', 'id', 'style', 'src', 'href', 'alt', 'title', 'target', 'rel', 'width', 'height', 'loading', 'datetime', 'open', 'data-*'],
-    FORBID_TAGS: ['style', 'script', 'iframe', 'embed', 'object', 'applet', 'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'frameset', 'frame', 'marquee'],
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'del', 'ins', 'mark', 'sub', 'sup', 'a', 'img', 'figure', 'figcaption', 'pre', 'code', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span', 'details', 'summary',
+      'math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'mfrac', 'msqrt', 'mover', 'munder', 'mstyle', 'merror', 'mpadded', 'mphantom', 'menclose', 'mlabeledtr', 'mtable', 'mtr', 'mtd', 'mprescripts', 'none'],
+    ALLOWED_ATTR: ['class', 'id', 'style', 'src', 'href', 'alt', 'title', 'target', 'rel', 'width', 'height', 'loading', 'datetime', 'open', 'start', 'type', 'colspan', 'rowspan', 'checked', 'disabled', 'draggable', 'data-line', 'data-language', 'mathvariant', 'encoding', 'definitionURL'],
+    FORBID_TAGS: ['script', 'iframe', 'embed', 'object', 'applet', 'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'frameset', 'frame', 'marquee', 'template'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onkeydown', 'onkeypress', 'onkeyup', 'onsubmit', 'onreset', 'onfocus', 'onblur', 'onchange', 'onselect', 'onabort', 'onbeforeunload', 'onhashchange', 'onpopstate', 'onstorage'],
   });
 }

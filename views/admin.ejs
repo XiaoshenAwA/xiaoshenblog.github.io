@@ -584,11 +584,10 @@
 window.__CONFIG__ = {
   SUPABASE_URL: '<%= config.SUPABASE_URL %>',
   SUPABASE_ANON_KEY: '<%= config.SUPABASE_ANON_KEY %>',
-  DEPLOY_HOOK_URL: '<%= config.DEPLOY_HOOK_URL %>',
   ADMIN_SAVE_REDIRECT_DELAY: <%= config.ADMIN_SAVE_REDIRECT_DELAY || 1500 %>,
   ADMIN_CHANGE_PW_REDIRECT_DELAY: <%= config.ADMIN_CHANGE_PW_REDIRECT_DELAY || 2000 %>,
   DB_TABLE: '<%= config.DB_TABLE %>',
-  LOCALE: <%- JSON.stringify(locale.admin || {}) %>
+  LOCALE: <%- JSON.stringify(locale.admin || {}).replace(/<\/script>/gi, '<\\/script>') %>
 };
 </script>
 <script>

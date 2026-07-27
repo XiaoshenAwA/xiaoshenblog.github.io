@@ -21,6 +21,7 @@ const config = {
   PORT: parseInt(env('PORT', cfg.server?.port ?? 3000), 10),
 
   // 站点
+  SITE_URL: env('SITE_URL', cfg.site?.url ?? ''),
   SITE_LANGUAGE: cfg.site?.language ?? 'zh-CN',
 
   // 数据库
@@ -212,6 +213,7 @@ const config = {
   EDITOR_DRAFT_PREFIX: cfg.editor?.draft_prefix ?? 'editor-draft',
 
   // 后台
+  ADMIN_PASSWORD: env('ADMIN_PASSWORD', cfg.admin?.password ?? ''),
   ADMIN_MIN_PASSWORD_LENGTH: cfg.admin?.min_password_length ?? 6,
   ADMIN_SAVE_REDIRECT_DELAY: cfg.admin?.save_redirect_delay ?? 1500,
   ADMIN_CHANGE_PW_REDIRECT_DELAY: cfg.admin?.change_pw_redirect_delay ?? 2000,

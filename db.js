@@ -41,7 +41,7 @@ function onlyPublished(arr) {
 
 async function getAllTags() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*');
+  const { data } = await db.from(table()).select('tags, published');
   const allTags = new Set();
   if (data) {
     for (const row of data) {
@@ -55,7 +55,7 @@ async function getAllTags() {
 
 async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '') {
   const db = getDb();
-  let query = db.from(table()).select('*', { count: 'exact' }).order('created_at', { ascending: false });
+  let query = db.from(table()).select('*', { count: 'exact' }).eq('published', true).order('created_at', { ascending: false });
   if (tag) {
     query = query.contains('tags', [tag]);
   }
@@ -65,9 +65,8 @@ async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '') {
   }
   const offset = (page - 1) * pageSize;
   const { data, count } = await query.range(offset, offset + pageSize - 1);
-  const all = (data || []).map(rowToPost);
-  const filtered = onlyPublished(all);
-  return { posts: filtered, total: filtered.length };
+  const posts = (data || []).map(rowToPost);
+  return { posts, total: count || 0 };
 }
 
 async function getAllPosts() {
@@ -97,13 +96,26 @@ async function getPostAdmin(id) {
 
 async function getAdjacentPosts(id) {
   const db = getDb();
-  const { data } = await db.from(table()).select('*').order('created_at', { ascending: false });
-  if (!data || data.length === 0) return { prev: null, next: null };
-  const allPosts = onlyPublished(data.map(r => ({ id: r.id, title: r.title, published: r.published })));
-  const idx = allPosts.findIndex(p => p.id === id);
+  const { data: current } = await db.from(table()).select('created_at, published').eq('id', id).single();
+  if (!current || current.published === false) return { prev: null, next: null };
+
+  const { data: prevData } = await db.from(table())
+    .select('id, title, created_at')
+    .eq('published', true)
+    .gt('created_at', current.created_at)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  const { data: nextData } = await db.from(table())
+    .select('id, title, created_at')
+    .eq('published', true)
+    .lt('created_at', current.created_at)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
   return {
-    prev: idx > 0 ? allPosts[idx - 1] : null,
-    next: idx < allPosts.length - 1 ? allPosts[idx + 1] : null
+    prev: prevData && prevData.length > 0 ? prevData[0] : null,
+    next: nextData && nextData.length > 0 ? nextData[0] : null
   };
 }
 
@@ -137,13 +149,13 @@ async function deletePost(id) {
 
 async function getPostCount() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*');
-  return (data || []).filter(r => r.published !== false).length;
+  const { count } = await db.from(table()).select('id', { count: 'exact', head: true }).eq('published', true);
+  return count || 0;
 }
 
 async function getAllCategories() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*');
+  const { data } = await db.from(table()).select('category, published');
   const catMap = {};
   if (data) {
     for (const row of data) {
@@ -157,7 +169,7 @@ async function getAllCategories() {
 
 async function getCategoryTree() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*');
+  const { data } = await db.from(table()).select('category, published');
   const root = {};
   if (data) {
     for (const row of data) {
@@ -191,7 +203,7 @@ async function getCategoryTree() {
 
 async function getArchives() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*').order('created_at', { ascending: false });
+  const { data } = await db.from(table()).select('id, title, created_at, published').order('created_at', { ascending: false });
   const months = {};
   if (data) {
     for (const row of data) {
@@ -208,18 +220,18 @@ async function getArchives() {
 
 async function getRecentPosts(limit = 5) {
   const db = getDb();
-  const { data } = await db.from(table()).select('*').order('created_at', { ascending: false });
+  const { data } = await db.from(table()).select('id, title, cover, created_at, published').order('created_at', { ascending: false });
   const all = (data || []).filter(r => r.published !== false).slice(0, limit);
   return all.map(r => ({ id: r.id, title: r.title, cover: r.cover || '', created_at: r.created_at }));
 }
 
 async function getTotalWordCount() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*');
+  const { data } = await db.from(table()).select('word_count, published');
   let total = 0;
   if (data) {
     for (const row of data) {
-      if (row.published !== false) total += (row.content || '').length;
+      if (row.published !== false) total += (row.word_count || 0);
     }
   }
   return total;
@@ -255,7 +267,7 @@ async function incrementViewCount(postId) {
 
 async function getLastPostUpdateTime() {
   const db = getDb();
-  const { data } = await db.from(table()).select('*').order('updated_at', { ascending: false });
+  const { data } = await db.from(table()).select('updated_at, published').order('updated_at', { ascending: false });
   if (data) {
     const published = data.filter(r => r.published !== false);
     if (published.length > 0) return published[0].updated_at;

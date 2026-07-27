@@ -55,13 +55,13 @@ CREATE POLICY "任何人都可以读取文章" ON posts
 
 -- 仅允许经过身份验证的用户写入
 CREATE POLICY "仅认证用户可以插入文章" ON posts
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "仅认证用户可以更新文章" ON posts
-  FOR UPDATE USING (auth.role() = 'authenticated');
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "仅认证用户可以删除文章" ON posts
-  FOR DELETE USING (auth.role() = 'authenticated');
+  FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- managed_tags RLS
 ALTER TABLE managed_tags ENABLE ROW LEVEL SECURITY;
@@ -70,10 +70,13 @@ CREATE POLICY "任何人都可以读取标签" ON managed_tags
   FOR SELECT USING (true);
 
 CREATE POLICY "仅认证用户可以插入标签" ON managed_tags
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "仅认证用户可以更新标签" ON managed_tags
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "仅认证用户可以删除标签" ON managed_tags
-  FOR DELETE USING (auth.role() = 'authenticated');
+  FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- managed_categories RLS
 ALTER TABLE managed_categories ENABLE ROW LEVEL SECURITY;
@@ -82,10 +85,22 @@ CREATE POLICY "任何人都可以读取分类" ON managed_categories
   FOR SELECT USING (true);
 
 CREATE POLICY "仅认证用户可以插入分类" ON managed_categories
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 CREATE POLICY "仅认证用户可以更新分类" ON managed_categories
-  FOR UPDATE USING (auth.role() = 'authenticated');
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "仅认证用户可以删除分类" ON managed_categories
-  FOR DELETE USING (auth.role() = 'authenticated');
+  FOR DELETE USING (auth.uid() IS NOT NULL);
+
+-- site_stats RLS
+ALTER TABLE site_stats ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "任何人都可以读取统计" ON site_stats
+  FOR SELECT USING (true);
+
+CREATE POLICY "仅认证用户可以更新统计" ON site_stats
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "仅认证用户可以修改统计" ON site_stats
+  FOR UPDATE USING (auth.uid() IS NOT NULL);

@@ -122,6 +122,11 @@
       var tag = container.getAttribute('data-tag') || '';
       var cat = container.getAttribute('data-cat') || '';
 
+      function esc(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+      }
+
       function genArticle(p, idx) {
         var coverLeft = idx % 2 === 0;
         var _dcArr = JSON.parse(document.querySelector('.recent-post-items').dataset.defaultCovers || '[]');
@@ -133,20 +138,20 @@
         var dateStr = date ? new Date(date).toISOString().slice(0,10) : '';
         return '<article class="recent-post-item reveal" style="animation-delay:' + (idx*0.08) + 's">' +
           '<div class="post_cover ' + (coverLeft ? 'left' : 'right') + '">' +
-            '<a href="<%= basePath %>/posts/' + p.id + '" title="' + p.title.replace(/"/g,'&quot;') + '">' +
-              '<img class="post-bg" src="' + (p.cover || defaultCover) + '" alt="' + p.title.replace(/"/g,'&quot;') + '">' +
+            '<a href="<%= basePath %>/posts/' + p.id + '" title="' + esc(p.title) + '">' +
+              '<img class="post-bg" src="' + esc(p.cover || defaultCover) + '" alt="' + esc(p.title) + '">' +
             '</a>' +
           '</div>' +
           '<div class="recent-post-info">' +
-            '<a class="article-title" href="<%= basePath %>/posts/' + p.id + '" title="' + p.title.replace(/"/g,'&quot;') + '">' + p.title + '</a>' +
+            '<a class="article-title" href="<%= basePath %>/posts/' + p.id + '" title="' + esc(p.title) + '">' + esc(p.title) + '</a>' +
           '<div class="article-meta-wrap">' +
             '<span class="post-meta-date">' +
               '<i class="far fa-calendar-alt"></i> ' +
               '<span class="article-meta-label"><%= locale.home?.published_at || '发表于' %></span> ' +
               '<time datetime="' + dateStr + '">' + dateStr + '</time>' +
             '</span>' +
-            (cats.length ? '<span class="article-meta"><span class="article-meta-separator">|</span><a class="article-meta__categories" href="<%= basePath %>/categories/' + p.category.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/">' + cats.join('<span class="article-meta-separator">&gt;</span>') + '</a></span>' : '') +
-            (tags.length ? '<span class="article-meta"><span class="article-meta-separator">|</span>' + tags.map(function(t){return '<a href="<%= basePath %>/?' + (t ? 'tag=' + encodeURIComponent(t) : '') + '" class="tag-pill"><i class="fas fa-tag"></i> ' + t + '</a>'}).join('') + '</span>' : '') +
+            (cats.length ? '<span class="article-meta"><span class="article-meta-separator">|</span><a class="article-meta__categories" href="<%= basePath %>/categories/' + p.category.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/">' + cats.map(esc).join('<span class="article-meta-separator">&gt;</span>') + '</a></span>' : '') +
+            (tags.length ? '<span class="article-meta"><span class="article-meta-separator">|</span>' + tags.map(function(t){return '<a href="<%= basePath %>/?' + (t ? 'tag=' + encodeURIComponent(t) : '') + '" class="tag-pill"><i class="fas fa-tag"></i> ' + esc(t) + '</a>'}).join('') + '</span>' : '') +
           '</div>' +
           '<div class="content">' + (p.excerptText || '') + '</div>' +
         '</div></article>';
