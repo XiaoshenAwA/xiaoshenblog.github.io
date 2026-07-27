@@ -3,28 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Markdown 编辑器 | MyBlog</title>
-  <meta name="description" content="记录生活，分享思考">
+  <title>Markdown 编辑器 | 博客</title>
+  <meta name="description" content="正在测试功能中...">
   
-  <link rel="icon" href="/xiaoshenblog.github.io/img/favicon.png">
+  <link rel="icon" href="/xiaoshenblog.github.iohttps://cdn.luogu.com.cn/upload/usericon/852112.png">
   
   <link rel="icon" type="image/png" sizes="32x32" href="/xiaoshenblog.github.io/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/xiaoshenblog.github.io/img/favicon-16.png">
   
+  <link rel="manifest" href="/xiaoshenblog.github.io/manifest.json">
+  <link rel="apple-touch-icon" href="/xiaoshenblog.github.io/img/icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="博客">
+  
   
   <meta property="og:title" content="Markdown 编辑器">
-  <meta property="og:site_name" content="MyBlog">
+  <meta property="og:site_name" content="博客">
   <meta property="og:type" content="article">
   <meta property="og:url" content="/xiaoshenblog.github.io/">
-  <meta property="og:description" content="记录生活，分享思考">
+  <meta property="og:description" content="正在测试功能中...">
   <meta name="twitter:card" content="summary_large_image">
   
   
-  
+  <meta property="og:image" content="https://cdn.luogu.com.cn/upload/image_hosting/615in8kx.png">
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous">
-  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1785136327178" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
+  <link rel="stylesheet" href="/xiaoshenblog.github.io/assets/main.css?v=1785136795072" onerror="this.onerror=null;this.href='/xiaoshenblog.github.io/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -36,7 +41,7 @@
       --text-muted: #999999;
       --border: rgba(0,0,0,0.08);
       --accent: #3498db;
-      --accent-light: rgba(52,152,219,0.1);
+      --accent-light: rgba(52,152,219,0.12);
       --shadow: 0 2px 12px rgba(0,0,0,0.06);
       --shadow-hover: 0 12px 32px rgba(0,0,0,0.1);
       --hero-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
@@ -67,9 +72,177 @@
   </style>
 
   
+  <style>
+    #preloader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.5s;
+    }
+    #preloader.hide { opacity: 0; pointer-events: none; }
+    #preloader .loader {
+      --color: var(--accent);
+      --size-mid: 40px;
+      --size-dot: 10px;
+      --size-bar: 3px;
+      --size-square: 24px;
+      display: block;
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+    #preloader .loader::before,
+    #preloader .loader::after {
+      content: '';
+      box-sizing: border-box;
+      position: absolute;
+    }
+    #preloader .loader.--1::before {
+      width: var(--size-mid); height: var(--size-mid);
+      border: 4px solid var(--color);
+      border-top-color: transparent;
+      border-radius: 50%;
+      left: 50%; top: 50%; transform: translate(-50%,-50%);
+      animation: l1 1s linear infinite;
+    }
+    #preloader .loader.--1::after {
+      width: calc(var(--size-mid) - 2px); height: calc(var(--size-mid) - 2px);
+      border: 2px solid transparent;
+      border-top-color: var(--color);
+      border-radius: 50%;
+      left: 50%; top: 50%; transform: translate(-50%,-50%);
+      animation: l1 0.6s linear reverse infinite;
+    }
+    @keyframes l1 { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    #preloader .loader.--2::before,
+    #preloader .loader.--2::after {
+      width: var(--size-dot); height: var(--size-dot);
+      background-color: var(--color); border-radius: 50%;
+      opacity: 0;
+      animation: l2 0.8s cubic-bezier(0.2,0.32,0,0.87) infinite;
+    }
+    #preloader .loader.--2::after { animation-delay: 0.3s; }
+    @keyframes l2 {
+      0%,80%,100% { opacity: 0; }
+      33% { opacity: 1; }
+      0%,100% { transform: translateX(-24px); }
+      90% { transform: translateX(24px); }
+    }
+    #preloader .loader.--3::before,
+    #preloader .loader.--3::after {
+      width: var(--size-dot); height: var(--size-dot);
+      background-color: var(--color); border-radius: 50%;
+      top: 50%;
+      animation: l3 1.2s ease-in-out infinite;
+    }
+    #preloader .loader.--3::before { left: calc(50% - 16px); }
+    #preloader .loader.--3::after { left: calc(50% + 8px); animation-delay: -0.4s; }
+    @keyframes l3 {
+      0%,100% { transform: translateY(-20px); }
+      44% { transform: translateY(20px); }
+    }
+    #preloader .loader.--4::before {
+      height: var(--size-bar); width: 40px;
+      background-color: var(--color);
+      left: 50%; top: 50%; transform-origin: left;
+      animation: l4 0.8s cubic-bezier(0,0,0.03,0.9) infinite;
+    }
+    @keyframes l4 {
+      0%,44%,88.1%,100% { transform-origin: left; }
+      0%,100%,88% { transform: scaleX(0); }
+      44.1%,88% { transform-origin: right; }
+      33%,44% { transform: scaleX(1); }
+    }
+    #preloader .loader.--5::before,
+    #preloader .loader.--5::after {
+      height: 20px; width: var(--size-bar);
+      background-color: var(--color);
+      animation: l5 0.6s cubic-bezier(0,0,0.03,0.9) infinite;
+    }
+    #preloader .loader.--5::before { left: calc(50% - 8px); top: calc(50% - 24px); }
+    #preloader .loader.--5::after { left: calc(50% + 8px); top: calc(50% - 8px); animation-delay: 0.2s; }
+    @keyframes l5 {
+      0%,88%,100% { opacity: 0; }
+      0% { transform: translateY(-40px); }
+      33% { opacity: 1; }
+      33%,88% { transform: translateY(20px); }
+    }
+    #preloader .loader.--6::before,
+    #preloader .loader.--7::before {
+      width: var(--size-square); height: var(--size-square);
+      background-color: var(--color);
+      top: calc(50% - var(--size-square)); left: calc(50% - var(--size-square));
+      animation: l6 2.4s cubic-bezier(0,0,0.24,1.21) infinite;
+    }
+    @keyframes l6 {
+      0%,100% { transform: none; }
+      25% { transform: translateX(100%); }
+      50% { transform: translateX(100%) translateY(100%); }
+      75% { transform: translateY(100%); }
+    }
+    #preloader .loader.--7::after {
+      width: var(--size-square); height: var(--size-square);
+      background-color: var(--color);
+      top: 50%; left: 50%;
+      animation: l7 2.4s cubic-bezier(0,0,0.24,1.21) infinite;
+    }
+    @keyframes l7 {
+      0%,100% { transform: none; }
+      25% { transform: translateX(-100%); }
+      50% { transform: translateX(-100%) translateY(-100%); }
+      75% { transform: translateY(-100%); }
+    }
+    #preloader .loader.--8::before,
+    #preloader .loader.--8::after {
+      width: var(--size-dot); height: var(--size-dot);
+      border-radius: 50%; background-color: var(--color);
+    }
+    #preloader .loader.--8::before {
+      top: calc(50% + 30px);
+      animation: l8-1 0.8s cubic-bezier(0.06,0.01,0.49,1.18) infinite;
+    }
+    @keyframes l8-1 {
+      0%,55%,100% { opacity: 0; }
+      0% { transform: scale(0.2); }
+      22% { opacity: 1; }
+      33%,55% { transform: scale(1) translateY(-40px); }
+    }
+    #preloader .loader.--8::after {
+      opacity: 0; top: calc(50% - 12px);
+      animation: l8-2 0.8s cubic-bezier(0.46,-0.1,0.27,1.07) 0.2s infinite;
+    }
+    @keyframes l8-2 {
+      0%,100% { opacity: 0; }
+      33% { opacity: 0.3; }
+      0% { transform: scale(0); }
+      100% { transform: scale(4); }
+    }
+    #preloader .loader.--9::before,
+    #preloader .loader.--9::after {
+      width: var(--size-dot); height: var(--size-dot);
+      border-radius: 50%; background-color: var(--color);
+      top: 50%;
+      animation: l9 0.42s cubic-bezier(0.39,0.31,0,1.11) infinite;
+    }
+    #preloader .loader.--9::before { left: calc(50% - 20px); }
+    #preloader .loader.--9::after { left: calc(50% + 12px); animation-delay: 0.12s; }
+    @keyframes l9 {
+      0%,100% { opacity: 0; }
+      0% { transform: translate(-24px,-24px); }
+      66% { opacity: 1; }
+      66%,100% { transform: none; }
+    }
+  </style>
+  
 <script>try{!function(){function sf(n){return String(n||'').replace(/[^a-zA-Z0-9\u4e00-\u9fff\s-]/g,'')}var k='blog_font_settings',s;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s)return;var d=document.documentElement;if(s.fontSize)d.style.setProperty('--font-size-global',s.fontSize+'px');if(s.bodyFont&&sf(s.bodyFont)!=='unset')d.style.setProperty('--font-body',"'"+sf(s.bodyFont)+"'");else d.style.removeProperty('--font-body');if(s.codeFont&&sf(s.codeFont)!=='unset'){d.style.setProperty('--font-code',"'"+sf(s.codeFont)+"'");var cs=document.createElement('style');cs.id='__code_font_style';var fn=sf(s.codeFont);cs.textContent='@font-face{font-family:"'+fn+'";src:local("'+fn+'")}code,pre,.editor-gutter,#editor-input,textarea,.code-wrap,.highlight,.hljs{font-family:"'+fn+'",monospace!important}';document.head.appendChild(cs);var gl=document.createElement('link');gl.rel='stylesheet';gl.id='__code_font_gf';gl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(sf(s.codeFont))+':wght@300;400;500;600;700&display=swap';document.head.appendChild(gl)}else{d.style.removeProperty('--font-code');var og=document.getElementById('__code_font_gf');if(og)og.remove()}if(s.bodyFont&&sf(s.bodyFont)!=='unset'){var bs=document.createElement('style');bs.id='__body_font_style';var fnB=sf(s.bodyFont);bs.textContent='@font-face{font-family:"'+fnB+'";src:local("'+fnB+'")}body,.post-content,.content{font-family:"'+fnB+'",serif!important}';document.head.appendChild(bs);var bl=document.createElement('link');bl.rel='stylesheet';bl.id='__body_font_gf';bl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(sf(s.bodyFont))+':wght@300;400;500;600;700&display=swap';document.head.appendChild(bl)}else{var bs2=document.getElementById('__body_font_style');if(bs2)bs2.textContent='';var bg=document.getElementById('__body_font_gf');if(bg)bg.remove()}}()}catch(e){}</script>
 </head>
 <body>
+  
+  <div id="preloader"><div class="loader" id="loaderEl"></div></div>
+  <script>
+    (function(){var e=document.getElementById('loaderEl');if(e)e.classList.add('--'+Math.floor(Math.random()*9+1));})();
+    window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)setTimeout(function(){p.classList.add('hide')},300)});
+  </script>
   
 
   <div class="progress-bar" id="progressBar"></div>
@@ -80,7 +253,7 @@
     <div id="menu-mask"></div>
     <div id="sidebar-menus">
       <div class="avatar-img text-center">
-        <img src="/img/avatar.png" alt="博主">
+        <img src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="博主">
       </div>
       <div class="site-data text-center">
         <a href="/xiaoshenblog.github.io/archives/"><div class="headline">文章</div><div class="length-num">0</div></a>
@@ -88,6 +261,48 @@
         <a href="/xiaoshenblog.github.io/categories/"><div class="headline">分类</div><div class="length-num">0</div></a>
       </div>
       <div class="menus_items">
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/"><i class="fas fa-home"></i><span> 首页</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/categories"><i class="fas fa-folder-open"></i><span> 分类</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/archives"><i class="fas fa-archive"></i><span> 归档</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/about"><i class="fas fa-user"></i><span> 关于</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/friends"><i class="fas fa-link"></i><span> 友链</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/admin"><i class="fas fa-cog"></i><span> 后台管理</span></a>
+          </div>
+          
+        
+          
+          <div class="menus_item">
+            <a class="site-page" href="/xiaoshenblog.github.io/editor"><i class="fas fa-pen"></i><span> 编辑器</span></a>
+          </div>
+          
         
       </div>
     </div>
@@ -101,8 +316,8 @@
     <nav id="nav">
       <span id="blog-info">
         <a class="nav-site-title" href="/xiaoshenblog.github.io/">
-          
-          <span class="site-name">MyBlog</span>
+          <img class="site-icon" src="https://cdn.luogu.com.cn/upload/usericon/852112.png" alt="Logo">
+          <span class="site-name">博客</span>
         </a>
         <a class="nav-page-title" href="/xiaoshenblog.github.io/">
           <span class="site-name">Markdown 编辑器</span>
@@ -111,6 +326,52 @@
       <div id="menus">
         <div class="menus_items">
           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/"><i class="fas fa-home"></i><span> 首页</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/categories"><i class="fas fa-folder-open"></i><span> 分类</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/archives"><i class="fas fa-archive"></i><span> 归档</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/about"><i class="fas fa-user"></i><span> 关于</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/friends"><i class="fas fa-link"></i><span> 友链</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/admin"><i class="fas fa-cog"></i><span> 后台管理</span></a>
+             </div>
+             
+           
+            
+            <div class="menus_item">
+               <a class="site-page" href="/xiaoshenblog.github.io/editor"><i class="fas fa-pen"></i><span> 编辑器</span></a>
+             </div>
+             
+           
+           
+           <div class="menus_item">
+             <button id="searchBtn" class="site-page search-btn-alt" title="搜索"><i class="fas fa-search"></i><span> 搜索</span></button>
+           </div>
            
           </div>
         <div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div>
@@ -279,7 +540,7 @@ window.__CONFIG__ = {
   EDITOR_INDENT_MODE: "tab"
 };
 </script>
-<script type="module" src="/xiaoshenblog.github.io/assets/editor.js?v=1785136327178" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="/xiaoshenblog.github.io/assets/editor.js?v=1785136795072" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
   </div><!-- #body-wrap -->
 
   <div class="jinrishici-container">
@@ -290,7 +551,7 @@ window.__CONFIG__ = {
   <footer id="footer">
     <div id="footer-wrap">
       
-      <div class="copyright">&copy;2026 By 博主</div>
+      <div class="copyright">&copy;2026 由 博主</div>
       
       
       <div class="framework-info">
@@ -315,13 +576,15 @@ window.__CONFIG__ = {
     </div>
   </div>
 
-  <script src="/xiaoshenblog.github.io/assets/main.js?v=1785136327178"></script>
+  <script src="/xiaoshenblog.github.io/assets/main.js?v=1785136795072"></script>
   <script>
     try {
       var h = document.documentElement;
       
       var s = localStorage.getItem('theme');
       if (s) { h.setAttribute('data-theme', s); } else {
+        
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) h.setAttribute('data-theme', 'dark');
         
       }
       
@@ -627,7 +890,103 @@ window.__CONFIG__ = {
     
 
     
+    try {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.shrink-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        if (!fig) return;
+        var pre = fig.querySelector('pre.code-wrap');
+        if (!pre) return;
+        pre.classList.toggle('code-shrink');
+        pre.classList.toggle('code-expanded');
+        if (pre.classList.contains('code-expanded')) {
+          btn.textContent = '折叠';
+        } else {
+          btn.textContent = '展开';
+        }
+      });
+    } catch(e) {}
+    
 
+    
+    try {
+      var fullpageState = { fig: null, backdrop: null, dragMoved: false };
+
+      function closeFullpage() {
+        var st = fullpageState;
+        if (!st.fig) return;
+        st.fig.remove();
+        document.body.classList.remove('code-fullpage-active');
+        if (st.backdrop && st.backdrop.parentNode) {
+          st.backdrop.parentNode.removeChild(st.backdrop);
+        }
+        st.backdrop = null;
+        st.fig = null;
+      }
+
+      document.addEventListener('click', function(e) {
+        if (fullpageState.dragMoved) return;
+        var btn = e.target.closest('.fullpage-btn');
+        if (!btn) return;
+        var fig = btn.closest('.highlight');
+        if (!fig) return;
+        var st = fullpageState;
+
+        if (fig.classList.contains('code-fullpage')) {
+          closeFullpage();
+          return;
+        }
+
+        st.fig = fig.cloneNode(true);
+        st.fig.classList.add('code-fullpage');
+        st.fig.style.background = '#e1e4e8';
+        st.fig.style.setProperty('--shiki-light-bg', '#e1e4e8');
+        st.fig.style.setProperty('--shiki-dark-bg', '#e1e4e8');
+
+        var bd = document.createElement('div');
+        bd.className = 'fullpage-backdrop';
+        document.body.appendChild(bd);
+        st.backdrop = bd;
+
+        document.body.appendChild(st.fig);
+        document.body.classList.add('code-fullpage-active');
+
+        var icon = st.fig.querySelector('.fullpage-btn i');
+        if (icon) icon.className = 'fas fa-compress';
+      });
+
+      (function() {
+        var dragState = null;
+        document.addEventListener('mousedown', function(e) {
+          var tools = e.target.closest('.code-fullpage .highlight-tools');
+          if (!tools) return;
+          var fig = tools.closest('.highlight');
+          if (!fig || !fig.classList.contains('code-fullpage')) return;
+          e.preventDefault();
+          var rect = fig.getBoundingClientRect();
+          fullpageState.dragMoved = false;
+          dragState = { fig: fig, startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
+        });
+        document.addEventListener('mousemove', function(e) {
+          if (!dragState) return;
+          var dx = e.clientX - dragState.startX;
+          var dy = e.clientY - dragState.startY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) fullpageState.dragMoved = true;
+          dragState.fig.style.setProperty('transform', 'none', 'important');
+          dragState.fig.style.setProperty('left', (dragState.origLeft + dx) + 'px', 'important');
+          dragState.fig.style.setProperty('top', (dragState.origTop + dy) + 'px', 'important');
+        });
+        document.addEventListener('mouseup', function() {
+          dragState = null;
+          setTimeout(function() { fullpageState.dragMoved = false; }, 100);
+        });
+      })();
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeFullpage();
+      });
+    } catch(e) {}
     
 
     /* Right-side buttons */
@@ -778,6 +1137,12 @@ window.__CONFIG__ = {
     } catch(e) {}
 
 
+    try {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/xiaoshenblog.github.io/sw.js');
+      }
+    } catch(e) {}
+    
   </script>
   
   <script src="/xiaoshenblog.github.io/js/background.js" defer></script>
@@ -1115,11 +1480,98 @@ window.__CONFIG__ = {
   </script>
 
   
+  <div id="search-mask" class="search-mask"></div>
+  <div id="local-search" class="local-search">
+    <div class="search-dialog">
+      <nav class="search-nav">
+        <span class="search-dialog-title"><i class="fas fa-search"></i> 搜索</span>
+        <button class="search-close-button"><i class="fas fa-times"></i></button>
+      </nav>
+      <div class="local-search-input">
+        <input type="text" id="searchInput" placeholder="搜索文章..." autocomplete="off">
+      </div>
+      <hr>
+      <div id="local-search-results" class="search-result-list"></div>
+      <div id="local-search-stats" class="search-stats"></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0/dist/fuse.min.js"></script>
+  <script>
+    (function() {
+      var fuse = null;
+      var overlay = document.getElementById('local-search');
+      var mask = document.getElementById('search-mask');
+      var input = document.getElementById('searchInput');
+      var closeBtn = document.querySelector('.search-close-button');
+      var searchBtn = document.getElementById('searchBtn');
+      var resultsEl = document.getElementById('local-search-results');
+      var statsEl = document.getElementById('local-search-stats');
+      if (!overlay || !input) return;
+
+      function loadIndex(cb) {
+        if (fuse) { cb(); return; }
+        fetch('/xiaoshenblog.github.io/search.json').then(function(r) { return r.json(); }).then(function(d) {
+          fuse = new Fuse(d, { keys: ['title', 'content', 'tags'], threshold: 0.4, includeScore: true });
+          cb();
+        })['catch'](function() {});
+      }
+
+      function doSearch(q) {
+        if (!q || q.length < 2) { resultsEl.innerHTML = ''; statsEl.textContent = ''; return; }
+        loadIndex(function() {
+          var res = fuse.search(q).slice(0, 20).map(function(m) { return m.item; });
+          if (res.length === 0) {
+            resultsEl.innerHTML = '<div class="search-no-result">未找到相关内容</div>';
+            statsEl.textContent = '0 个结果';
+          } else {
+            resultsEl.innerHTML = '<ol class="search-result-list">' + res.map(function(r) {
+              return '<li class="search-result-item"><a href="/xiaoshenblog.github.io' + r.url + '" class="search-result-item-link">' +
+                '<span class="search-result-title">' + r.title + '</span>' +
+                '<span class="search-result-excerpt">' + r.content.substring(0, 120) + '</span></a></li>';
+            }).join('') + '</ol>';
+            statsEl.textContent = res.length + ' 个结果';
+          }
+        });
+      }
+
+      function openSearch() {
+        overlay.style.display = 'block';
+        mask.style.display = 'block';
+        setTimeout(function() { input.focus(); }, 100);
+      }
+
+      function closeSearch() {
+        overlay.style.display = 'none';
+        mask.style.display = 'none';
+        input.value = '';
+        resultsEl.innerHTML = '';
+        statsEl.textContent = '';
+      }
+
+      if (searchBtn) searchBtn.addEventListener('click', openSearch);
+      if (closeBtn) closeBtn.addEventListener('click', closeSearch);
+      if (mask) mask.addEventListener('click', closeSearch);
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && overlay.style.display === 'block') closeSearch();
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+        if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,textarea')) { e.preventDefault(); openSearch(); }
+      });
+
+      input.addEventListener('input', function() {
+        clearTimeout(this.searchTimer);
+        var q = this.value.trim();
+        this.searchTimer = setTimeout(function() { doSearch(q); }, 200);
+      });
+      input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(this.value.trim()); });
+    })();
+  </script>
+  
   <script>
   try {
     (function() {
       var MAX_RETRY = 2;
-      var covers = ["https://t.alcy.cc/fj"];
+      var covers = ["https://t.alcy.cc/fj?9043","https://t.alcy.cc/ycy","https://t.alcy.cc/moez"];
       function retryImg(img) {
         var retries = parseInt(img.getAttribute('data-retry') || '0');
         if (retries >= MAX_RETRY || !img.getAttribute('data-origin-src')) return;
