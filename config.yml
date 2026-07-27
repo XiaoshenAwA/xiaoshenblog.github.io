@@ -21,6 +21,9 @@ server:
 # ============================================================
 
 site:
+  # 网站 URL。用于 sitemap、Open Graph 等。
+  # 填写完整域名，如 "https://example.com"。
+  url: ""
   # 网站语言。用于 HTML lang 属性、Giscus 评论语言等。
   # 常用值：zh-CN（简体中文）、en（英文）、ja（日语）。
   language: "zh-CN"
@@ -43,6 +46,12 @@ database:
   service_key: ""
   # 文章数据表名。如果使用不同的表名，请同步修改此处。
   table: "posts"
+  # 站点统计数据表名。
+  stats_table: "site_stats"
+  # 标签管理数据表名。
+  tags_table: "managed_tags"
+  # 分类管理数据表名。
+  categories_table: "managed_categories"
 
 # ============================================================
 #  博客基本信息
@@ -300,6 +309,8 @@ nav:
   display_title: true
   # 是否固定导航栏。启用后导航栏将始终悬浮在页面顶部。
   fixed: false
+  # 导航栏滚动阈值（px）。页面滚动超过此值后，导航栏将应用滚动样式。
+  scroll_threshold: 60
   # 导航菜单项列表。每一项包含 label（显示名称）、path（链接路径）、icon（FontAwesome 图标类名）。
   # 可自由增删改，支持下拉菜单（未实现，仅为预留格式）。
   menu:
@@ -340,9 +351,11 @@ images:
     effect: true
   # 文章默认封面图 URL。当某篇文章未设置封面时，使用此图片作为默认封面。
   default_cover:
-    - "https://t.alcy.cc/fj?9043"
+    - "https://t.alcy.cc/fj"
     - "https://t.alcy.cc/ycy"
     - "https://t.alcy.cc/moez"
+  # 文章封面图回退 URL。当 default_cover 列表中的图片均不可用时，使用此图片。
+  fallback_cover: "https://t.alcy.cc/fj"
   # 是否全局禁用所有页面的顶部图（banner 区域）。
   disable_top_img: false
   # 默认顶部图。当各页面未单独设置顶部图时，使用此图片作为默认值。
@@ -575,6 +588,8 @@ aside:
   mobile: true
   # 侧边栏位置。left = 左侧，right = 右侧。
   position: right
+  # "关注我"按钮的默认平台。可选 github、twitter 等。
+  follow_me_platform: "github"
 
   # 作者信息卡片
   card_author:
@@ -826,8 +841,14 @@ editor:
 # ============================================================
 
 admin:
+  # 管理员密码。请通过环境变量 ADMIN_PASSWORD 设置，不要在此处明文填写。
+  password: ""
   # 管理员密码的最小长度（字符数）。
   min_password_length: 6
+  # 后台文章列表每页显示数量。
+  page_size: 20
+  # 最大撤销操作次数。
+  max_undo: 50
   # 保存文章成功后自动跳转回文章列表的延迟时间（毫秒）。
   save_redirect_delay: 1500
   # 修改密码成功后自动跳转回后台的延迟时间（毫秒）。

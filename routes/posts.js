@@ -121,7 +121,7 @@ router.get('/search.json', async (req, res) => {
     const index = posts.map(p => ({
       id: p.id,
       title: p.title,
-      content: (p.content || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
+      content: (p.content || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().substring(0, config.SEARCH_EXCERPT_LENGTH || 120),
       url: config.BASE_PATH + '/posts/' + p.id + '/',
       tags: p.tags || []
     }));

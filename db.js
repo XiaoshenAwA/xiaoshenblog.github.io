@@ -27,6 +27,9 @@ function getAdminDb() {
 }
 
 const table = () => config.DB_TABLE;
+const statsTable = () => config.DB_STATS_TABLE;
+const tagsTable = () => config.DB_TAGS_TABLE;
+const categoriesTable = () => config.DB_CATEGORIES_TABLE;
 
 function rowToPost(row) {
   return {
@@ -264,7 +267,7 @@ async function getTotalWordCount() {
 async function getSiteStats() {
   const db = getDb();
   if (!db) return { visitor_count: 0, total_views: 0 };
-  const { data } = await db.from('site_stats').select('key, value');
+  const { data } = await db.from(statsTable()).select('key, value');
   const stats = { visitor_count: 0, total_views: 0 };
   if (data) {
     for (const row of data) {
@@ -277,18 +280,18 @@ async function getSiteStats() {
 async function incrementVisitorCount() {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data } = await db.from('site_stats').select('value').eq('key', 'visitor_count').single();
+  const { data } = await db.from(statsTable()).select('value').eq('key', 'visitor_count').single();
   const newValue = (data?.value || 0) + 1;
-  await db.from('site_stats').upsert({ key: 'visitor_count', value: newValue, updated_at: new Date().toISOString() });
+  await db.from(statsTable()).upsert({ key: 'visitor_count', value: newValue, updated_at: new Date().toISOString() });
   return newValue;
 }
 
 async function incrementViewCount(postId) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data } = await db.from('site_stats').select('value').eq('key', 'total_views').single();
+  const { data } = await db.from(statsTable()).select('value').eq('key', 'total_views').single();
   const newValue = (data?.value || 0) + 1;
-  await db.from('site_stats').upsert({ key: 'total_views', value: newValue, updated_at: new Date().toISOString() });
+  await db.from(statsTable()).upsert({ key: 'total_views', value: newValue, updated_at: new Date().toISOString() });
   return newValue;
 }
 
@@ -308,7 +311,7 @@ async function getLastPostUpdateTime() {
 async function getManagedTags() {
   const db = getAdminDb();
   if (!db) return [];
-  const { data: tags, error: tagError } = await db.from('managed_tags').select('*').order('name');
+  const { data: tags, error: tagError } = await db.from(tagsTable()).select('*').order('name');
   if (tagError) return [];
 
   const { data: posts } = await db.from(table()).select('tags');
@@ -328,7 +331,7 @@ async function getManagedTags() {
 async function createManagedTag(name) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data, error } = await db.from('managed_tags').insert({ name: name.trim() }).select().single();
+  const { data, error } = await db.from(tagsTable()).insert({ name: name.trim() }).select().single();
   if (error) throw error;
   return data;
 }
@@ -336,14 +339,14 @@ async function createManagedTag(name) {
 async function deleteManagedTag(id) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { error } = await db.from('managed_tags').delete().eq('id', id);
+  const { error } = await db.from(tagsTable()).delete().eq('id', id);
   if (error) throw error;
 }
 
 async function renameManagedTag(id, name) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { error } = await db.from('managed_tags').update({ name: name.trim() }).eq('id', id);
+  const { error } = await db.from(tagsTable()).update({ name: name.trim() }).eq('id', id);
   if (error) throw error;
 }
 
@@ -352,7 +355,7 @@ async function renameManagedTag(id, name) {
 async function getManagedCategories() {
   const db = getAdminDb();
   if (!db) return [];
-  const { data: cats, error: catError } = await db.from('managed_categories').select('*').order('sort_order');
+  const { data: cats, error: catError } = await db.from(categoriesTable()).select('*').order('sort_order');
   if (catError) return [];
 
   const { data: posts } = await db.from(table()).select('category');
@@ -409,12 +412,12 @@ async function createManagedCategory(name, parentId) {
   if (!db) throw new Error('数据库未配置');
   let path = name.trim();
   if (parentId) {
-    const { data: parent } = await db.from('managed_categories').select('path').eq('id', parentId).single();
+    const { data: parent } = await db.from(categoriesTable()).select('path').eq('id', parentId).single();
     if (parent && parent.path) {
       path = parent.path + '/' + name.trim();
     }
   }
-  const { data, error } = await db.from('managed_categories').insert({
+  const { data, error } = await db.from(categoriesTable()).insert({
     name: name.trim(),
     parent_id: parentId || null,
     path
@@ -426,30 +429,30 @@ async function createManagedCategory(name, parentId) {
 async function deleteManagedCategory(id) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { error } = await db.from('managed_categories').delete().eq('id', id);
+  const { error } = await db.from(categoriesTable()).delete().eq('id', id);
   if (error) throw error;
 }
 
 async function renameManagedCategory(id, name) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data: cat } = await db.from('managed_categories').select('*').eq('id', id).single();
+  const { data: cat } = await db.from(categoriesTable()).select('*').eq('id', id).single();
   if (!cat) throw new Error('分类不存在');
   let newPath = name.trim();
   if (cat.parent_id) {
-    const { data: parent } = await db.from('managed_categories').select('path').eq('id', cat.parent_id).single();
+    const { data: parent } = await db.from(categoriesTable()).select('path').eq('id', cat.parent_id).single();
     if (parent && parent.path) {
       newPath = parent.path + '/' + name.trim();
     }
   }
-  const { error } = await db.from('managed_categories').update({ name: name.trim(), path: newPath }).eq('id', id);
+  const { error } = await db.from(categoriesTable()).update({ name: name.trim(), path: newPath }).eq('id', id);
   if (error) throw error;
 
-  const { data: children } = await db.from('managed_categories').select('id, path').filter('path', 'like', cat.path + '/%');
+  const { data: children } = await db.from(categoriesTable()).select('id, path').filter('path', 'like', cat.path + '/%');
   if (children) {
     for (const child of children) {
       const childNewPath = child.path.replace(cat.path, newPath);
-      await db.from('managed_categories').update({ path: childNewPath }).eq('id', child.id);
+      await db.from(categoriesTable()).update({ path: childNewPath }).eq('id', child.id);
     }
   }
 }
@@ -457,22 +460,22 @@ async function renameManagedCategory(id, name) {
 async function moveManagedCategory(id, newParentId) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data: cat } = await db.from('managed_categories').select('*').eq('id', id).single();
+  const { data: cat } = await db.from(categoriesTable()).select('*').eq('id', id).single();
   if (!cat) throw new Error('分类不存在');
   let newPath = cat.name.trim();
   if (newParentId) {
-    const { data: parent } = await db.from('managed_categories').select('path').eq('id', newParentId).single();
+    const { data: parent } = await db.from(categoriesTable()).select('path').eq('id', newParentId).single();
     if (parent && parent.path) {
       newPath = parent.path + '/' + cat.name.trim();
     }
   }
-  const { error } = await db.from('managed_categories').update({ parent_id: newParentId || null, path: newPath }).eq('id', id);
+  const { error } = await db.from(categoriesTable()).update({ parent_id: newParentId || null, path: newPath }).eq('id', id);
   if (error) throw error;
-  const { data: children } = await db.from('managed_categories').select('id, path').filter('path', 'like', cat.path + '/%');
+  const { data: children } = await db.from(categoriesTable()).select('id, path').filter('path', 'like', cat.path + '/%');
   if (children) {
     for (const child of children) {
       const childNewPath = child.path.replace(cat.path, newPath);
-      await db.from('managed_categories').update({ path: childNewPath }).eq('id', child.id);
+      await db.from(categoriesTable()).update({ path: childNewPath }).eq('id', child.id);
     }
   }
 }
@@ -480,7 +483,7 @@ async function moveManagedCategory(id, newParentId) {
 async function getManagedCategoriesFlat() {
   const db = getAdminDb();
   if (!db) return [];
-  const { data } = await db.from('managed_categories').select('*').order('path');
+  const { data } = await db.from(categoriesTable()).select('*').order('path');
   return data || [];
 }
 

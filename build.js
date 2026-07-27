@@ -29,7 +29,7 @@ function copyDirSync(src, dest) {
 }
 
 async function build() {
-  const basePath = process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : '';
+  const basePath = config.BASE_PATH;
   const isStatic = true;
   const cssVersion = Date.now();
 
@@ -152,7 +152,7 @@ async function build() {
       searchIndex.push({
         id: post.id,
         title: post.title,
-        content: text.substring(0, config.SEARCH_EXCERPT_LENGTH || 500),
+        content: text.substring(0, config.SEARCH_EXCERPT_LENGTH || 120),
         url: basePath + '/posts/' + post.id + '/',
         tags: post.tags
       });
@@ -161,13 +161,13 @@ async function build() {
   }
 
   console.log('\u6B63\u5728\u751F\u6210\u540E\u53F0\u7BA1\u7406\u9875\u9762...');
-  await render('admin.ejs', { allTags: [], postCount: 0, title: '\u540E\u53F0\u7BA1\u7406', locale: config.locale }, 'admin/index.html');
+  await render('admin.ejs', { allTags: [], postCount: 0, title: config.locale?.admin?.title || '\u540E\u53F0\u7BA1\u7406', locale: config.locale }, 'admin/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210 Markdown \u7F16\u8F91\u5668\u9875\u9762...');
-  await render('editor.ejs', { title: 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');
+  await render('editor.ejs', { title: config.locale?.editor?.title || 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210 Sitemap...');
-  var siteUrl = config.SITE_URL || 'https://xiaoshenblog.github.io';
+  var siteUrl = config.SITE_URL || '';
   var sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
   function addUrl(loc, priority) {
     sitemap += '  <url>\n    <loc>' + siteUrl + loc + '</loc>\n    <priority>' + priority + '</priority>\n  </url>\n';
