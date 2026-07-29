@@ -352,8 +352,8 @@ images:
   # 文章默认封面图 URL。当某篇文章未设置封面时，使用此图片作为默认封面。
   default_cover:
     - "https://t.alcy.cc/fj"
-    - "https://t.alcy.cc/ycy"
-    - "https://t.alcy.cc/moez"
+    # - "https://t.alcy.cc/ycy"
+    # - "https://t.alcy.cc/moez"
   # 文章封面图回退 URL。当 default_cover 列表中的图片均不可用时，使用此图片。
   fallback_cover: "https://t.alcy.cc/fj"
   # 是否全局禁用所有页面的顶部图（banner 区域）。
