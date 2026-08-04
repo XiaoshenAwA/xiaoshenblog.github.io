@@ -9,10 +9,11 @@ const adminAuth = require('../middleware/adminAuth');
 
 router.get('/', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
     const tag = req.query.tag || '';
     const cat = req.query.cat || '';
-    const { posts, total } = await getPostsPage(page, tag, config.PAGE_SIZE, cat);
+    const q = req.query.q || '';
+    const { posts, total } = await getPostsPage(page, tag, config.PAGE_SIZE, cat, q);
     const totalPages = Math.ceil(total / config.PAGE_SIZE) || 1;
     const sidebar = await getSidebarData();
 
@@ -20,14 +21,14 @@ router.get('/', async (req, res) => {
       p.excerptText = await excerpt(p.content, config.EXCERPT_LENGTH);
     }
 
-    res.render('index', { posts, page, totalPages, total, tag, cat, ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'home' });
+    res.render('index', { posts, page, totalPages, total, tag, cat, q, ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'home' });
   } catch (e) {
     console.error('[首页错误]', e.message);
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
 });
 
-router.get('/posts/new', async (req, res) => {
+router.get('/posts/new', adminAuth, async (req, res) => {
   try {
     const allCategories = await getAllCategories();
     res.render('new', { basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, allCategories });
@@ -70,7 +71,7 @@ router.delete('/posts/:id', adminAuth, async (req, res) => {
   }
 });
 
-router.get('/posts/:id/edit', async (req, res) => {
+router.get('/posts/:id/edit', adminAuth, async (req, res) => {
   try {
     const post = await getPostAdmin(req.params.id);
     if (!post) return res.status(404).send(config.locale?.post?.not_found || '文章未找到');
@@ -132,15 +133,17 @@ router.get('/search.json', async (req, res) => {
 });
 
 async function getSidebarData() {
-  const allCategories = await getAllCategories();
-  const categoryTree = await getCategoryTree();
-  const allTags = await getAllTags();
-  const recentPosts = await getRecentPosts(config.SIDEBAR_RECENT_COUNT || 5);
-  const archives = await getArchives();
-  const postCount = await getPostCount();
-  const totalWordCount = await getTotalWordCount();
-  const siteStats = await getSiteStats();
-  const lastUpdateTime = await getLastPostUpdateTime();
+  const [allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount, siteStats, lastUpdateTime] = await Promise.all([
+    getAllCategories(),
+    getCategoryTree(),
+    getAllTags(),
+    getRecentPosts(config.SIDEBAR_RECENT_COUNT || 5),
+    getArchives(),
+    getPostCount(),
+    getTotalWordCount(),
+    getSiteStats(),
+    getLastPostUpdateTime()
+  ]);
   return { allCategories, categoryTree, allTags, recentPosts, archives, postCount, totalWordCount, visitorCount: siteStats.visitor_count, totalViews: siteStats.total_views, lastUpdateTime };
 }
 
@@ -168,14 +171,14 @@ router.get(/\/categories\/(.+)/, async (req, res) => {
   try {
     const catPath = decodeURIComponent(req.params[0] || '').replace(/\/+$/, '');
     if (!catPath) { res.redirect(config.BASE_PATH + '/categories'); return; }
-    const page = parseInt(req.query.page) || 1;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
     const { posts, total } = await getPostsPage(page, '', config.PAGE_SIZE, catPath);
     const totalPages = Math.ceil(total / config.PAGE_SIZE) || 1;
     const sidebar = await getSidebarData();
     for (const p of posts) {
       p.excerptText = await excerpt(p.content, config.EXCERPT_LENGTH);
     }
-    res.render('index', { posts, page, totalPages, total, tag: '', cat: catPath, ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'category' });
+    res.render('index', { posts, page, totalPages, total, tag: '', cat: catPath, q: '', ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false, pageType: 'category' });
   } catch (e) {
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
   }
@@ -249,17 +252,22 @@ router.post('/api/stats/view/:id', async (req, res) => {
 
 router.get('/api/posts', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
     const tag = req.query.tag || '';
     const cat = req.query.cat || '';
-    const { posts, total } = await getPostsPage(page, tag, config.PAGE_SIZE, cat);
+    const q = req.query.q || '';
+    const { posts, total } = await getPostsPage(page, tag, config.PAGE_SIZE, cat, q);
     const totalPages = Math.ceil(total / config.PAGE_SIZE) || 1;
     const data = [];
     for (const p of posts) {
+      var cover = p.cover;
+      if (!cover) {
+        cover = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER[0] : (config.DEFAULT_COVER || '');
+      }
       data.push({
         id: p.id,
         title: p.title,
-        cover: p.cover || config.DEFAULT_COVER || '',
+        cover: cover,
         category: p.category,
         tags: p.tags,
         created_at: p.created_at,
@@ -269,7 +277,7 @@ router.get('/api/posts', async (req, res) => {
     }
     res.json({ posts: data, page, totalPages, total });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({ error: '获取文章列表失败' });
   }
 });
 
@@ -280,7 +288,8 @@ router.get('/api/admin/tags', adminAuth, async (req, res) => {
     const tags = await getManagedTags();
     res.json(tags);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[获取标签失败]', e.message);
+    res.status(500).json({ error: '获取标签失败' });
   }
 });
 
@@ -291,7 +300,8 @@ router.post('/api/admin/tags', adminAuth, async (req, res) => {
     const tag = await createManagedTag(name);
     res.json(tag);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[创建标签失败]', e.message);
+    res.status(500).json({ error: '创建标签失败' });
   }
 });
 
@@ -300,7 +310,8 @@ router.delete('/api/admin/tags/:id', adminAuth, async (req, res) => {
     await deleteManagedTag(req.params.id);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[删除标签失败]', e.message);
+    res.status(500).json({ error: '删除标签失败' });
   }
 });
 
@@ -311,7 +322,8 @@ router.put('/api/admin/tags/:id', adminAuth, async (req, res) => {
     await renameManagedTag(req.params.id, name);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[重命名标签失败]', e.message);
+    res.status(500).json({ error: '重命名标签失败' });
   }
 });
 
@@ -323,7 +335,8 @@ router.get('/api/admin/categories', adminAuth, async (req, res) => {
     const flat = await getManagedCategoriesFlat();
     res.json({ tree, flat });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[获取分类失败]', e.message);
+    res.status(500).json({ error: '获取分类失败' });
   }
 });
 
@@ -334,7 +347,8 @@ router.post('/api/admin/categories', adminAuth, async (req, res) => {
     const cat = await createManagedCategory(name, parent_id || null);
     res.json(cat);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[创建分类失败]', e.message);
+    res.status(500).json({ error: '创建分类失败' });
   }
 });
 
@@ -343,7 +357,8 @@ router.delete('/api/admin/categories/:id', adminAuth, async (req, res) => {
     await deleteManagedCategory(req.params.id);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[删除分类失败]', e.message);
+    res.status(500).json({ error: '删除分类失败' });
   }
 });
 
@@ -359,8 +374,40 @@ router.put('/api/admin/categories/:id', adminAuth, async (req, res) => {
     }
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('[更新分类失败]', e.message);
+    res.status(500).json({ error: '更新分类失败' });
   }
+});
+
+// ============ Admin Posts API ============
+
+router.get('/api/admin/posts', adminAuth, async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const { posts, total } = await getPostsPage(page, '', config.ADMIN_PAGE_SIZE || config.PAGE_SIZE);
+    const totalPages = Math.ceil(total / (config.ADMIN_PAGE_SIZE || config.PAGE_SIZE)) || 1;
+    res.json({ posts, total, page, totalPages });
+  } catch (e) {
+    console.error('[Admin获取文章失败]', e.message);
+      res.status(500).json({ error: '获取文章列表失败' });
+  }
+});
+
+const { pinyin } = require('pinyin-pro');
+router.get('/api/pinyin', (req, res) => {
+  const text = req.query.text || '';
+  if (!text) return res.json({ pinyin: [] });
+  var result = [];
+  for (var i = 0; i < text.length; i++) {
+    var ch = text.charAt(i);
+    if (ch >= '\u4e00' && ch <= '\u9fff') {
+      var py = pinyin(ch, { toneType: 'symbol' });
+      result.push(py || ch);
+    } else {
+      result.push(ch);
+    }
+  }
+  res.json({ pinyin: result });
 });
 
 module.exports = router;

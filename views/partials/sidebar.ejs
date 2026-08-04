@@ -39,16 +39,25 @@
 </div>
 <% } %>
 
+<% if (typeof postPage === 'undefined' || !postPage) { %>
 <div class="card-widget card-hitokoto" id="hitokotoCard">
   <div class="item-headline"><i class="fas fa-quote-left"></i><span>一言</span></div>
   <div class="hitokoto-content">
     <div class="hitokoto-text" id="hitokotoText">加载中...</div>
     <div class="hitokoto-from" id="hitokotoFrom"></div>
   </div>
-  <div class="hitokoto-btn" onclick="fetchHitokoto()"><i class="fas fa-sync-alt"></i></div>
+  <div class="hitokoto-btn" id="hitokotoRefreshBtn"><i class="fas fa-sync-alt"></i></div>
 </div>
+<% } %>
 
 <div class="sticky_layout">
+  <% if (typeof postPage !== 'undefined' && postPage && config.TOC_POST) { %>
+  <div class="card-widget<%= config.TOC_STYLE_SIMPLE ? ' toc-simple' : '' %>" id="toc-widget" style="display:none">
+    <div class="item-headline"><i class="fas fa-stream"></i><span><%= locale.post?.toc_title || '目录' %></span><span class="toc-percentage"></span></div>
+    <div class="toc-content" id="toc-content"></div>
+  </div>
+  <% } %>
+
   <% if (config.ASIDE_CARD_RECENT_POST && typeof recentPosts !== 'undefined' && recentPosts.length > 0) { %>
   <div class="card-widget card-recent-post">
     <div class="item-headline"><i class="fas fa-history"></i><span><%= locale.sidebar?.recent_posts_title || '最新文章' %></span></div>
@@ -70,6 +79,7 @@
   </div>
   <% } %>
 
+  <% if (typeof postPage === 'undefined' || !postPage) { %>
   <% if (config.ASIDE_CARD_CATEGORIES && typeof categoryTree !== 'undefined' && categoryTree.length > 0) { %>
   <div class="card-widget card-categories">
     <div class="item-headline">
@@ -188,5 +198,6 @@
       <% } %>
     </div>
   </div>
+  <% } %>
   <% } %>
 </div>

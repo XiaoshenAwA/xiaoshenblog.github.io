@@ -65,7 +65,7 @@ async function getAllTags() {
   return [...allTags];
 }
 
-async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '') {
+async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '', search = '') {
   const db = getDb();
   if (!db) return { posts: [], total: 0 };
   let query = db.from(table()).select('*', { count: 'exact' }).eq('published', true).order('created_at', { ascending: false });
@@ -75,6 +75,9 @@ async function getPostsPage(page = 1, tag = '', pageSize = 5, cat = '') {
   if (cat) {
     const prefix = cat + '/';
     query = query.or(`category.eq.${cat},category.like.${prefix}%`);
+  }
+  if (search) {
+    query = query.ilike('title', `%${search}%`);
   }
   const offset = (page - 1) * pageSize;
   const { data, count } = await query.range(offset, offset + pageSize - 1);
@@ -120,15 +123,15 @@ async function getAdjacentPosts(id) {
   const { data: prevData } = await db.from(table())
     .select('id, title, created_at')
     .eq('published', true)
-    .gt('created_at', current.created_at)
-    .order('created_at', { ascending: true })
+    .lt('created_at', current.created_at)
+    .order('created_at', { ascending: false })
     .limit(1);
 
   const { data: nextData } = await db.from(table())
     .select('id, title, created_at')
     .eq('published', true)
-    .lt('created_at', current.created_at)
-    .order('created_at', { ascending: false })
+    .gt('created_at', current.created_at)
+    .order('created_at', { ascending: true })
     .limit(1);
 
   return {
@@ -246,7 +249,7 @@ async function getArchives() {
 async function getRecentPosts(limit = 5) {
   const db = getDb();
   if (!db) return [];
-  const { data } = await db.from(table()).select('id, title, cover, created_at, published').order('created_at', { ascending: false });
+  const { data } = await db.from(table()).select('id, title, cover, created_at, published').order('created_at', { ascending: false }).limit(limit * 2);
   const all = (data || []).filter(r => r.published !== false).slice(0, limit);
   return all.map(r => ({ id: r.id, title: r.title, cover: r.cover || '', created_at: r.created_at }));
 }
@@ -280,25 +283,31 @@ async function getSiteStats() {
 async function incrementVisitorCount() {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data } = await db.from(statsTable()).select('value').eq('key', 'visitor_count').single();
-  const newValue = (data?.value || 0) + 1;
-  await db.from(statsTable()).upsert({ key: 'visitor_count', value: newValue, updated_at: new Date().toISOString() });
+  const { data, error: readError } = await db.from(statsTable()).select('value').eq('key', 'visitor_count').single();
+  if (readError && readError.code !== 'PGRST116') throw readError;
+  const currentValue = data?.value || 0;
+  const newValue = currentValue + 1;
+  const { error: writeError } = await db.from(statsTable()).upsert({ key: 'visitor_count', value: newValue, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (writeError) throw writeError;
   return newValue;
 }
 
 async function incrementViewCount(postId) {
   const db = getAdminDb();
   if (!db) throw new Error('数据库未配置');
-  const { data } = await db.from(statsTable()).select('value').eq('key', 'total_views').single();
-  const newValue = (data?.value || 0) + 1;
-  await db.from(statsTable()).upsert({ key: 'total_views', value: newValue, updated_at: new Date().toISOString() });
+  const { data, error: readError } = await db.from(statsTable()).select('value').eq('key', 'total_views').single();
+  if (readError && readError.code !== 'PGRST116') throw readError;
+  const currentValue = data?.value || 0;
+  const newValue = currentValue + 1;
+  const { error: writeError } = await db.from(statsTable()).upsert({ key: 'total_views', value: newValue, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (writeError) throw writeError;
   return newValue;
 }
 
 async function getLastPostUpdateTime() {
   const db = getDb();
   if (!db) return null;
-  const { data } = await db.from(table()).select('updated_at, published').order('updated_at', { ascending: false });
+  const { data } = await db.from(table()).select('updated_at, published').order('updated_at', { ascending: false }).limit(10);
   if (data) {
     const published = data.filter(r => r.published !== false);
     if (published.length > 0) return published[0].updated_at;

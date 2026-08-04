@@ -17,18 +17,33 @@
         </div>
       <% } %>
 
+      <div class="search-filter-bar reveal">
+        <form class="search-form" action="<%= basePath %>/" method="get">
+          <% if (tag) { %><input type="hidden" name="tag" value="<%= tag %>"><% } %>
+          <% if (cat) { %><input type="hidden" name="cat" value="<%= cat %>"><% } %>
+          <div class="search-input-wrap">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" name="q" class="search-input" placeholder="<%= locale.home?.search_placeholder || '搜索文章标题...' %>" value="<%= q || '' %>" autocomplete="off">
+            <% if (q) { %>
+              <a href="<%= basePath %>/<%= tag ? '?tag=' + encodeURIComponent(tag) : '' %><%= tag && cat ? '&' : (cat ? '?' : '') %><%= cat ? 'cat=' + encodeURIComponent(cat) : '' %>" class="search-clear"><i class="fas fa-times"></i></a>
+            <% } %>
+          </div>
+          <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+
       <% if (posts.length === 0) { %>
         <div class="empty-state reveal">
           <div class="empty-icon"><i class="fas fa-book-open"></i></div>
           <h3><%= locale.home?.empty_title || '还没有文章' %></h3>
           <p><%= locale.home?.empty_text || '开始你的第一篇博客吧！' %></p>
-          <a href="<%= basePath %>/editor" class="btn btn-primary"><i class="fas fa-pen"></i> <%= locale.home?.empty_button || '开始写作' %></a>
+          <a href="<%= basePath %>/editor/markdown" class="btn btn-primary"><i class="fas fa-pen"></i> <%= locale.home?.empty_button || '开始写作' %></a>
         </div>
       <% } else { %>
         <%
           var defaultCoverUrl = 'https://t.alcy.cc/fj';
         %>
-        <div class="recent-post-items" data-page="<%= page %>" data-total-pages="<%= totalPages %>" data-tag="<%= tag %>" data-cat="<%= cat %>" data-default-covers="<%= JSON.stringify(Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']) %>">
+        <div class="recent-post-items" data-page="<%= page %>" data-total-pages="<%= totalPages %>" data-tag="<%= tag %>" data-cat="<%= cat %>" data-q="<%= q || '' %>" data-default-covers="<%= JSON.stringify(Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']) %>">
           <% posts.forEach((post, i) => { %>
             <% var coverLeft = i % 2 === 0; %>
             <% var _dcArr = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']; %>
@@ -83,7 +98,8 @@
             <div class="pagination">
               <% var pageBase = cat ? (basePath + '/categories/' + cat.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/') : (basePath + '/'); %>
               <% var hasTag = tag && !isStatic; %>
-              <% function pageUrl(p) { var u = pageBase; var h = false; if (hasTag) { u += '?tag=' + encodeURIComponent(tag); h = true; } if (p > 1) { u += (h ? '&' : '?') + 'page=' + p; } return u; } %>
+              <% var hasQ = q && !isStatic; %>
+              <% function pageUrl(p) { var u = pageBase; var h = false; if (hasTag) { u += '?tag=' + encodeURIComponent(tag); h = true; } if (hasQ) { u += (h ? '&' : '?') + 'q=' + encodeURIComponent(q); h = true; } if (p > 1) { u += (h ? '&' : '?') + 'page=' + p; } return u; } %>
               <% if (page > 1) { %>
                 <a href="<%= pageUrl(page-1) %>" class="page-btn extend prev" rel="prev"><i class="fas fa-chevron-left fa-fw"></i></a>
               <% } %>
@@ -116,11 +132,29 @@
       var aside = document.querySelector('.aside-content');
       var wrap = document.getElementById('load-more-wrap');
       var btn = document.getElementById('load-more-btn');
+      var searchBar = document.querySelector('.search-filter-bar');
+      var q = (container && container.getAttribute('data-q')) || '';
+      try { q = q || new URLSearchParams(window.location.search).get('q') || ''; } catch(e) {}
+
+      if (q) {
+        var scrollTarget = container || searchBar;
+        function scrollToResults() {
+          if (!scrollTarget) return;
+          var top = scrollTarget.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop) - 70;
+          window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+        }
+        function scheduleScroll() { setTimeout(scrollToResults, 150); }
+        if (document.readyState === 'complete') { scheduleScroll(); }
+        else { window.addEventListener('load', scheduleScroll); }
+        window.addEventListener('pageshow', scheduleScroll);
+      }
+
       if (!container || !aside) return;
       var currentPage = parseInt(container.getAttribute('data-page') || '1');
       var totalPages = parseInt(container.getAttribute('data-total-pages') || '1');
       var tag = container.getAttribute('data-tag') || '';
       var cat = container.getAttribute('data-cat') || '';
+      var loadedCount = container.querySelectorAll('.recent-post-item').length;
 
       function esc(s) {
         if (s == null) return '';
@@ -132,14 +166,33 @@
         var _dcArr = JSON.parse(document.querySelector('.recent-post-items').dataset.defaultCovers || '[]');
         var _dcUrl = _dcArr.length ? _dcArr[Math.floor(Math.random() * _dcArr.length)] : 'https://t.alcy.cc/fj';
         var defaultCover = _dcUrl + (_dcUrl.includes('?') ? '&' : '?') + 'v=' + p.id;
+        var cover = Array.isArray(p.cover) ? p.cover[0] : (p.cover || defaultCover);
         var cats = p.category ? p.category.split('/').filter(Boolean) : [];
         var tags = p.tags || [];
         var date = p.updated_at || p.created_at || '';
-        var dateStr = date ? new Date(date).toISOString().slice(0,10) : '';
+        var dateStr = date ? date.substring(0,10) : '';
+        var catsHtml = '';
+        if (cats.length) {
+          catsHtml = '<span class="article-meta"><span class="article-meta-separator">|</span>';
+          for (var ci = 0; ci < cats.length; ci++) {
+            var catPath = cats.slice(0, ci+1).map(function(s){return encodeURIComponent(s)}).join('/');
+            if (ci > 0) catsHtml += '<span class="article-meta-separator">&gt;</span>';
+            catsHtml += '<i class="fas fa-inbox"></i><a class="article-meta__categories" href="<%= basePath %>/categories/' + catPath + '/">' + esc(cats[ci]) + '</a>';
+          }
+          catsHtml += '</span>';
+        }
+        var tagsHtml = '';
+        if (tags.length) {
+          tagsHtml = '<span class="meta-flex-break"></span><div class="post-tags">';
+          for (var ti = 0; ti < tags.length; ti++) {
+            tagsHtml += '<a href="<%= basePath %>/?' + (tags[ti] ? 'tag=' + encodeURIComponent(tags[ti]) : '') + '" class="tag-pill"><i class="fas fa-tag"></i> ' + esc(tags[ti]) + '</a>';
+          }
+          tagsHtml += '</div>';
+        }
         return '<article class="recent-post-item reveal" style="animation-delay:' + (idx*0.08) + 's">' +
           '<div class="post_cover ' + (coverLeft ? 'left' : 'right') + '">' +
             '<a href="<%= basePath %>/posts/' + p.id + '" title="' + esc(p.title) + '">' +
-              '<img class="post-bg" src="' + esc(p.cover || defaultCover) + '" alt="' + esc(p.title) + '">' +
+              '<img class="post-bg" src="' + esc(cover) + '" alt="' + esc(p.title) + '">' +
             '</a>' +
           '</div>' +
           '<div class="recent-post-info">' +
@@ -150,10 +203,10 @@
               '<span class="article-meta-label"><%= locale.home?.published_at || '发表于' %></span> ' +
               '<time datetime="' + dateStr + '">' + dateStr + '</time>' +
             '</span>' +
-            (cats.length ? '<span class="article-meta"><span class="article-meta-separator">|</span><a class="article-meta__categories" href="<%= basePath %>/categories/' + p.category.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/">' + cats.map(esc).join('<span class="article-meta-separator">&gt;</span>') + '</a></span>' : '') +
-            (tags.length ? '<span class="article-meta"><span class="article-meta-separator">|</span>' + tags.map(function(t){return '<a href="<%= basePath %>/?' + (t ? 'tag=' + encodeURIComponent(t) : '') + '" class="tag-pill"><i class="fas fa-tag"></i> ' + esc(t) + '</a>'}).join('') + '</span>' : '') +
+            catsHtml +
+            tagsHtml +
           '</div>' +
-          '<div class="content">' + (p.excerptText || '') + '</div>' +
+          '<div class="content">' + esc(p.excerptText || '') + '</div>' +
         '</div></article>';
       }
 
@@ -161,11 +214,12 @@
         var params = 'page=' + page;
         if (tag) params += '&tag=' + encodeURIComponent(tag);
         if (cat) params += '&cat=' + encodeURIComponent(cat);
+        if (q) params += '&q=' + encodeURIComponent(q);
         fetch('<%= basePath %>/api/posts?' + params).then(function(r) { return r.json(); }).then(function(data) {
           data.posts.forEach(function(p, i) {
-            var startIdx = (page - 1) * data.total + i;
-            container.insertAdjacentHTML('beforeend', genArticle(p, startIdx));
+            container.insertAdjacentHTML('beforeend', genArticle(p, loadedCount + i));
           });
+          loadedCount += data.posts.length;
           currentPage = page;
           container.setAttribute('data-page', currentPage);
           if (wrap) wrap.style.display = currentPage >= totalPages ? 'none' : '';

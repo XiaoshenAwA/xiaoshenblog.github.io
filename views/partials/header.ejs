@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="<%= config.SITE_LANGUAGE %>" data-theme="<%= config.THEME_DEFAULT %>">
 <head>
+  <script>try{!function(){var h=document.documentElement;<% if (config.DARKMODE_ENABLE) { %>var s=localStorage.getItem('theme');if(s){h.setAttribute('data-theme',s)}else{<% if (config.DARKMODE_AUTO === 1) { %>if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches)h.setAttribute('data-theme','dark');<% } else if (config.DARKMODE_AUTO === 2) { %>var hr=(new Date()).getHours(),st=<%= config.DARKMODE_START %>,en=<%= config.DARKMODE_END %>;(st>en?(hr>=st||hr<en):(hr>=st&&hr<en))&&h.setAttribute('data-theme','dark');<% } %>}<% } %>}()}catch(e){}</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= typeof title !== 'undefined' && title ? title + ' | ' : '' %><%= config.BLOG_NAME %></title>
   <% if (typeof metaDesc !== 'undefined' && metaDesc) { %><meta name="description" content="<%= metaDesc %>"><% } else if (typeof post !== 'undefined' && post && post.content) { %><meta name="description" content="<%= post.content.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,160) %>"><% } else { %><meta name="description" content="<%= config.BLOG_SUBTITLE %>"><% } %>
   <% if (config.FAVICON) { %>
-  <link rel="icon" href="<%= basePath %><%= config.FAVICON %>">
+  <link rel="icon" href="<%= url(config.FAVICON) %>">
   <% } %>
   <% if (config.PWA_FAVICON_32) { %><link rel="icon" type="image/png" sizes="32x32" href="<%= basePath %><%= config.PWA_FAVICON_32 %>"><% } %>
   <% if (config.PWA_FAVICON_16) { %><link rel="icon" type="image/png" sizes="16x16" href="<%= basePath %><%= config.PWA_FAVICON_16 %>"><% } %>
@@ -20,13 +21,15 @@
   <meta property="og:title" content="<%= typeof title !== 'undefined' && title ? title : config.BLOG_NAME %>">
   <meta property="og:site_name" content="<%= config.BLOG_NAME %>">
   <meta property="og:type" content="<%= typeof title !== 'undefined' && title ? 'article' : 'website' %>">
-  <meta property="og:url" content="<%= basePath %>/">
+  <meta property="og:url" content="">
   <meta property="og:description" content="<%= typeof metaDesc !== 'undefined' && metaDesc ? metaDesc : (typeof post !== 'undefined' && post && post.content ? post.content.replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim().substring(0,160) : config.BLOG_SUBTITLE) %>">
   <meta name="twitter:card" content="<%= config.OG_TWITTER_CARD %>">
   <% if (config.OG_TWITTER_ID) { %><meta name="twitter:site" content="<%= config.OG_TWITTER_ID %>"><% } %>
   <% if (config.OG_FB_APP_ID) { %><meta property="fb:app_id" content="<%= config.OG_FB_APP_ID %>"><% } %>
   <% if (typeof post !== 'undefined' && post && post.cover) { %><meta property="og:image" content="<%= url(post.cover) %>"><% } else if (config.INDEX_IMG) { %><meta property="og:image" content="<%= url(config.INDEX_IMG) %>"><% } %>
   <% } %>
+  <link rel="canonical" href="">
+  <script>try{(function(){var u=window.location.href;var o=document.querySelector('meta[property="og:url"]');if(o)o.setAttribute('content',u);var c=document.querySelector('link[rel="canonical"]');if(c)c.setAttribute('href',u)})()}catch(e){}</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="<%= basePath %>/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="<%= basePath %>/assets/main.css?v=<%= typeof cssVersion !== 'undefined' ? cssVersion : '1' %>" onerror="this.onerror=null;this.href='<%= basePath %>/css/style.css'">
@@ -236,7 +239,7 @@
   <% } %>
 <script>try{!function(){function sf(n){return String(n||'').replace(/[^a-zA-Z0-9\u4e00-\u9fff\s-]/g,'')}var k='blog_font_settings',s;try{s=JSON.parse(localStorage.getItem(k))}catch(e){}if(!s)return;var d=document.documentElement;if(s.fontSize)d.style.setProperty('--font-size-global',s.fontSize+'px');if(s.bodyFont&&sf(s.bodyFont)!=='unset')d.style.setProperty('--font-body',"'"+sf(s.bodyFont)+"'");else d.style.removeProperty('--font-body');if(s.codeFont&&sf(s.codeFont)!=='unset'){d.style.setProperty('--font-code',"'"+sf(s.codeFont)+"'");var cs=document.createElement('style');cs.id='__code_font_style';var fn=sf(s.codeFont);cs.textContent='@font-face{font-family:"'+fn+'";src:local("'+fn+'")}code,pre,.editor-gutter,#editor-input,textarea,.code-wrap,.highlight,.hljs{font-family:"'+fn+'",monospace!important}';document.head.appendChild(cs);var gl=document.createElement('link');gl.rel='stylesheet';gl.id='__code_font_gf';gl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(sf(s.codeFont))+':wght@300;400;500;600;700&display=swap';document.head.appendChild(gl)}else{d.style.removeProperty('--font-code');var og=document.getElementById('__code_font_gf');if(og)og.remove()}if(s.bodyFont&&sf(s.bodyFont)!=='unset'){var bs=document.createElement('style');bs.id='__body_font_style';var fnB=sf(s.bodyFont);bs.textContent='@font-face{font-family:"'+fnB+'";src:local("'+fnB+'")}body,.post-content,.content{font-family:"'+fnB+'",serif!important}';document.head.appendChild(bs);var bl=document.createElement('link');bl.rel='stylesheet';bl.id='__body_font_gf';bl.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(sf(s.bodyFont))+':wght@300;400;500;600;700&display=swap';document.head.appendChild(bl)}else{var bs2=document.getElementById('__body_font_style');if(bs2)bs2.textContent='';var bg=document.getElementById('__body_font_gf');if(bg)bg.remove()}}()}catch(e){}</script>
 </head>
-<body>
+<body<%- typeof pageClass !== 'undefined' && pageClass ? ' class="' + pageClass + '"' : '' %>>
   <% if (config.PRELOADER_ENABLE) { %>
   <div id="preloader"><div class="loader" id="loaderEl"></div></div>
   <script>
@@ -326,7 +329,7 @@
       <div id="site-subtitle"><span id="subtitle"><%= config.BLOG_SUBTITLE %></span></div>
       <% if (config.INDEX_SUBTITLE_ENABLE && config.INDEX_SUBTITLE_SUB.length > 0) { %>
       <script>
-        var subtitleStrings = <%- JSON.stringify(config.INDEX_SUBTITLE_SUB) %>;
+        var subtitleStrings = <%- JSON.stringify(config.INDEX_SUBTITLE_SUB).replace(/<\/script>/gi, '<\\/script>') %>;
         var subtitleEl = document.getElementById('subtitle');
         var subCharIdx = 0, subStrIdx = 0, subDeleting = false;
         var subSpeed = <%= config.INDEX_SUBTITLE_TYPE_SPEED %>, subBack = <%= config.INDEX_SUBTITLE_BACK_SPEED %>, subPause = <%= config.INDEX_SUBTITLE_PAUSE_TIME %>;
@@ -433,14 +436,14 @@
             <i class="far fa-file-word fa-fw post-meta-icon"></i>
             <span class="post-meta-label"><%= locale.post?.word_count_label || '总字数:' %></span>
             <%
-              var wc = post.word_count || post.content.length;
+              var wc = post.word_count || (post.content ? post.content.length : 0);
               var wcDisplay = wc >= 1000 ? (wc / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : wc;
             %>
             <span class="word-count"><%= wcDisplay %></span>
             <span class="post-meta-separator">|</span>
             <i class="far fa-clock fa-fw post-meta-icon"></i>
             <span class="post-meta-label"><%= locale.post?.reading_time || '阅读时长:' %></span>
-            <span><%= Math.ceil(post.content.length / config.READING_SPEED) || 1 %><%= locale.post?.reading_time_unit || '分钟' %></span>
+            <span><%= Math.ceil((post.content ? post.content.length : 0) / config.READING_SPEED) || 1 %><%= locale.post?.reading_time_unit || '分钟' %></span>
           </span>
           <span class="post-meta-separator">|</span>
           <span class="post-meta-pv-cv" id="post-pv-display" data-flag-title="">

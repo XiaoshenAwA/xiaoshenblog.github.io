@@ -38,6 +38,63 @@ const langDisplay = {
   latex: 'LaTeX', tex: 'TeX'
 };
 
+function breakResetLists(src) {
+  const lines = String(src).split('\n');
+  const out = [];
+  let fence = null;
+  let prev = null;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (fence) {
+      out.push(line);
+      if (trimmed.startsWith(fence)) fence = null;
+      continue;
+    }
+    if (!trimmed) {
+      out.push(line);
+      continue;
+    }
+    const fenceMatch = trimmed.match(/^(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      out.push(line);
+      fence = fenceMatch[1];
+      prev = null;
+      continue;
+    }
+    const qm = trimmed.match(/^((?:>\s*)*)(\S)/);
+    const q = qm ? (qm[1].match(/>/g) || []).length : 0;
+    const rest = qm ? qm[2] + trimmed.slice(qm[0].length) : trimmed;
+    const indent = (rest.match(/^ */) || [''])[0].length;
+    if (indent >= 4) {
+      out.push(line);
+      continue;
+    }
+    const restTrimmed = rest.trim();
+    if (/^[-+*](?:\s|$)/.test(restTrimmed)) {
+      out.push(line);
+      prev = null;
+      continue;
+    }
+    const m = restTrimmed.match(/^(\d+)([.)])(?=\s)/);
+    if (m) {
+      const num = parseInt(m[1], 10);
+      const delim = m[2];
+      if (prev && prev.q === q && prev.indent === indent && prev.delim === delim && num <= prev.num) {
+        out.push('');
+        out.push('[//]: # ()');
+        out.push('');
+      }
+      prev = { num, indent, delim, q };
+      out.push(line);
+      continue;
+    }
+    out.push(line);
+    prev = null;
+  }
+  return out.join('\n');
+}
+
 async function init() {
   if (ready) return;
   if (initPromise) return initPromise;
@@ -84,6 +141,8 @@ async function init() {
   md.use(markdownItMark);
   md.use(markdownItInsDel);
 
+  const allTagStacks = [];
+
   function makeContainer(name, icon, defaultTitle) {
     md.use(markdownItContainer, name, {
       validate: function (params) {
@@ -108,9 +167,10 @@ async function init() {
 
   function makeAdmonition(name, icon, defaultTitle) {
     var tagStack = [];
+    allTagStacks.push(tagStack);
     md.use(markdownItContainer, name, {
       validate: function (params) {
-        return params.trim() === name || params.trim().match(new RegExp('^' + name + '\\['));
+        return params.trim().startsWith(name) || params.trim().match(new RegExp('^' + name + '\\['));
       },
       render: function (tokens, idx) {
         if (tokens[idx].nesting === 1) {
@@ -143,6 +203,10 @@ async function init() {
   makeAdmonition('error', '<i class="fas fa-circle-xmark"></i>', '错误');
   makeAdmonition('danger', '<i class="fas fa-ban"></i>', '危险');
   makeContainer('details', '<i class="fas fa-chevron-right"></i>', '详情');
+
+  md.core.ruler.push('admonition_reset', function (state) {
+    allTagStacks.forEach(function (ts) { ts.length = 0; });
+  });
 
   md.use(await fromHighlighter(highlighter, {
     themes: { light: config.MD_SHIKI_THEME_LIGHT, dark: config.MD_SHIKI_THEME_DARK },
@@ -184,6 +248,9 @@ async function init() {
     const closeIdx = afterPre.lastIndexOf(closePre);
     const innerCode = closeIdx >= 0 ? afterPre.slice(0, closeIdx) : afterPre;
 
+    var codeLineCount = (innerCode.match(/<span class="line/g) || []).length;
+    var shouldShrink = config.CB_SHRINK && codeLineCount >= 5;
+
     var toolsParts = '';
     if (config.CB_MACSTYLE) {
       toolsParts += '<div class="mac-style">'
@@ -195,7 +262,7 @@ async function init() {
     if (config.CB_LANGUAGE && langName) {
       toolsParts += '<span class="code-lang">' + langName + '</span>';
     }
-    if (config.CB_SHRINK) {
+    if (shouldShrink) {
       toolsParts += '<i class="shrink-btn" title="展开/折叠">展开</i>';
     }
     if (config.CB_FULLPAGE) {
@@ -208,7 +275,7 @@ async function init() {
 
     var wrapClass = 'code-wrap';
     if (config.CB_WORD_WRAP) wrapClass += ' code-wrap-on';
-    if (config.CB_SHRINK) wrapClass += ' code-shrink';
+    if (shouldShrink) wrapClass += ' code-shrink';
     var heightStyle = '';
     if (config.CB_HEIGHT_LIMIT) heightStyle = ' style="max-height:' + config.CB_HEIGHT_LIMIT + 'px;overflow-y:auto"';
 
@@ -227,7 +294,7 @@ async function init() {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: false });
       } catch (e) {
-        const msg = String(e.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const msg = String(e.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         return `<span style="color:${config.MD_KATEX_ERROR_COLOR}">[公式错误: ${msg}]</span>`;
       }
     },
@@ -235,7 +302,7 @@ async function init() {
       try {
         return katex.renderToString(str, { ...katexOptions, displayMode: true });
       } catch (e) {
-        const msg = String(e.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const msg = String(e.message || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
         return `<span style="color:${config.MD_KATEX_ERROR_COLOR}" class="katex-error katex-display">[公式错误: ${msg}]</span>`;
       }
     }
@@ -248,13 +315,13 @@ async function init() {
 
 async function render(content) {
   await init();
-  const raw = md.render(content || '');
+  const raw = md.render(breakResetLists(content || ''));
   return DOMPurify.sanitize(raw, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'del', 'ins', 'mark', 'sub', 'sup', 'a', 'img', 'figure', 'figcaption', 'pre', 'code', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span', 'details', 'summary',
       'math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'mfrac', 'msqrt', 'mover', 'munder', 'mstyle', 'merror', 'mpadded', 'mphantom', 'menclose', 'mlabeledtr', 'mtable', 'mtr', 'mtd', 'mprescripts', 'none'],
-    ALLOWED_ATTR: ['class', 'id', 'style', 'src', 'href', 'alt', 'title', 'target', 'rel', 'width', 'height', 'loading', 'datetime', 'open', 'start', 'type', 'colspan', 'rowspan', 'checked', 'disabled', 'draggable', 'data-line', 'data-language', 'mathvariant', 'encoding', 'definitionURL'],
-    FORBID_TAGS: ['script', 'iframe', 'embed', 'object', 'applet', 'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'frameset', 'frame', 'marquee', 'template'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onkeydown', 'onkeypress', 'onkeyup', 'onsubmit', 'onreset', 'onfocus', 'onblur', 'onchange', 'onselect', 'onabort', 'onbeforeunload', 'onhashchange', 'onpopstate', 'onstorage'],
+    ALLOWED_ATTR: ['class', 'id', 'src', 'href', 'alt', 'title', 'target', 'rel', 'width', 'height', 'loading', 'datetime', 'open', 'start', 'type', 'colspan', 'rowspan', 'checked', 'disabled', 'draggable', 'data-line', 'data-language', 'mathvariant', 'encoding', 'definitionURL', 'style'],
+    FORBID_TAGS: ['script', 'iframe', 'embed', 'object', 'applet', 'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'frameset', 'frame', 'marquee', 'template', 'style'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onkeydown', 'onkeypress', 'onkeyup', 'onsubmit', 'onreset', 'onfocus', 'onblur', 'onchange', 'onselect', 'onabort', 'onbeforeunload', 'onhashchange', 'onpopstate', 'onstorage', 'onfocusin', 'onfocusout', 'oninput', 'oninvalid', 'oncontextmenu', 'oncopy', 'oncut', 'onpaste', 'onwheel', 'onpointerdown', 'onpointerup', 'onpointermove', 'onpointerover', 'onpointerout', 'onpointerenter', 'onpointerleave', 'onpointercancel', 'ongotpointercapture', 'onlostpointercapture', 'ontouchstart', 'ontouchend', 'ontouchmove', 'ontouchcancel', 'onanimationend', 'onanimationstart', 'onanimationiteration', 'ontransitionend', 'ontransitionrun', 'ontransitionstart', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onpageshow', 'onpagehide', 'onmessage', 'onmessageerror', 'onplay', 'onplaying', 'onpause', 'onended', 'onvolumechange', 'onwaiting', 'onscroll'],
   });
 }
 

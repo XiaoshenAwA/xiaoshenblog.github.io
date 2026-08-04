@@ -40,6 +40,63 @@ function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
+function breakResetLists(src) {
+  const lines = String(src).split('\n')
+  const out = []
+  let fence = null
+  let prev = null
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+    if (fence) {
+      out.push(line)
+      if (trimmed.startsWith(fence)) fence = null
+      continue
+    }
+    if (!trimmed) {
+      out.push(line)
+      continue
+    }
+    const fenceMatch = trimmed.match(/^(`{3,}|~{3,})/)
+    if (fenceMatch) {
+      out.push(line)
+      fence = fenceMatch[1]
+      prev = null
+      continue
+    }
+    const qm = trimmed.match(/^((?:>\s*)*)(\S)/)
+    const q = qm ? (qm[1].match(/>/g) || []).length : 0
+    const rest = qm ? qm[2] + trimmed.slice(qm[0].length) : trimmed
+    const indent = (rest.match(/^ */) || [''])[0].length
+    if (indent >= 4) {
+      out.push(line)
+      continue
+    }
+    const restTrimmed = rest.trim()
+    if (/^[-+*](?:\s|$)/.test(restTrimmed)) {
+      out.push(line)
+      prev = null
+      continue
+    }
+    const m = restTrimmed.match(/^(\d+)([.)])(?=\s)/)
+    if (m) {
+      const num = parseInt(m[1], 10)
+      const delim = m[2]
+      if (prev && prev.q === q && prev.indent === indent && prev.delim === delim && num <= prev.num) {
+        out.push('')
+        out.push('[//]: # ()')
+        out.push('')
+      }
+      prev = { num, indent, delim, q }
+      out.push(line)
+      continue
+    }
+    out.push(line)
+    prev = null
+  }
+  return out.join('\n')
+}
+
 function renderMath(str, displayMode) {
   try { return katex.renderToString(str, { displayMode, throwOnError: false }) }
   catch { return str }
@@ -644,9 +701,10 @@ adminCodeInput.addEventListener('keydown', e => {
     e.preventDefault()
     const s = adminCodeInput.selectionStart
     const end = adminCodeInput.selectionEnd
-    if (!document.execCommand('insertText', false, '  ')) {
-      adminCodeInput.value = adminCodeInput.value.substring(0, s) + '  ' + adminCodeInput.value.substring(end)
-      adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + 2
+    const ind = getIndent()
+    if (!document.execCommand('insertText', false, ind)) {
+      adminCodeInput.value = adminCodeInput.value.substring(0, s) + ind + adminCodeInput.value.substring(end)
+      adminCodeInput.selectionStart = adminCodeInput.selectionEnd = s + ind.length
     }
     adminUpdateCodeHighlight(); return
   }
@@ -789,7 +847,7 @@ function updatePreview(textareaId, previewId) {
   const textarea = document.getElementById(textareaId)
   const preview = document.getElementById(previewId)
   if (textarea && preview) {
-    preview.innerHTML = md.render(textarea.value || '*...*')
+    preview.innerHTML = md.render(breakResetLists(textarea.value || '*...*'))
     preview.querySelectorAll('pre code').forEach(block => {
       const lang = (block.className.match(/language-(\w+)/) || [])[1]
       if (lang && hljs.getLanguage(lang)) {
@@ -803,13 +861,14 @@ function updatePreview(textareaId, previewId) {
 
 function saveDraft(textareaId) {
   const ta = document.getElementById(textareaId)
-  if (ta) localStorage.setItem(cfg.EDITOR_DRAFT_PREFIX + '-' + textareaId, ta.value)
+  if (ta) try { localStorage.setItem(cfg.EDITOR_DRAFT_PREFIX + '-' + textareaId, ta.value) } catch {}
 }
 
 function setupPreview(textareaId, previewId) {
   const textarea = document.getElementById(textareaId)
   if (textarea) {
-    const saved = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-' + textareaId)
+    let saved = ''
+    try { saved = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-' + textareaId) } catch {}
     if (saved) textarea.value = saved
     textarea.addEventListener('input', () => { saveDraft(textareaId); updatePreview(textareaId, previewId) })
     const gutterEl = document.querySelector('.editor-gutter[data-for="' + textareaId + '"]')
@@ -853,7 +912,9 @@ document.addEventListener('keydown', e => {
 })
 
 const INDENT_MODES = ['tab', 'spaces2', 'spaces4', 'spaces8']
-let indentMode = localStorage.getItem('editor-indent-mode') || cfg.EDITOR_INDENT_MODE || 'tab'
+let indentMode = ''
+try { indentMode = localStorage.getItem('editor-indent-mode') } catch {}
+indentMode = indentMode || cfg.EDITOR_INDENT_MODE || 'tab'
 
 function getIndent() {
   if (indentMode === 'tab') return '\t'
@@ -945,7 +1006,10 @@ function setupAutoClose(ta, updateFn) {
           }
           ta.selectionStart = ta.selectionEnd = start + 1 + deep.length
         } else {
-          document.execCommand('insertText', false, '\n' + deep)
+          if (!document.execCommand('insertText', false, '\n' + deep)) {
+            ta.value = val.substring(0, start) + '\n' + deep + val.substring(end)
+            ta.selectionStart = ta.selectionEnd = start + 1 + deep.length
+          }
         }
         if (updateFn) updateFn(); return
       }
@@ -966,7 +1030,7 @@ document.querySelectorAll('.indent-toggle').forEach(btn => {
   btn.addEventListener('click', () => {
     const idx = INDENT_MODES.indexOf(indentMode)
     indentMode = INDENT_MODES[(idx + 1) % INDENT_MODES.length]
-    localStorage.setItem('editor-indent-mode', indentMode)
+    try { localStorage.setItem('editor-indent-mode', indentMode) } catch {}
     updateIndentBtns()
   })
 })
@@ -990,9 +1054,11 @@ setTimeout(() => {
   }
   const titleInput = document.getElementById('edit-title')
   if (titleInput) {
-    titleInput.value = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') || ''
+    let titleDraft = ''
+    try { titleDraft = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') } catch {}
+    titleInput.value = titleDraft || ''
     titleInput.addEventListener('input', () => {
-      localStorage.setItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title', titleInput.value)
+      try { localStorage.setItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title', titleInput.value) } catch {}
     })
   }
   updateIndentBtns()
@@ -1151,15 +1217,20 @@ $('#edit-form').addEventListener('submit', async e => {
 })
 
 function clearDraft() {
-  localStorage.removeItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-content')
-  localStorage.removeItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title')
+  try {
+    localStorage.removeItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-content')
+    localStorage.removeItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title')
+  } catch {}
 }
 
 $('#new-post-btn').addEventListener('click', () => {
   $('#edit-id').value = ''
-  $('#edit-title').value = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') || ''
-  const draft = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-content')
-  $('#edit-content').value = draft || ''
+  let titleDraft = ''
+  try { titleDraft = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-title') } catch {}
+  $('#edit-title').value = titleDraft || ''
+  let contentDraft = ''
+  try { contentDraft = localStorage.getItem(cfg.EDITOR_DRAFT_PREFIX + '-edit-content') } catch {}
+  $('#edit-content').value = contentDraft || ''
   $('#edit-category').value = ''
   $('#edit-tags').value = ''
   $('#edit-cover').value = ''
@@ -1192,6 +1263,7 @@ window.deletePost = async function (id) {
 const undoStack = []
 const redoStack = []
 const MAX_UNDO = ADMIN_MAX_UNDO
+let undoRedoLock = false
 
 function pushUndo(action) {
   undoStack.push(action)
@@ -1231,8 +1303,10 @@ async function applyAction(action) {
 }
 
 async function performUndo() {
+  if (undoRedoLock) return
   const action = undoStack.pop()
   if (!action) return
+  undoRedoLock = true
   try {
     const reverse = Object.assign({}, action, {
       fromCategory: action.toCategory, toCategory: action.fromCategory,
@@ -1247,12 +1321,16 @@ async function performUndo() {
   } catch (e) {
     undoStack.push(action)
     showTagManageMsg('撤销失败: ' + e.message, 'error')
+  } finally {
+    undoRedoLock = false
   }
 }
 
 async function performRedo() {
+  if (undoRedoLock) return
   const action = redoStack.pop()
   if (!action) return
+  undoRedoLock = true
   try {
     await applyAction(action)
     undoStack.push(action)
@@ -1262,14 +1340,16 @@ async function performRedo() {
   } catch (e) {
     redoStack.push(action)
     showTagManageMsg('重做失败: ' + e.message, 'error')
+  } finally {
+    undoRedoLock = false
   }
 }
 
 function handleUndoKeyboard(e) {
   var tag = e.target && e.target.tagName
   if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return
-  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); performUndo() }
-  if (e.ctrlKey && e.key === 'y') { e.preventDefault(); performRedo() }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); performUndo() }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); performRedo() }
 }
 document.addEventListener('keydown', handleUndoKeyboard)
 
@@ -1521,11 +1601,13 @@ window.confirmDeleteTag = async function() {
   if (!deleteTagCallback) return
   const { id, tagName, articles } = deleteTagCallback
   const confirmBtn = $('#delete-tag-confirm-btn')
-  confirmBtn.disabled = true
-  confirmBtn.textContent = '删除中...'
+  if (confirmBtn) {
+    confirmBtn.disabled = true
+    confirmBtn.textContent = '删除中...'
+  }
   try {
-    const removeFromArticles = $('#delete-tag-remove-articles').checked
-    if (removeFromArticles && articles.length > 0) {
+    const removeFromArticles = $('#delete-tag-remove-articles')
+    if (removeFromArticles && removeFromArticles.checked && articles.length > 0) {
       for (const a of articles) {
         const newTags = (a.tags || []).filter(function(t) { return t !== tagName })
         if (newTags.length !== (a.tags || []).length) {
@@ -1542,15 +1624,21 @@ window.confirmDeleteTag = async function() {
     loadTagExplorerData()
   } catch (e) {
     showTagManageMsg('删除失败: ' + e.message, 'error')
-    confirmBtn.disabled = false
-    confirmBtn.textContent = '删除标签'
+    if (confirmBtn) {
+      confirmBtn.disabled = false
+      confirmBtn.textContent = '删除标签'
+    }
   }
 }
 
 window.closeDeleteTagDialog = function() {
-  $('#delete-tag-modal').style.display = 'none'
-  $('#delete-tag-confirm-btn').disabled = false
-  $('#delete-tag-confirm-btn').textContent = '删除标签'
+  const modal = $('#delete-tag-modal')
+  if (modal) modal.style.display = 'none'
+  const btn = $('#delete-tag-confirm-btn')
+  if (btn) {
+    btn.disabled = false
+    btn.textContent = '删除标签'
+  }
   deleteTagCallback = null
 }
 
@@ -2005,7 +2093,8 @@ async function sortCategory(id, direction) {
 let contextMenuTarget = null
 
 function closeContextMenu() {
-  $('#context-menu').classList.remove('active')
+  const menu = $('#context-menu')
+  if (menu) menu.classList.remove('active')
   contextMenuTarget = null
 }
 
@@ -2118,33 +2207,42 @@ $('#context-menu').addEventListener('click', function(e) {
 let inputDialogCallback = null
 
 window.showInputDialog = function(title, callback, defaultValue) {
-  $('#input-dialog-title').textContent = title
-  $('#input-dialog-field').value = defaultValue || ''
+  const titleEl = $('#input-dialog-title')
+  const fieldEl = $('#input-dialog-field')
+  const dialogEl = $('#input-dialog')
+  if (!titleEl || !fieldEl || !dialogEl) return
+  titleEl.textContent = title
+  fieldEl.value = defaultValue || ''
   inputDialogCallback = callback
-  $('#input-dialog').style.display = 'flex'
+  dialogEl.style.display = 'flex'
   setTimeout(function() {
-    $('#input-dialog-field').focus()
-    $('#input-dialog-field').select()
+    fieldEl.focus()
+    fieldEl.select()
   }, 100)
 }
 
 window.closeInputDialog = function() {
-  $('#input-dialog').style.display = 'none'
+  const dialogEl = $('#input-dialog')
+  if (dialogEl) dialogEl.style.display = 'none'
   inputDialogCallback = null
 }
 
-$('#input-dialog-confirm').addEventListener('click', function() {
-  const val = $('#input-dialog-field').value.trim()
+const inputDialogConfirm = $('#input-dialog-confirm')
+if (inputDialogConfirm) inputDialogConfirm.addEventListener('click', function() {
+  const field = $('#input-dialog-field')
+  const val = field ? field.value.trim() : ''
   if (inputDialogCallback) {
     inputDialogCallback(val)
   }
   closeInputDialog()
 })
 
-$('#input-dialog-field').addEventListener('keydown', function(e) {
+const inputDialogField = $('#input-dialog-field')
+if (inputDialogField) inputDialogField.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     e.preventDefault()
-    $('#input-dialog-confirm').click()
+    const confirmBtn = $('#input-dialog-confirm')
+    if (confirmBtn) confirmBtn.click()
   }
   if (e.key === 'Escape') {
     closeInputDialog()
@@ -2213,7 +2311,7 @@ function updateCategoryDisplay() {
   const display = $('#selected-cats-display')
   if (!box) return
   if (selectedCategoryPath) {
-    display.style.display = 'none'
+    if (display) display.style.display = 'none'
     const existing = box.querySelectorAll('.selected-badge')
     for (const e of existing) e.remove()
     const badge = document.createElement('span')
@@ -2222,12 +2320,13 @@ function updateCategoryDisplay() {
     badge.querySelector('.badge-remove').addEventListener('click', function(e) {
       e.stopPropagation()
       selectedCategoryPath = ''
-      $('#edit-category').value = ''
+      const catInput = $('#edit-category')
+      if (catInput) catInput.value = ''
       updateCategoryDisplay()
     })
     box.insertBefore(badge, box.firstChild)
   } else {
-    display.style.display = ''
+    if (display) display.style.display = ''
     const existing = box.querySelectorAll('.selected-badge')
     for (const e of existing) e.remove()
   }
@@ -2240,7 +2339,7 @@ function updateTagsDisplay() {
   const existing = box.querySelectorAll('.selected-badge')
   for (const e of existing) e.remove()
   if (selectedTags.length) {
-    display.style.display = 'none'
+    if (display) display.style.display = 'none'
     for (const t of selectedTags) {
       const badge = document.createElement('span')
       badge.className = 'selected-badge'
@@ -2254,7 +2353,7 @@ function updateTagsDisplay() {
       box.insertBefore(badge, display)
     }
   } else {
-    display.style.display = ''
+    if (display) display.style.display = ''
   }
 }
 
@@ -2341,7 +2440,8 @@ window.openCategoryPicker = function() {
 }
 
 window.closeCategoryPicker = function() {
-  $('#cat-picker-modal').style.display = 'none'
+  const modal = $('#cat-picker-modal')
+  if (modal) modal.style.display = 'none'
 }
 
 window.confirmCategoryPicker = function() {
@@ -2351,7 +2451,8 @@ window.confirmCategoryPicker = function() {
   } else {
     selectedCategoryPath = ''
   }
-  $('#edit-category').value = selectedCategoryPath
+  const catInput = $('#edit-category')
+  if (catInput) catInput.value = selectedCategoryPath
   updateCategoryDisplay()
   closeCategoryPicker()
 }
@@ -2365,7 +2466,9 @@ window.openNewCategoryFromPicker = function() {
     if (name) {
       clientCreateManagedCategory(name, parentId).then(function() {
         openCategoryPicker()
-      }).catch(function() {})
+      }).catch(function(err) {
+        showCatManageMsg('创建分类失败: ' + err.message, 'error')
+      })
     }
   })
 }
@@ -2402,7 +2505,8 @@ window.openTagPicker = function() {
 }
 
 window.closeTagPicker = function() {
-  $('#tag-picker-modal').style.display = 'none'
+  const modal = $('#tag-picker-modal')
+  if (modal) modal.style.display = 'none'
 }
 
 window.confirmTagPicker = function() {
@@ -2421,7 +2525,9 @@ window.openNewTagFromPicker = function() {
     if (name) {
       clientCreateManagedTag(name).then(function() {
         openTagPicker()
-      }).catch(function() {})
+      }).catch(function(err) {
+        showTagManageMsg('创建标签失败: ' + err.message, 'error')
+      })
     }
   })
 }
@@ -2438,5 +2544,3 @@ window.editPost = async function(id) {
   updateTagsDisplay()
   setTimeout(loadPickerData, 100)
 }
-
-checkAuth()

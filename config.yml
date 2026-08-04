@@ -14,7 +14,7 @@
 
 server:
   # 监听端口号。修改后需重启服务。
-  port: 3001
+  port: 3000
 
 # ============================================================
 #  站点基础设置
@@ -267,6 +267,7 @@ locale:
   # ---- 编辑器 ----
   editor:
     title: "Markdown 编辑器"
+    typst_title: "Typst 编辑器"
     input_placeholder: "在此输入 Markdown..."
     preview_placeholder: "等待输入..."
 
@@ -342,7 +343,7 @@ nav:
 
 images:
   # 网站 Favicon 图标路径。显示在浏览器标签页上。
-  favicon: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
+  favicon: "/img/852112.webp"
   # 头像设置
   avatar:
     # 头像图片路径。留空则使用 FontAwesome 图标占位。
@@ -352,8 +353,8 @@ images:
   # 文章默认封面图 URL。当某篇文章未设置封面时，使用此图片作为默认封面。
   default_cover:
     - "https://t.alcy.cc/fj"
-    - "https://t.alcy.cc/ycy"
-    - "https://t.alcy.cc/moez"
+    # - "https://t.alcy.cc/ycy"
+    # - "https://t.alcy.cc/moez"
   # 文章封面图回退 URL。当 default_cover 列表中的图片均不可用时，使用此图片。
   fallback_cover: "https://t.alcy.cc/fj"
   # 是否全局禁用所有页面的顶部图（banner 区域）。
@@ -697,9 +698,9 @@ markdown:
     # Shiki 主题名（分别配置浅色和深色模式下的主题）。
     themes:
       # 浅色模式下的 Shiki 主题名。可选：github-light, vitesse-light, material-lighter 等。
-      light: "github-light"
+      light: "light-plus"
       # 深色模式下的 Shiki 主题名。可选：github-dark, vitesse-dark, material-palenight 等。
-      dark: "github-dark"
+      dark: "dark-plus"
 
   # LaTeX 数学公式设置
   math:
@@ -784,11 +785,11 @@ pwa:
   # Web App Manifest 文件路径。
   manifest: "/manifest.json"
   # Apple 触摸图标（iOS 添加到桌面时显示的图标）。
-  apple_touch_icon: "/img/icon.png"
+  apple_touch_icon: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
   # 32x32 尺寸的 Favicon。
-  favicon_32_32: "/img/favicon-32.png"
+  favicon_32_32: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
   # 16x16 尺寸的 Favicon。
-  favicon_16_16: "/img/favicon-16.png"
+  favicon_16_16: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
 
 # ============================================================
 #  Open Graph 社交分享
@@ -806,7 +807,6 @@ open_graph:
   fb_app_id: ""
 
 # ============================================================
-  # ============================================================
 #  CDN 资源
 #  控制外部 CDN 资源的版本和地址。如需锁定版本或使用私有 CDN，
 #  修改此处即可。留空则使用默认值。
@@ -859,7 +859,7 @@ admin:
 #  显示在页脚和侧边栏。
 # ============================================================
 
-# fack bug
+# 社交链接
 social:
   # GitHub 个人主页链接。
   github: "https://github.com/XiaoshenAwA"

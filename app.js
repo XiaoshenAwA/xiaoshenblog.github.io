@@ -10,19 +10,26 @@ const adminAuth = require('./middleware/adminAuth');
 const app = express();
 const PORT = config.PORT;
 
-let cssVersion = '1';
-try {
-  cssVersion = fs.statSync(path.join(__dirname, 'public', 'assets', 'main.css')).mtimeMs;
-} catch(e) {
-  console.error('Failed to read CSS version:', e.message);
-}
+const cssVersion = Date.now();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(config.BASE_PATH, express.static(path.join(__dirname, 'public')));
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'unsafe-hashes'", "https://giscus.app", "https://cdn.jsdelivr.net", "https://esm.sh"],
+      scriptSrcAttr: null,
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://giscus.app", "https://esm.sh", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      fontSrc: ["'self'", "data:", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net", "https://fonts.gstatic.com"],
+      connectSrc: ["'self'", "https://giscus.app", "https://v1.hitokoto.cn", "https://v1.jinrishici.com", "https://cdn.jsdelivr.net", "https://esm.sh", "https://playgroundcdn.typescriptlang.org", "https://fonts.googleapis.com", config.SUPABASE_URL],
+      workerSrc: ["'self'", "https://cdn.jsdelivr.net", "blob:"],
+      frameSrc: ["https://giscus.app"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
 }));
 app.use(express.json({ limit: '1mb' }));
@@ -73,10 +80,17 @@ const SAFE_CONFIG_KEYS = [
 ];
 
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', config.SITE_URL || '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+app.use((req, res, next) => {
+  if (!req.path.startsWith(config.BASE_PATH + '/assets')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
   next();
 });
 
@@ -98,6 +112,7 @@ app.use((req, res, next) => {
   res.locals.formatDate = function(d) {
     if (!d) return '';
     var dt = new Date(d);
+    if (isNaN(dt.getTime())) return '';
     var y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), day = String(dt.getDate()).padStart(2,'0');
     return y + '-' + m + '-' + day;
   };
@@ -109,7 +124,35 @@ app.get(`${config.BASE_PATH}/admin`, (req, res) => {
 });
 
 app.get(`${config.BASE_PATH}/editor`, (req, res) => {
-  res.render('editor', { locale: config.locale });
+  res.redirect(`${config.BASE_PATH}/editor/markdown`);
+});
+
+app.get(`${config.BASE_PATH}/editor/markdown`, (req, res) => {
+  res.render('editor', { locale: config.locale, editorMode: 'markdown' });
+});
+
+app.get(`${config.BASE_PATH}/editor/typst`, (req, res) => {
+  res.render('editor', { locale: config.locale, editorMode: 'typst' });
+});
+
+app.get(`${config.BASE_PATH}/typst-packages/*`, (req, res) => {
+  const pkgPath = req.params[0];
+  const targetUrl = `https://packages.typst.org/preview/${pkgPath}`;
+  const https = require('https');
+  const proxyReq = https.get(targetUrl, { headers: { 'User-Agent': 'typst-editor/1.0' } }, (proxyRes) => {
+    res.status(proxyRes.statusCode);
+    res.set('Content-Type', proxyRes.headers['content-type'] || 'application/octet-stream');
+    res.set('Content-Length', proxyRes.headers['content-length'] || '');
+    proxyRes.pipe(res);
+  });
+  proxyReq.on('error', (e) => {
+    console.error('Typst package proxy error:', e.message);
+    res.status(502).json({ error: 'Failed to fetch package from packages.typst.org' });
+  });
+  proxyReq.setTimeout(30000, () => {
+    proxyReq.destroy();
+    res.status(504).json({ error: 'Package fetch timeout' });
+  });
 });
 
 app.use(config.BASE_PATH, postsRouter);

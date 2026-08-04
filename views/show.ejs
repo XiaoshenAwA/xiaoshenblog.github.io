@@ -1,8 +1,9 @@
 <% var _shArr = Array.isArray(config.DEFAULT_COVER) ? config.DEFAULT_COVER : [config.DEFAULT_COVER || config.FALLBACK_COVER || 'https://t.alcy.cc/fj']; %>
 <% var _shUrl = _shArr[Math.floor(Math.random() * _shArr.length)]; %>
-<%- include('partials/header', { title: post.title, top_img: (!config.DISABLE_TOP_IMG && post.cover) ? post.cover : (config.DEFAULT_TOP_IMG || _shUrl + (_shUrl.includes('?') ? '&' : '?') + 'v=' + post.id), post: post }) %>
+<% var _topImg = (!config.DISABLE_TOP_IMG && post.cover) ? post.cover : (_shUrl + (_shUrl.includes('?') ? '&' : '?') + 'v=' + post.id); %>
+<%- include('partials/header', { title: post.title, top_img: _topImg, post: post }) %>
 
-  <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
+  <main class="layout post-layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
     <div id="post">
       <article class="post-article reveal">
         <div class="post-content"><%- post.contentHtml %></div>
@@ -40,20 +41,31 @@
 
         <% if (config.COMMENTS_USE === 'giscus' && config.GISCUS_REPO) { %>
         <div class="post-comments">
-          <script src="<%= config.GISCUS_SCRIPT_URL %>"
-            data-repo="<%= config.GISCUS_REPO %>"
-            data-repo-id="<%= config.GISCUS_REPO_ID %>"
-            data-category="<%= config.GISCUS_CATEGORY %>"
-            data-category-id="<%= config.GISCUS_CATEGORY_ID %>"
-            data-mapping="<%= config.GISCUS_MAPPING %>"
-            data-strict="<%= config.GISCUS_STRICT %>"
-            data-reactions-enabled="<%= config.GISCUS_REACTIONS_ENABLED %>"
-            data-emit-metadata="<%= config.GISCUS_EMIT_METADATA %>"
-            data-input-position="<%= config.GISCUS_INPUT_POSITION %>"
-            data-theme="<%= config.GISCUS_LIGHT_THEME %>"
-            data-lang="<%= config.GISCUS_LANG || config.SITE_LANGUAGE %>"
-            crossorigin="anonymous"
-            async>
+          <script>
+          try {
+            (function() {
+              var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+              var s = document.createElement('script');
+              s.src = <%- JSON.stringify(config.GISCUS_SCRIPT_URL).replace(/<\/script>/gi, '<\\/script>') %>;
+              s.setAttribute('data-repo', <%- JSON.stringify(config.GISCUS_REPO).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-repo-id', <%- JSON.stringify(config.GISCUS_REPO_ID).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-category', <%- JSON.stringify(config.GISCUS_CATEGORY).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-category-id', <%- JSON.stringify(config.GISCUS_CATEGORY_ID).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-mapping', <%- JSON.stringify(config.GISCUS_MAPPING).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-strict', <%- JSON.stringify(config.GISCUS_STRICT).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-reactions-enabled', <%- JSON.stringify(config.GISCUS_REACTIONS_ENABLED).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-emit-metadata', <%- JSON.stringify(config.GISCUS_EMIT_METADATA).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-input-position', <%- JSON.stringify(config.GISCUS_INPUT_POSITION).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-theme', dark
+                ? <%- JSON.stringify(config.GISCUS_DARK_THEME || 'dark').replace(/<\/script>/gi, '<\\/script>') %>
+                : <%- JSON.stringify(config.GISCUS_LIGHT_THEME || 'light').replace(/<\/script>/gi, '<\\/script>') %>);
+              s.setAttribute('data-lang', <%- JSON.stringify(config.GISCUS_LANG || config.SITE_LANGUAGE).replace(/<\/script>/gi, '<\\/script>') %>);
+              s.crossOrigin = 'anonymous';
+              s.async = true;
+              var host = document.currentScript;
+              (host && host.parentNode ? host.parentNode : document.body).appendChild(s);
+            })();
+          } catch(e) {}
           </script>
         </div>
         <% } %>
@@ -61,39 +73,97 @@
     </div>
 
     <div class="aside-content" id="aside-content">
-      <%- include('partials/sidebar') %>
-      <% if (config.TOC_POST) { %>
-      <div class="card-widget<%= config.TOC_STYLE_SIMPLE ? ' toc-simple' : '' %>" id="toc-widget" style="display:none">
-        <div class="item-headline"><i class="fas fa-list"></i> <%= locale.post?.toc_title || '目录' %></div>
-        <div class="toc-content" id="toc-content"></div>
-      </div>
-      <% } %>
+      <%- include('partials/sidebar', { postPage: true }) %>
     </div>
   </main>
 
   <script>
   try {
-    var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
-    var toc = document.getElementById('toc-content');
     var tocWidget = document.getElementById('toc-widget');
-    if (toc && headings.length > 0) {
+    var tocContent = document.getElementById('toc-content');
+    var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
+    if (tocWidget && tocContent && headings.length > 0) {
       <%
         var tocExpandClass = '';
         if (config.TOC_EXPAND) tocExpandClass = ' toc-expand';
       %>
-      toc.className += '<%= tocExpandClass %>';
+      tocContent.className += '<%= tocExpandClass %>';
+      var root = document.createElement('ol');
+      root.className = 'toc';
+      var lastOl = [null, null, null, null];
+      var counters = [0, 0, 0];
       headings.forEach(function(h, i) {
         if (!h.id) h.id = 'heading-' + i;
+        var level = parseInt(h.tagName.charAt(1)) || 2;
+        counters[level - 1]++;
+        for (var k = level; k < 3; k++) counters[k] = 0;
+        var number = '';
+        for (var k = 1; k <= level; k++) { if (k > 1) number += '.'; number += counters[k - 1]; }
+        var li = document.createElement('li');
+        li.className = 'toc-item toc-level-' + level;
         var a = document.createElement('a');
+        a.className = 'toc-link';
         a.href = '#' + h.id;
         <% if (config.TOC_NUMBER) { %>
-        a.textContent = (i + 1) + '. ' + h.textContent;
-        <% } else { %>
-        a.textContent = h.textContent;
+        var num = document.createElement('span');
+        num.className = 'toc-number';
+        num.textContent = number + '. ';
+        a.appendChild(num);
         <% } %>
-        a.className = 'toc-link toc-link-' + h.tagName.toLowerCase();
-        toc.appendChild(a);
+        var txt = document.createElement('span');
+        txt.className = 'toc-text';
+        txt.textContent = h.textContent;
+        a.appendChild(txt);
+        li.appendChild(a);
+        var pLevel = level - 1;
+        while (pLevel >= 1 && !lastOl[pLevel]) pLevel--;
+        (pLevel >= 1 ? lastOl[pLevel] : root).appendChild(li);
+        if (level < 3) {
+          var childOl = document.createElement('ol');
+          childOl.className = 'toc-child';
+          li.appendChild(childOl);
+          lastOl[level] = childOl;
+        }
+        for (var k = level + 1; k <= 3; k++) lastOl[k] = null;
       });
+      tocContent.appendChild(root);
+
+      var links = tocContent.querySelectorAll('.toc-link');
+      var pctEl = tocWidget.querySelector('.toc-percentage');
+      var lastActive = null;
+      function clearActive() {
+        tocContent.querySelectorAll('.toc-item.active').forEach(function(el) { el.classList.remove('active'); });
+        links.forEach(function(l) { l.classList.remove('active'); });
+      }
+      function setActive(link) {
+        if (link === lastActive) return;
+        clearActive();
+        link.classList.add('active');
+        var li = link.parentElement;
+        while (li && li.classList.contains('toc-item')) {
+          li.classList.add('active');
+          li = li.parentElement ? li.parentElement.parentElement : null;
+        }
+        lastActive = link;
+        var cr = tocContent.getBoundingClientRect();
+        var lr = link.getBoundingClientRect();
+        if (lr.top < cr.top || lr.bottom > cr.bottom) tocContent.scrollTop += lr.top - cr.top - 8;
+      }
+      function updateToc() {
+        var pos = window.scrollY || document.documentElement.scrollTop;
+        var current = null;
+        for (var i = 0; i < headings.length; i++) {
+          if (headings[i].getBoundingClientRect().top <= 90) current = links[i];
+          else break;
+        }
+        if (current) setActive(current);
+        else clearActive();
+        var doc = document.documentElement;
+        var maxScroll = doc.scrollHeight - window.innerHeight;
+        if (pctEl) pctEl.textContent = (maxScroll > 0 ? Math.round(pos / maxScroll * 100) : 0) + '%';
+      }
+      window.addEventListener('scroll', function() { requestAnimationFrame(updateToc); }, { passive: true });
+      updateToc();
       tocWidget.style.display = '';
     }
   } catch(e) {}

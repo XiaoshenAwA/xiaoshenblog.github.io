@@ -16,14 +16,20 @@ export default defineConfig({
         admin: path.resolve(__dirname, 'src/admin.js'),
         editor: path.resolve(__dirname, 'src/editor.js')
       },
+      external: [
+        'monaco-editor',
+        /monaco-editor\/.*/
+      ],
       output: {
         entryFileNames: '[name].js',
         chunkFileNames: 'chunk.[hash].js',
         assetFileNames: '[name][extname]',
         manualChunks(id) {
-          if (id.includes('highlight.js')) return 'hljs'
+          if (id.includes('shiki') || id.includes('twoslash')) return 'shiki'
           if (id.includes('katex')) return 'katex'
           if (id.includes('markdown-it')) return 'mdit'
+          if (id.includes('pdfjs-dist')) return 'pdf'
+          if ((id.includes('typst.ts') || id.includes('typst-ts')) && !id.includes('typescript')) return 'typst'
         }
       }
     }

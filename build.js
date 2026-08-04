@@ -83,7 +83,7 @@ async function build() {
   for (let page = 1; page <= totalPages; page++) {
     const offset = (page - 1) * config.PAGE_SIZE;
     const posts = await preparePosts(allPosts.slice(offset, offset + config.PAGE_SIZE));
-    const data = { posts, page, totalPages, total: allPosts.length, tag: '', cat: '', ...sidebarData, pageType: 'home' };
+    const data = { posts, page, totalPages, total: allPosts.length, tag: '', cat: '', q: '', ...sidebarData, pageType: 'home' };
     if (page === 1) {
       await render('index.ejs', data, 'index.html');
     } else {
@@ -98,7 +98,7 @@ async function build() {
     for (let page = 1; page <= tPages; page++) {
       const offset = (page - 1) * config.PAGE_SIZE;
       const posts = allFiltered.slice(offset, offset + config.PAGE_SIZE);
-      const data = { posts, page, totalPages: tPages, tag, cat: '', ...sidebarData, pageType: 'home' };
+      const data = { posts, page, totalPages: tPages, tag, cat: '', q: '', ...sidebarData, pageType: 'home' };
       if (page === 1) {
         await render('index.ejs', data, `tag/${encodeURIComponent(tag)}/index.html`);
       } else {
@@ -153,7 +153,7 @@ async function build() {
         id: post.id,
         title: post.title,
         content: text.substring(0, config.SEARCH_EXCERPT_LENGTH || 120),
-        url: basePath + '/posts/' + post.id + '/',
+        url: '/posts/' + post.id + '/',
         tags: post.tags
       });
     }
@@ -164,13 +164,16 @@ async function build() {
   await render('admin.ejs', { allTags: [], postCount: 0, title: config.locale?.admin?.title || '\u540E\u53F0\u7BA1\u7406', locale: config.locale }, 'admin/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210 Markdown \u7F16\u8F91\u5668\u9875\u9762...');
-  await render('editor.ejs', { title: config.locale?.editor?.title || 'Markdown \u7F16\u8F91\u5668' }, 'editor/index.html');
+  await render('editor.ejs', { title: config.locale?.editor?.title || 'Markdown \u7F16\u8F91\u5668', editorMode: 'markdown' }, 'editor/markdown/index.html');
+
+  console.log('\u6B63\u5728\u751F\u6210 Typst \u7F16\u8F91\u5668\u9875\u9762...');
+  await render('editor.ejs', { title: config.locale?.editor?.typst_title || 'Typst \u7F16\u8F91\u5668', editorMode: 'typst' }, 'editor/typst/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210 Sitemap...');
   var siteUrl = config.SITE_URL || '';
   var sitemap = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
   function addUrl(loc, priority) {
-    sitemap += '  <url>\n    <loc>' + siteUrl + loc + '</loc>\n    <priority>' + priority + '</priority>\n  </url>\n';
+    sitemap += '  <url>\n    <loc>' + siteUrl + basePath + loc + '</loc>\n    <priority>' + priority + '</priority>\n  </url>\n';
   }
   addUrl('/', '1.0');
   for (var pi = 0; pi < allPosts.length; pi++) {

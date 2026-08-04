@@ -1,55 +1,74 @@
-<%- include('partials/header', { title: locale.editor?.title || 'Markdown 编辑器' }) %>
-<link rel="stylesheet" href="<%= basePath %>/assets/editor.css">
-<link rel="stylesheet" href="<%= basePath %>/assets/hljs.css">
+<%
+  var editorMode = typeof editorMode === 'undefined' ? 'markdown' : editorMode;
+  var isTypst = editorMode === 'typst';
+  var editorTitle = isTypst ? (locale.editor?.typst_title || 'Typst 编辑器') : (locale.editor?.title || 'Markdown 编辑器');
+%>
+<%- include('partials/header', { title: editorTitle }) %>
+<link rel="stylesheet" href="<%= basePath %>/assets/editor.css?v=<%= cssVersion %>">
+<link rel="stylesheet" href="<%= basePath %>/css/shiki-twoslash-style-rich.css">
 <style>
 .editor-page ~ .site-footer { display: none !important; }
 </style>
-<div class="editor-page">
+<div class="editor-page<%= isTypst ? ' mode-typst' : '' %>">
   <div class="editor-toolbar">
-    <button class="toolbar-btn" data-md="**" data-wrap="**" title="粗体"><i class="fas fa-bold"></i></button>
-    <button class="toolbar-btn" data-md="*" data-wrap="*" title="斜体"><i class="fas fa-italic"></i></button>
-    <button class="toolbar-btn" data-md="~~" data-wrap="~~" title="删除线"><i class="fas fa-strikethrough"></i></button>
+    <div class="editor-mode-tabs" id="editor-mode-tabs" role="tablist">
+      <a href="<%= basePath %>/editor/markdown" class="editor-mode-tab<%= !isTypst ? ' active' : '' %>" role="tab">Markdown</a>
+      <a href="<%= basePath %>/editor/typst" class="editor-mode-tab<%= isTypst ? ' active' : '' %>" role="tab">Typst</a>
+    </div>
     <span class="toolbar-divider"></span>
-    <button class="toolbar-btn" data-md="# " data-wrap="" title="标题"><i class="fas fa-heading"></i></button>
-    <button class="toolbar-btn" data-md="> " data-wrap="" title="引用"><i class="fas fa-quote-right"></i></button>
-    <button class="toolbar-btn" data-md="- " data-wrap="" title="无序列表"><i class="fas fa-list-ul"></i></button>
-    <button class="toolbar-btn" data-md="1. " data-wrap="" title="有序列表"><i class="fas fa-list-ol"></i></button>
+    <button class="toolbar-btn md-only" data-md="**" data-wrap="**" title="粗体"><i class="fas fa-bold"></i></button>
+    <button class="toolbar-btn md-only" data-md="*" data-wrap="*" title="斜体"><i class="fas fa-italic"></i></button>
+    <button class="toolbar-btn md-only" data-md="~~" data-wrap="~~" title="删除线"><i class="fas fa-strikethrough"></i></button>
+    <span class="toolbar-divider md-only"></span>
+    <button class="toolbar-btn md-only" data-md="# " data-wrap="" title="标题"><i class="fas fa-heading"></i></button>
+    <button class="toolbar-btn md-only" data-md="> " data-wrap="" title="引用"><i class="fas fa-quote-right"></i></button>
+    <button class="toolbar-btn md-only" data-md="- " data-wrap="" title="无序列表"><i class="fas fa-list-ul"></i></button>
+    <button class="toolbar-btn md-only" data-md="1. " data-wrap="" title="有序列表"><i class="fas fa-list-ol"></i></button>
+    <span class="toolbar-divider md-only"></span>
+    <button class="toolbar-btn md-only" data-md="```\n" data-wrap="\n```" data-action="code" title="代码块"><i class="fas fa-code"></i></button>
+    <button class="toolbar-btn md-only" data-md="[" data-wrap="](url)" data-action="link" title="链接"><i class="fas fa-link"></i></button>
+    <button class="toolbar-btn md-only" data-md="![" data-wrap="](url)" data-action="image" title="图片"><i class="fas fa-image"></i></button>
+    <button class="toolbar-btn md-only" data-md="---" data-wrap="" title="分割线"><i class="fas fa-minus"></i></button>
+    <!-- Typst toolbar -->
+    <button class="toolbar-btn typst-only" data-md="*{" data-wrap="}*" title="Bold"><i class="fas fa-bold"></i></button>
+    <button class="toolbar-btn typst-only" data-md="_{" data-wrap="}_" title="Italic"><i class="fas fa-italic"></i></button>
+    <button class="toolbar-btn typst-only" data-md="= {" data-wrap="}" title="Heading"><i class="fas fa-heading"></i></button>
+    <button class="toolbar-btn typst-only" data-md="#link(" data-wrap=')[ "text"]' title="Link"><i class="fas fa-link"></i></button>
+    <button class="toolbar-btn typst-only" data-md='#image("' data-wrap='")' title="Image"><i class="fas fa-image"></i></button>
+    <button class="toolbar-btn typst-only" data-md="```typst\n" data-wrap="\n```" title="Code block"><i class="fas fa-code"></i></button>
+    <button class="toolbar-btn typst-only" data-md="- " data-wrap="" title="List"><i class="fas fa-list-ul"></i></button>
+    <button class="toolbar-btn typst-only" data-md="---" data-wrap="" title="Line"><i class="fas fa-minus"></i></button>
     <span class="toolbar-divider"></span>
-    <button class="toolbar-btn" data-md="```\n" data-wrap="\n```" data-action="code" title="代码块"><i class="fas fa-code"></i></button>
-    <button class="toolbar-btn" data-md="[" data-wrap="](url)" data-action="link" title="链接"><i class="fas fa-link"></i></button>
-    <button class="toolbar-btn" data-md="![" data-wrap="](url)" data-action="image" title="图片"><i class="fas fa-image"></i></button>
-    <button class="toolbar-btn" data-md="---" data-wrap="" title="分割线"><i class="fas fa-minus"></i></button>
-    <span class="toolbar-divider"></span>
-    <button class="toolbar-btn" id="editor-download" title="下载为 Markdown"><i class="fas fa-download"></i></button>
-    <span class="toolbar-divider"></span>
-    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" id="editor-download" title="<%= isTypst ? '下载为 .typ 文件' : '下载为 Markdown' %>"><i class="fas fa-download"></i></button>
     <button class="toolbar-btn" id="indent-toggle" title="缩进方式：Tab（点击切换为空格）"><i class="fas fa-indent"></i></button>
+    <span class="toolbar-divider"></span>
     <button class="toolbar-btn view-mode-btn active" data-mode="split" title="分栏"><i class="fas fa-columns"></i></button>
     <button class="toolbar-btn view-mode-btn" data-mode="edit" title="仅编辑"><i class="fas fa-pen"></i></button>
     <button class="toolbar-btn view-mode-btn" data-mode="preview" title="仅预览"><i class="fas fa-eye"></i></button>
+    <span class="toolbar-divider"></span>
+    <button class="toolbar-btn" id="preview-font-decrease" title="<%= isTypst ? '预览缩放缩小' : '编辑器字体缩小' %>"><i class="fas fa-minus"></i></button>
+    <input type="text" class="toolbar-font-input" id="editor-font-size-input" value="<%= isTypst ? '100%' : '14px' %>" title="<%= isTypst ? 'Typst 预览缩放 %' : '编辑器字体大小' %>">
+    <button class="toolbar-btn" id="preview-font-increase" title="<%= isTypst ? '预览缩放放大' : '编辑器字体放大' %>"><i class="fas fa-plus"></i></button>
     <span class="toolbar-divider"></span>
     <button class="toolbar-btn" id="editor-fullscreen" title="全屏"><i class="fas fa-expand"></i></button>
   </div>
   <div class="editor-container">
     <div class="editor-pane">
-      <div class="editor-input-wrap">
-        <div class="editor-gutter" id="editor-gutter"></div>
-        <textarea id="editor-input" placeholder="<%= locale.editor?.input_placeholder || '在此输入 Markdown...' %>"></textarea>
-      </div>
+      <div class="editor-input-wrap" id="editor-input"></div>
     </div>
     <div class="editor-pane">
-      <div class="post-content" id="editor-preview"><p class="muted"><%= locale.editor?.preview_placeholder || '等待输入...' %></p></div>
+      <div id="editor-preview"></div>
     </div>
   </div>
 </div>
 
 <!-- Insert Link Modal -->
 <div id="insert-link-modal" class="picker-modal" style="display:none;">
-  <div class="picker-overlay" onclick="document.getElementById('insert-link-modal').style.display='none'"></div>
+  <div class="picker-overlay" data-close="insert-link-modal"></div>
   <div class="picker-dialog" style="width:480px;">
     <div class="picker-header">
       <span>插入链接</span>
-      <button type="button" class="picker-close" onclick="document.getElementById('insert-link-modal').style.display='none'">&times;</button>
+      <button type="button" class="picker-close" data-close="insert-link-modal">&times;</button>
     </div>
     <div class="picker-body" style="padding:18px;display:flex;flex-direction:column;gap:14px;">
       <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">链接文本</label>
@@ -59,7 +78,7 @@
     </div>
     <div class="picker-footer" style="justify-content:flex-end;">
       <div>
-        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('insert-link-modal').style.display='none'">取消</button>
+        <button type="button" class="btn btn-sm btn-outline" data-close="insert-link-modal">取消</button>
         <button type="button" class="btn btn-sm btn-primary" id="link-confirm">插入</button>
       </div>
     </div>
@@ -68,11 +87,11 @@
 
 <!-- Insert Image Modal -->
 <div id="insert-image-modal" class="picker-modal" style="display:none;">
-  <div class="picker-overlay" onclick="document.getElementById('insert-image-modal').style.display='none'"></div>
+  <div class="picker-overlay" data-close="insert-image-modal"></div>
   <div class="picker-dialog" style="width:480px;">
     <div class="picker-header">
       <span>插入图片</span>
-      <button type="button" class="picker-close" onclick="document.getElementById('insert-image-modal').style.display='none'">&times;</button>
+      <button type="button" class="picker-close" data-close="insert-image-modal">&times;</button>
     </div>
     <div class="picker-body" style="padding:18px;display:flex;flex-direction:column;gap:14px;">
       <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">图片地址 (URL)</label>
@@ -82,7 +101,7 @@
     </div>
     <div class="picker-footer" style="justify-content:flex-end;">
       <div>
-        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('insert-image-modal').style.display='none'">取消</button>
+        <button type="button" class="btn btn-sm btn-outline" data-close="insert-image-modal">取消</button>
         <button type="button" class="btn btn-sm btn-primary" id="image-confirm">插入</button>
       </div>
     </div>
@@ -91,11 +110,11 @@
 
 <!-- Insert Code Block Modal -->
 <div id="insert-code-modal" class="picker-modal" style="display:none;">
-  <div class="picker-overlay" onclick="document.getElementById('insert-code-modal').style.display='none'"></div>
+  <div class="picker-overlay" data-close="insert-code-modal"></div>
   <div class="picker-dialog" style="width:720px;max-width:95vw;">
     <div class="picker-header">
       <span>插入代码块</span>
-      <button type="button" class="picker-close" onclick="document.getElementById('insert-code-modal').style.display='none'">&times;</button>
+      <button type="button" class="picker-close" data-close="insert-code-modal">&times;</button>
     </div>
     <div class="picker-body" style="padding:18px;display:flex;flex-direction:column;gap:14px;">
       <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">编程语言</label>
@@ -127,30 +146,40 @@
         <option value="makefile">Makefile</option>
         <option value="dockerfile">Dockerfile</option>
       </select></div>
-      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">代码内容</label>
+      <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">代码内容（输入 `// ^?` 可预览类型推断）</label>
       <div class="code-editor-wrap" id="code-editor-wrap">
-        <div class="code-gutter" id="code-gutter">1</div>
-        <div class="code-editor-body">
-          <pre class="code-highlight" id="code-highlight"></pre>
-          <textarea class="code-input" id="code-input" placeholder="在此输入代码..."></textarea>
-        </div>
+        <div class="code-editor-body" id="code-input"></div>
       </div></div>
     </div>
     <div class="picker-footer" style="justify-content:flex-end;">
       <div>
-        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('insert-code-modal').style.display='none'">取消</button>
+        <button type="button" class="btn btn-sm btn-outline" data-close="insert-code-modal">取消</button>
         <button type="button" class="btn btn-sm btn-primary" id="code-confirm">插入</button>
       </div>
     </div>
   </div>
 </div>
 
+<link rel="stylesheet" href="<%= basePath %>/vs/editor/editor.main.css">
+<script src="<%= basePath %>/vs/loader.js"></script>
 <script>
 window.__CONFIG__ = {
-  EDITOR_DOWNLOAD_FILENAME: <%- JSON.stringify(config.EDITOR_DOWNLOAD_FILENAME) %>,
-  EDITOR_DRAFT_PREFIX: <%- JSON.stringify(config.EDITOR_DRAFT_PREFIX) %>,
-  EDITOR_INDENT_MODE: <%- JSON.stringify(config.EDITOR_INDENT_MODE) %>
+  EDITOR_MODE: <%- JSON.stringify(editorMode) %>,
+  EDITOR_DOWNLOAD_FILENAME: <%- JSON.stringify(config.EDITOR_DOWNLOAD_FILENAME).replace(/<\/script>/gi, '<\\/script>') %>,
+  EDITOR_DRAFT_PREFIX: <%- JSON.stringify(config.EDITOR_DRAFT_PREFIX).replace(/<\/script>/gi, '<\\/script>') %>,
+  EDITOR_INDENT_MODE: <%- JSON.stringify(config.EDITOR_INDENT_MODE).replace(/<\/script>/gi, '<\\/script>') %>,
+  MD_SHIKI_THEME_LIGHT: <%- JSON.stringify(config.MD_SHIKI_THEME_LIGHT).replace(/<\/script>/gi, '<\\/script>') %>,
+  MD_SHIKI_THEME_DARK: <%- JSON.stringify(config.MD_SHIKI_THEME_DARK).replace(/<\/script>/gi, '<\\/script>') %>,
+  TYPST_COMPILER_WASM: '<%= basePath %>/wasm/typst_ts_web_compiler_bg.wasm',
+  TYPST_RENDERER_WASM: '<%= basePath %>/wasm/typst_ts_renderer_bg.wasm'
 };
+require.config({ paths: { vs: '<%= basePath %>/vs' } });
+window.__monacoReady = new Promise(function(resolve) {
+  require(['vs/editor/editor.main'], function(monaco) {
+    window.monaco = monaco;
+    resolve(monaco);
+  });
+});
 </script>
-<script type="module" src="<%= basePath %>/assets/editor.js?v=<%= cssVersion %>" onerror="document.querySelector('.editor-page').innerHTML='<p style=color:red;padding:2em>编辑器脚本加载失败，请先运行 npx vite build</p>'"></script>
+<script type="module" src="<%= basePath %>/assets/editor.js?v=<%= cssVersion %>"></script>
 <%- include('partials/footer') %>

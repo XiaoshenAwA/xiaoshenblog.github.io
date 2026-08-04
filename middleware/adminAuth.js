@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const config = require('../config');
 
 function adminAuth(req, res, next) {
@@ -10,7 +11,13 @@ function adminAuth(req, res, next) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   const token = authHeader.slice(7);
-  if (token !== adminPassword) {
+  try {
+    const tokenBuf = Buffer.from(token, 'utf8');
+    const passwordBuf = Buffer.from(adminPassword, 'utf8');
+    if (tokenBuf.length !== passwordBuf.length || !crypto.timingSafeEqual(tokenBuf, passwordBuf)) {
+      return res.status(403).json({ error: 'Invalid credentials' });
+    }
+  } catch (e) {
     return res.status(403).json({ error: 'Invalid credentials' });
   }
   next();

@@ -1,8 +1,195 @@
 <%- include('partials/header', { title: locale.categories?.title || '分类', subtitle: (locale.categories?.subtitle_prefix || '共 ') + categoryTree.filter(function(c) { return c.level === 0; }).length + ' ' + (locale.categories?.subtitle_suffix || '个大类') }) %>
 
+<style>
+.tree-container {
+  --tree-node-height: 34px;
+  --tree-indent: 24px;
+  --tree-border-color: var(--border, #e4e7ed);
+  --tree-text-color: var(--text, #606266);
+  --tree-hover-bg: var(--accent-light, #f5f7fa);
+  --tree-highlight-color: var(--accent, #409eff);
+}
+
+.filter-input-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+.filter-input-wrapper .el-input__wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--tree-border-color);
+  border-radius: 6px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  transition: border-color 0.2s;
+}
+.filter-input-wrapper .el-input__wrapper:focus-within {
+  border-color: var(--tree-highlight-color);
+  box-shadow: 0 0 0 1px var(--tree-highlight-color);
+}
+.filter-input-wrapper .el-input__prefix {
+  color: var(--text-muted);
+  margin-right: 8px;
+  font-size: 14px;
+}
+.filter-input-wrapper input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  height: 36px;
+  font-size: 14px;
+  color: var(--tree-text-color);
+  font-family: inherit;
+}
+.filter-input-wrapper input::placeholder {
+  color: var(--text-muted);
+}
+.filter-input-wrapper .el-input__clear {
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  display: none;
+}
+.filter-input-wrapper .el-input__clear.visible {
+  display: inline-block;
+}
+
+.el-tree {
+  background: transparent;
+  color: var(--tree-text-color);
+  font-size: 14px;
+}
+.el-tree-node {
+  outline: none;
+  user-select: none;
+  border: 1px solid var(--tree-border-color);
+  border-radius: 6px;
+  margin: 4px 0;
+  background: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.el-tree-node:hover {
+  border-color: var(--tree-highlight-color);
+}
+.el-tree-node + .el-tree-node {
+  margin-top: 6px;
+}
+.el-tree-node__content {
+  display: flex;
+  align-items: center;
+  height: var(--tree-node-height);
+  padding: 0 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  gap: 4px;
+}
+.el-tree-node__content:hover {
+  background: var(--tree-hover-bg);
+}
+.el-tree-node__children .el-tree-node {
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  background: transparent;
+  position: relative;
+}
+.el-tree-node__children .el-tree-node + .el-tree-node::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: var(--tree-border-color);
+}
+.el-tree-node__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  color: var(--tree-highlight-color);
+  flex-shrink: 0;
+}
+.el-tree-node__content.filter-match {
+  background: var(--tree-hover-bg);
+}
+.el-tree-node__expand-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.6;
+  transition: transform 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.el-tree-node__expand-icon.is-leaf {
+  visibility: hidden;
+}
+.el-tree-node__expand-icon.expanded {
+  transform: rotate(90deg);
+}
+.el-tree-node__label {
+  flex: 1;
+  font-size: 14px;
+  padding-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.el-tree-node__label .highlight {
+  color: var(--tree-highlight-color);
+  font-weight: 600;
+}
+.el-tree-node__count {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--accent-light);
+  padding: 0 8px;
+  border-radius: 10px;
+  line-height: 20px;
+  flex-shrink: 0;
+}
+.el-tree-node__children {
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+.el-tree-node__children.collapsed {
+  max-height: 0 !important;
+}
+.el-tree--empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-muted);
+}
+.el-tree--empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+.no-match {
+  text-align: center;
+  padding: 32px 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.no-match i {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 8px;
+  opacity: 0.4;
+}
+</style>
+
   <main class="layout<%= !config.ASIDE_ENABLE ? ' hide-aside' : '' %>" id="content-inner">
     <div id="page">
-      <div class="category-lists">
+      <div class="category-lists tree-container">
         <% if (categoryTree.length === 0) { %>
           <div class="empty-state reveal">
             <div class="empty-icon"><i class="fas fa-folder-open"></i></div>
@@ -10,23 +197,14 @@
             <p><%= locale.categories?.empty_text || '还没有为文章添加分类标签' %></p>
           </div>
         <% } else { %>
-        <ul class="category-list">
-          <% var prevLevel = -1; %>
-          <% categoryTree.forEach(function(c) { %>
-          <% var diff = c.level - prevLevel; %>
-          <% if (diff > 0 && prevLevel >= 0) { %><ul class="category-list-child"><% } %>
-          <% if (diff === 0) { %></li><% } %>
-          <% if (diff < 0) { %>
-          <% for (var i = 0; i < -diff; i++) { %></li></ul><% } %>
-          </li>
-          <% } %>
-          <li class="category-list-item">
-            <a class="category-list-link" href="<%= basePath %>/categories/<%= c.path.split('/').map(function(s){return encodeURIComponent(s)}).join('/') %>/"><%= c.name %></a>
-            <span class="category-list-count"><%= c.count %></span>
-          <% prevLevel = c.level; %>
-          <% }); %>
-          <% for (var i = 0; i <= prevLevel; i++) { %></li><% if (i < prevLevel) { %></ul><% } %><% } %>
-        </ul>
+        <div class="filter-input-wrapper">
+          <div class="el-input__wrapper">
+            <span class="el-input__prefix"><i class="fas fa-search"></i></span>
+            <input type="text" id="categoryFilterInput" placeholder="<%= locale.categories?.filter_placeholder || '搜索分类名称...' %>" autocomplete="off">
+            <span class="el-input__clear" id="categoryFilterClear"><i class="fas fa-times-circle"></i></span>
+          </div>
+        </div>
+        <div class="el-tree" id="categoryTreeRoot"></div>
         <% } %>
       </div>
     </div>
@@ -35,5 +213,330 @@
       <%- include('partials/sidebar') %>
     </div>
   </main>
+
+<% if (categoryTree.length > 0) { %>
+<script>
+(function() {
+  var flatData = <%- JSON.stringify(categoryTree) %>;
+  var basePath = <%- JSON.stringify(basePath) %>;
+
+  function buildNested(flat) {
+    var root = [];
+    var stack = [];
+    for (var i = 0; i < flat.length; i++) {
+      var item = flat[i];
+      var node = { name: item.name, count: item.count, path: item.path, level: item.level, children: [], _el: null, _expanded: false };
+      if (item.level === 0) {
+        root.push(node);
+        stack = [node];
+      } else {
+        while (stack.length > item.level) stack.pop();
+        var parent = stack[stack.length - 1];
+        if (parent) {
+          parent.children.push(node);
+        }
+        stack.push(node);
+      }
+    }
+    return root;
+  }
+
+  var treeData = buildNested(flatData);
+  var filterText = '';
+  var treeEl = document.getElementById('categoryTreeRoot');
+
+  function hasMatch(node, text) {
+    if (!text) return true;
+    var lower = text.toLowerCase();
+    if (node.name.toLowerCase().indexOf(lower) !== -1) return true;
+    for (var i = 0; i < node.children.length; i++) {
+      if (hasMatch(node.children[i], text)) return true;
+    }
+    return false;
+  }
+
+  function updateVisibility(node, text) {
+    var match = hasMatch(node, text);
+    node._visible = match;
+    if (node._el) {
+      node._el.style.display = match ? '' : 'none';
+    }
+    for (var i = 0; i < node.children.length; i++) {
+      updateVisibility(node.children[i], text);
+    }
+    return match;
+  }
+
+  function renderNode(container, node, depth) {
+    var nodeDiv = document.createElement('div');
+    nodeDiv.className = 'el-tree-node';
+    node._el = nodeDiv;
+
+    var content = document.createElement('div');
+    content.className = 'el-tree-node__content';
+    content.style.paddingLeft = (depth * 20 + 4) + 'px';
+
+    var expandIcon = document.createElement('span');
+    expandIcon.className = 'el-tree-node__expand-icon';
+    expandIcon.style.backgroundImage = "url('data:image/svg+xml;charset=utf-8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path d=\"M8.59 16.58 13.17 12 8.59 7.41 10 6l6 6-6 6z\"/></svg>')";
+    if (node.children.length === 0) {
+      expandIcon.classList.add('is-leaf');
+    }
+    content.appendChild(expandIcon);
+
+    if (depth > 0) {
+      var dotIcon = document.createElement('span');
+      dotIcon.className = 'el-tree-node__dot';
+      dotIcon.innerHTML = '<i class="fa-regular fa-circle-dot"></i>';
+      content.appendChild(dotIcon);
+    }
+
+    var label = document.createElement('span');
+    label.className = 'el-tree-node__label';
+    label.textContent = node.name;
+    content.appendChild(label);
+
+    var count = document.createElement('span');
+    count.className = 'el-tree-node__count';
+    count.textContent = node.count;
+    content.appendChild(count);
+
+    var childrenContainer = document.createElement('div');
+    childrenContainer.className = 'el-tree-node__children collapsed';
+
+    content.addEventListener('click', function(e) {
+      if (e.target.closest('.el-tree-node__expand-icon')) return;
+      if (node.children.length === 0) {
+        window.location.href = basePath + '/categories/' + node.path.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/';
+        return;
+      }
+      toggleExpand(node);
+    });
+
+    expandIcon.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleExpand(node);
+    });
+
+    label.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (node.children.length > 0) {
+        toggleExpand(node);
+      } else {
+        window.location.href = basePath + '/categories/' + node.path.split('/').map(function(s){return encodeURIComponent(s)}).join('/') + '/';
+      }
+    });
+
+    nodeDiv.appendChild(content);
+
+    if (node.children.length > 0) {
+      nodeDiv.appendChild(childrenContainer);
+      for (var i = 0; i < node.children.length; i++) {
+        var childEl = renderNode(childrenContainer, node.children[i], depth + 1);
+        childrenContainer.appendChild(childEl);
+      }
+    }
+
+    node._childrenContainer = childrenContainer;
+    node._expandIcon = expandIcon;
+    node._content = content;
+    node._label = label;
+    return nodeDiv;
+  }
+
+  function toggleExpand(node) {
+    if (node.children.length === 0) return;
+    var expanding = !node._expanded;
+
+    if (expanding) {
+      var parent = findParent(treeData, node);
+      if (parent) {
+        for (var i = 0; i < parent.children.length; i++) {
+          if (parent.children[i] !== node && parent.children[i]._expanded) {
+            collapseNode(parent.children[i]);
+          }
+        }
+      } else {
+        for (var i = 0; i < treeData.length; i++) {
+          if (treeData[i] !== node && treeData[i]._expanded) {
+            collapseNode(treeData[i]);
+          }
+        }
+      }
+    }
+
+    node._expanded = expanding;
+    node._expandIcon.classList.toggle('expanded', expanding);
+    node._childrenContainer.classList.toggle('collapsed', !expanding);
+
+    if (expanding) {
+      var totalHeight = 0;
+      for (var i = 0; i < node.children.length; i++) {
+        totalHeight += getNodeHeight(node.children[i]);
+      }
+      node._childrenContainer.style.maxHeight = totalHeight + 'px';
+    }
+  }
+
+  function collapseNode(node) {
+    node._expanded = false;
+    node._expandIcon.classList.remove('expanded');
+    node._childrenContainer.classList.add('collapsed');
+    for (var i = 0; i < node.children.length; i++) {
+      collapseNodeAll(node.children[i]);
+    }
+  }
+
+  function collapseNodeAll(node) {
+    node._expanded = false;
+    if (node._expandIcon) node._expandIcon.classList.remove('expanded');
+    if (node._childrenContainer) node._childrenContainer.classList.add('collapsed');
+    for (var i = 0; i < node.children.length; i++) {
+      collapseNodeAll(node.children[i]);
+    }
+  }
+
+  function getNodeHeight(node) {
+    var h = 34;
+    if (node._expanded && node.children.length > 0) {
+      for (var i = 0; i < node.children.length; i++) {
+        h += getNodeHeight(node.children[i]);
+      }
+    }
+    return h;
+  }
+
+  function findParent(roots, target) {
+    for (var i = 0; i < roots.length; i++) {
+      if (roots[i] === target) return null;
+      if (roots[i].children.indexOf(target) !== -1) return roots[i];
+      var found = findParent(roots[i].children, target);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function highlightText(text, query) {
+    if (!query) return text;
+    var idx = text.toLowerCase().indexOf(query.toLowerCase());
+    if (idx === -1) return text;
+    return text.substring(0, idx) + '<span class="highlight">' + text.substring(idx, idx + query.length) + '</span>' + text.substring(idx + query.length);
+  }
+
+  function applyFilter(text) {
+    filterText = text;
+    for (var i = 0; i < treeData.length; i++) {
+      applyFilterToNode(treeData[i], text, true);
+    }
+    if (text) {
+      for (var i = 0; i < treeData.length; i++) {
+        if (hasMatch(treeData[i], text)) {
+          var path = findPathToFirstMatch(treeData[i], text);
+          if (path) {
+            for (var j = 0; j < path.length; j++) {
+              if (!path[j]._expanded) {
+                toggleExpand(path[j]);
+              }
+            }
+            break;
+          }
+        }
+      }
+    } else {
+      for (var i = 0; i < treeData.length; i++) {
+        if (treeData[i]._expanded) {
+          collapseNode(treeData[i]);
+        }
+      }
+    }
+
+    var hasVisible = false;
+    for (var i = 0; i < treeData.length; i++) {
+      if (treeData[i]._visible !== false) { hasVisible = true; break; }
+    }
+    var emptyEl = treeEl.querySelector('.no-match');
+    if (!hasVisible && text) {
+      if (!emptyEl) {
+        var div = document.createElement('div');
+        div.className = 'no-match';
+        div.innerHTML = '<i class="fas fa-folder-open"></i><%= locale.categories?.no_match || '没有匹配的分类' %>';
+        treeEl.appendChild(div);
+      }
+    } else {
+      if (emptyEl) emptyEl.remove();
+    }
+  }
+
+  function applyFilterToNode(node, text, isRoot) {
+    var match = node.name.toLowerCase().indexOf(text.toLowerCase()) !== -1;
+    var childMatch = false;
+    for (var i = 0; i < node.children.length; i++) {
+      if (applyFilterToNode(node.children[i], text, false)) {
+        childMatch = true;
+      }
+    }
+    var visible = !text || match || childMatch;
+    node._visible = visible;
+    if (node._el) {
+      node._el.style.display = visible ? '' : 'none';
+    }
+    if (text && node._label) {
+      node._label.innerHTML = highlightText(node.name, text);
+    } else if (node._label) {
+      node._label.textContent = node.name;
+    }
+    return visible;
+  }
+
+  function findPathToFirstMatch(node, text) {
+    if (node.name.toLowerCase().indexOf(text.toLowerCase()) !== -1) return [node];
+    for (var i = 0; i < node.children.length; i++) {
+      if (hasMatch(node.children[i], text)) {
+        var sub = findPathToFirstMatch(node.children[i], text);
+        if (sub) {
+          sub.unshift(node);
+          return sub;
+        }
+      }
+    }
+    return null;
+  }
+
+  function initTree() {
+    for (var i = 0; i < treeData.length; i++) {
+      var el = renderNode(treeEl, treeData[i], 0);
+      treeEl.appendChild(el);
+    }
+  }
+
+  initTree();
+
+  var input = document.getElementById('categoryFilterInput');
+  var clearBtn = document.getElementById('categoryFilterClear');
+
+  input.addEventListener('input', function() {
+    var val = this.value.trim();
+    clearBtn.classList.toggle('visible', !!val);
+    applyFilter(val);
+  });
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      this.value = '';
+      clearBtn.classList.remove('visible');
+      applyFilter('');
+      this.blur();
+    }
+  });
+
+  clearBtn.addEventListener('click', function() {
+    input.value = '';
+    clearBtn.classList.remove('visible');
+    applyFilter('');
+    input.focus();
+  });
+})();
+</script>
+<% } %>
 
 <%- include('partials/footer') %>

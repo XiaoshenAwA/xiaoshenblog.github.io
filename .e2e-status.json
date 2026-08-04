@@ -1,0 +1,129 @@
+{
+  "A1": true,
+  "A2": true,
+  "A3": true,
+  "A4": true,
+  "A5": true,
+  "B6": true,
+  "B7": true,
+  "B8": true,
+  "B9": true,
+  "D12": true,
+  "D13": true,
+  "E14": true,
+  "E15": true,
+  "E16": true,
+  "E17": true,
+  "E18": true,
+  "E19": true,
+  "E20": true,
+  "F21": true,
+  "F22": true,
+  "F23": true,
+  "F24": true,
+  "G25": true,
+  "G26": true,
+  "sa-02": {
+    "postId": "7",
+    "postUrl": "http://localhost:3001/posts/7/",
+    "startedAt": "2026-07-29T01:20:53.221Z",
+    "completedAt": "2026-07-29T01:22:55.105Z",
+    "passed": true
+  },
+  "sa-03-about": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:26:34.387Z"
+  },
+  "sa-04-categories": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:27:08.884Z"
+  },
+  "sa-06-archives": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:30:39.115Z"
+  },
+  "sa-07-friends": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:29:30.396Z"
+  },
+  "sa-05-category-filter": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:29:44.717Z"
+  },
+  "sa-08-tags": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:30:43.267Z"
+  },
+  "sa-17-global-ui": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:44:22.629Z"
+  },
+  "sa-09-admin-login": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:53:02.560Z"
+  },
+  "sa-10-admin-posts": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:52:26.580Z"
+  },
+  "sa-18-modals": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T02:16:11.999Z"
+  },
+  "sa-11-admin-edit": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T01:50:01.811Z"
+  },
+  "sa-12-admin-changepw": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T10:22:00.943Z"
+  },
+  "sa-13-admin-about": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T03:54:06.441Z"
+  },
+  "sa-14-admin-tags": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T04:46:41.237Z"
+  },
+  "sa-16-editor": {
+    "started": true,
+    "completed": false,
+    "lastTest": null,
+    "timestamp": "2026-07-29T02:24:43.496Z"
+  },
+  "sa-15-admin-categories": {
+    "started": true,
+    "completed": true,
+    "lastTest": "done",
+    "timestamp": "2026-07-29T04:47:51.932Z"
+  }
+}
