@@ -187,7 +187,25 @@ router.get(/\/categories\/(.+)/, async (req, res) => {
 router.get('/archives', async (req, res) => {
   try {
     const sidebar = await getSidebarData();
-    res.render('archives', { ...sidebar, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
+    const allPosts = [];
+    for (const a of sidebar.archives) {
+      for (const p of a.posts) allPosts.push({ ...p, year: a.year, month: a.month });
+    }
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = config.PAGE_SIZE || 12;
+    const total = allPosts.length;
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    const cur = Math.min(page, totalPages);
+    const slice = allPosts.slice((cur - 1) * pageSize, cur * pageSize);
+    const paged = {};
+    for (const p of slice) {
+      const key = p.year + '-' + String(p.month).padStart(2, '0');
+      if (!paged[key]) paged[key] = { year: p.year, month: p.month, count: 0, posts: [] };
+      paged[key].count++;
+      paged[key].posts.push(p);
+    }
+    const pagedArchives = Object.values(paged).sort((a, b) => b.year - a.year || b.month - a.month);
+    res.render('archives', { ...sidebar, archives: pagedArchives, total, page: cur, totalPages, basePath: config.BASE_PATH, config, locale: config.locale, isStatic: false });
   } catch (e) {
     res.status(500).send('服务器错误');
   }

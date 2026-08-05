@@ -288,10 +288,11 @@ function breakResetLists(src) {
       prev = null
       continue
     }
-    const qm = trimmed.match(/^((?:>\s*)*)(\S)/)
-    const q = qm ? (qm[1].match(/>/g) || []).length : 0
-    const rest = qm ? qm[2] + trimmed.slice(qm[0].length) : trimmed
-    const indent = (rest.match(/^ */) || [''])[0].length
+    const pm = line.match(/^(\s*(?:>\s*)*)(\S)/)
+    const prefix = pm ? pm[1] : ''
+    const q = (prefix.match(/>/g) || []).length
+    const indent = (prefix.match(/^ */) || [''])[0].length
+    const rest = pm ? pm[2] + line.slice(pm[0].length) : line
     if (indent >= 4) {
       out.push(line)
       continue
@@ -559,8 +560,12 @@ const TYPST_EMPTY_HTML = `<div class="typst-page-wrap">
 
 let typstRenderSeq = 0
 
+const TYPST_MAX_PDF_BYTES = 50 * 1024 * 1024
+const TYPST_MAX_PAGES = 200
+
 function renderTypstPreview(source) {
   typstPending = source
+  if (typstWorkerWaiters.size) abortTypstWorker()
   if (!typstRendering) typstRunLoop()
 }
 
@@ -663,26 +668,56 @@ async function renderTypstPage(host, pdf, page, dpr, zoomScale) {
   host.appendChild(pageEl)
 }
 
-let typstIncrServer = null
+let typstWorker = null
+let typstWorkerSeq = 0
+const typstWorkerWaiters = new Map()
 
-async function compileTypstPdf($typst, src) {
-  const compiler = await $typst.getCompiler()
-  if (!(compiler && compiler.compiler && typeof compiler.compiler.create_incr_server === 'function')) {
-    return await $typst.pdf({ mainContent: src })
+function abortTypstWorker() {
+  if (typstWorker) {
+    try { typstWorker.terminate() } catch {}
+    typstWorker = null
   }
-  compiler.addSource('/main.typ', src)
-  if (!typstIncrServer) {
-    const { IncrementalServer } = await import('@myriaddreamin/typst.ts/compiler')
-    typstIncrServer = new IncrementalServer(compiler.compiler.create_incr_server())
+  for (const [, w] of typstWorkerWaiters) {
+    try { w.reject(new Error('aborted')) } catch {}
   }
-  const res = await compiler.compile({
-    mainFilePath: '/main.typ',
-    incrementalServer: typstIncrServer,
-    format: 1,
-    diagnostics: 'none'
+  typstWorkerWaiters.clear()
+}
+
+function getTypstWorker() {
+  if (typstWorker) return typstWorker
+  typstWorker = new Worker(new URL('./typst-worker.js', import.meta.url), { type: 'module' })
+  typstWorker.onmessage = (e) => {
+    const { id, ok, error, detail, data } = e.data
+    const w = typstWorkerWaiters.get(id)
+    if (!w) return
+    typstWorkerWaiters.delete(id)
+    if (ok) {
+      w.resolve(new Uint8Array(data))
+    } else {
+      const msg = error === 'PDF_TOO_LARGE'
+        ? '生成的 PDF 过大,预览已停止。'
+        : error === 'COMPILE_FAILED'
+          ? 'Typst compile failed: ' + (detail || 'no output')
+          : (detail || error || 'Typst worker error')
+      w.reject(new Error(msg))
+    }
+  }
+  typstWorker.onerror = (e) => {
+    const msg = 'Typst worker error: ' + (e && e.message ? e.message : 'unknown')
+    for (const [, w] of typstWorkerWaiters) w.reject(new Error(msg))
+    typstWorkerWaiters.clear()
+  }
+  return typstWorker
+}
+
+function compileTypstPdf(src) {
+  const basePath = (window.__CONFIG__ || {}).BASE_PATH || ''
+  const worker = getTypstWorker()
+  return new Promise((resolve, reject) => {
+    const id = ++typstWorkerSeq
+    typstWorkerWaiters.set(id, { resolve, reject })
+    worker.postMessage({ type: 'compile', id, src, basePath })
   })
-  if (res && res.result && res.result.length) return res.result
-  throw new Error('Typst compile failed: ' + JSON.stringify((res && res.diagnostics) || 'no output'))
 }
 
 let typstStatusEl = null
@@ -721,14 +756,13 @@ async function typstRunLoop() {
     wrap.appendChild(host)
     let statusTimer = null
     try {
-      const $typst = window.__$typst
-      if (!$typst) {
+      if (!window.__$typst) {
         hideTypstStatus()
         preview.innerHTML = '<p class="muted">Typst is loading, please wait...</p>'
         continue
       }
       statusTimer = setTimeout(() => showTypstStatus('\u6B63\u5728\u7F16\u8BD1\u2026'), 400)
-      const pdfData = await compileTypstPdf($typst, src)
+      const pdfData = await compileTypstPdf(src)
       clearTimeout(statusTimer)
       hideTypstStatus()
       if (typstPending !== null) continue
@@ -736,20 +770,31 @@ async function typstRunLoop() {
         preview.innerHTML = '<p class="muted">Empty output</p>'
         continue
       }
+      if (pdfData.length > TYPST_MAX_PDF_BYTES) {
+        preview.innerHTML = '<div class="typst-error"><span class="typst-err-severity">Limit</span><span class="typst-err-msg">生成的 PDF 过大(' + (pdfData.length / 1024 / 1024).toFixed(1) + ' MB),预览已停止。</span></div>'
+        continue
+      }
       const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(pdfData) }).promise
       if (typstPending !== null) { try { pdf.destroy() } catch {}; continue }
       if (typstPdfDoc && typstPdfDoc !== pdf) { try { typstPdfDoc.destroy() } catch {} }
       typstPdfDoc = pdf
       const dpr = window.devicePixelRatio || 1
-      for (let i = 1; i <= pdf.numPages; i++) {
+      const pageLimit = Math.min(pdf.numPages, TYPST_MAX_PAGES)
+      for (let i = 1; i <= pageLimit; i++) {
         if (typstPending !== null) break
         const page = await pdf.getPage(i)
         if (typstPending !== null) break
         await renderTypstPage(host, pdf, page, dpr, 1.5 * typstZoom)
       }
       if (typstPending !== null) { try { pdf.destroy() } catch {}; continue }
+      if (pdf.numPages > TYPST_MAX_PAGES) {
+        const note = document.createElement('div')
+        note.className = 'typst-limit-note'
+        note.textContent = '文档共 ' + pdf.numPages + ' 页,仅预览前 ' + TYPST_MAX_PAGES + ' 页。'
+        wrap.appendChild(note)
+      }
       if (oldWrap) preview.replaceChild(wrap, oldWrap)
-      else preview.appendChild(wrap)
+      else { preview.innerHTML = ''; preview.appendChild(wrap) }
       bindWrapScroll(wrap)
       setupTypstPan()
       if (scrollRatio > 0) wrap.scrollTop = scrollRatio * (wrap.scrollHeight - wrap.clientHeight)
@@ -1140,23 +1185,12 @@ async function initEditor() {
     console.warn('Shiki loading failed:', e)
   }
 
-  // Load typst in background
-  try {
-    const cfg = window.__CONFIG__ || {}
-    if (cfg.TYPST_COMPILER_WASM && cfg.TYPST_RENDERER_WASM) {
-      const { $typst } = await import('@myriaddreamin/typst.ts/dist/esm/contrib/snippet')
-      $typst.setCompilerInitOptions({ getModule: () => cfg.TYPST_COMPILER_WASM })
-      $typst.setRendererInitOptions({ getModule: () => cfg.TYPST_RENDERER_WASM })
-      window.__$typst = $typst
-      // WASM ready — re-render if the user is on the Typst editor
-      if (currentMode === 'typst') renderTypstPreview(editor.getValue())
-    }
-  } catch (e) {
-    console.warn('Typst loading failed:', e)
-    window.__$typstError = e
-    if (currentMode === 'typst') {
-      preview.innerHTML = '<div class="typst-error"><span class="typst-err-severity">Load Error</span><span class="typst-err-msg">Typst 引擎加载失败</span></div>'
-    }
+  // Typst 编译在 Worker 中完成;首次编译时 Worker 内部懒加载 wasm。
+  if (currentMode === 'typst') {
+    try {
+      window.__$typst = { worker: true }
+    } catch {}
+    renderTypstPreview(editor.getValue())
   }
 }
 

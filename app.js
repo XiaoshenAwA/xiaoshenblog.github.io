@@ -15,7 +15,7 @@ const cssVersion = Date.now();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(config.BASE_PATH, express.static(path.join(__dirname, 'public')));
+app.use(config.BASE_PATH, express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 }));
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -88,7 +88,10 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  if (!req.path.startsWith(config.BASE_PATH + '/assets')) {
+  if (req.path.startsWith(config.BASE_PATH + '/assets')) {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.removeHeader('ETag');
+  } else {
     res.setHeader('Cache-Control', 'no-store');
   }
   next();

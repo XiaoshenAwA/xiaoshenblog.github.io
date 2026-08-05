@@ -125,7 +125,26 @@ async function build() {
   await render('categories.ejs', { ...sidebarData }, 'categories/index.html');
 
   console.log('\u6B63\u5728\u751F\u6210\u5F52\u6863\u9875\u9762...');
-  await render('archives.ejs', { ...sidebarData }, 'archives/index.html');
+  const archiveFlat = [];
+  for (const a of archives) {
+    for (const p of a.posts) archiveFlat.push({ ...p, year: a.year, month: a.month });
+  }
+  const archiveTotalPages = Math.ceil(archiveFlat.length / config.PAGE_SIZE) || 1;
+  for (let ap = 1; ap <= archiveTotalPages; ap++) {
+    const offset = (ap - 1) * config.PAGE_SIZE;
+    const slice = archiveFlat.slice(offset, offset + config.PAGE_SIZE);
+    const pagedMap = {};
+    for (const p of slice) {
+      const key = p.year + '-' + String(p.month).padStart(2, '0');
+      if (!pagedMap[key]) pagedMap[key] = { year: p.year, month: p.month, count: 0, posts: [] };
+      pagedMap[key].count++;
+      pagedMap[key].posts.push(p);
+    }
+    const pagedArchives = Object.values(pagedMap).sort((a, b) => b.year - a.year || b.month - a.month);
+    const arcData = { ...sidebarData, archives: pagedArchives, total: archiveFlat.length, page: ap, totalPages: archiveTotalPages };
+    if (ap === 1) await render('archives.ejs', arcData, 'archives/index.html');
+    else await render('archives.ejs', arcData, `archives/page/${ap}/index.html`);
+  }
 
   console.log('\u6B63\u5728\u751F\u6210\u6807\u7B7E\u96C6\u9875\u9762...');
   const allTagCounts = [];

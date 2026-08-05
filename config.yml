@@ -14,7 +14,7 @@
 
 server:
   # 监听端口号。修改后需重启服务。
-  port: 3000
+  port: 3002
 
 # ============================================================
 #  站点基础设置
@@ -343,7 +343,7 @@ nav:
 
 images:
   # 网站 Favicon 图标路径。显示在浏览器标签页上。
-  favicon: "/img/852112.webp"
+  favicon: "https://cdn.luogu.com.cn/upload/usericon/852112.png"
   # 头像设置
   avatar:
     # 头像图片路径。留空则使用 FontAwesome 图标占位。

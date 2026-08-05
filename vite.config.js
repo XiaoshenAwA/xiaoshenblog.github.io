@@ -7,6 +7,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   root: path.resolve(__dirname, 'src'),
   base: './',
+  worker: {
+    format: 'es',
+    rollupOptions: {
+      output: {
+        assetFileNames: '[name][extname]'
+      }
+    }
+  },
   build: {
     outDir: path.resolve(__dirname, 'public/assets'),
     emptyOutDir: true,

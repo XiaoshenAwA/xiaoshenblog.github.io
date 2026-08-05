@@ -478,6 +478,17 @@ header#page-header .menus_item .site-page:hover {
   opacity: 0.8;
 }
 
+.typst-limit-note {
+  margin: 8px 0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px dashed #94a3b8;
+  background: rgba(148, 163, 184, 0.08);
+  color: inherit;
+  font-size: 0.85em;
+  text-align: center;
+}
+
 .view-mode-btn.active { background: var(--accent-light); color: var(--accent); }
 #editor-fullscreen.active { background: var(--accent-light); color: var(--accent); }
 .editor-container.mode-edit .editor-pane:last-child { display: none; }

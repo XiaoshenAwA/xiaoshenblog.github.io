@@ -64,10 +64,11 @@ function breakResetLists(src) {
       prev = null
       continue
     }
-    const qm = trimmed.match(/^((?:>\s*)*)(\S)/)
-    const q = qm ? (qm[1].match(/>/g) || []).length : 0
-    const rest = qm ? qm[2] + trimmed.slice(qm[0].length) : trimmed
-    const indent = (rest.match(/^ */) || [''])[0].length
+    const pm = line.match(/^(\s*(?:>\s*)*)(\S)/)
+    const prefix = pm ? pm[1] : ''
+    const q = (prefix.match(/>/g) || []).length
+    const indent = (prefix.match(/^ */) || [''])[0].length
+    const rest = pm ? pm[2] + line.slice(pm[0].length) : line
     if (indent >= 4) {
       out.push(line)
       continue

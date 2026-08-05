@@ -8,44 +8,46 @@ const { chromium } = require('playwright');
   page.on('console', m => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text()); });
 
   await page.goto('http://localhost:3000/editor/markdown', { waitUntil: 'domcontentloaded', timeout: 30000 });
-  // wait for monaco + shiki to fully initialize
-  await page.waitForFunction(() => window.__editorInitialized === true, null, { timeout: 30000 }).catch(() => console.log('editor not initialized'));
-  await page.waitForTimeout(3000);
-
-  await page.locator('#searchBtn').first().click();
-  await page.waitForTimeout(500);
+  await page.waitForFunction(() => window.__editorInitialized === true, null, { timeout: 30000 }).catch(() => console.log('editor NOT initialized'));
+  await page.waitForTimeout(1500);
 
   const overlay = page.locator('#local-search');
-  console.log('display after click:', await overlay.evaluate(el => getComputedStyle(el).display));
-  console.log('searchInput focused:', await page.evaluate(() => document.activeElement && document.activeElement.id));
 
-  // type into search
-  const input = page.locator('#searchInput');
-  await input.type('测试', { delay: 50 });
-  await page.waitForTimeout(1500);
-  const results = await page.locator('#local-search-results').innerText();
-  const stats = await page.locator('#local-search-stats').innerText();
-  console.log('results:', JSON.stringify(results.slice(0, 200)));
-  console.log('stats:', JSON.stringify(stats));
-
-  // check if search.json is loaded
-  const fuseStatus = await page.evaluate(() => window.__fuseDebug || 'n/a');
-
-  // check active element after typing
-  console.log('activeElement after typing:', await page.evaluate(() => document.activeElement && document.activeElement.id + '/' + document.activeElement.tagName));
-
-  // Now test with monaco focused: click inside editor then click search button
-  await page.locator('#editor-input').click();
-  await page.waitForTimeout(300);
-  console.log('monaco focused:', await page.evaluate(() => {
-    const a = document.activeElement;
-    return a && (a.className && String(a.className).includes('monaco')) ? 'yes' : (a ? a.tagName + '.' + a.className : 'none');
-  }));
-
+  // 1) open search, check results for a common query
   await page.locator('#searchBtn').first().click();
-  await page.waitForTimeout(500);
-  console.log('display after click while monaco focused:', await overlay.evaluate(el => getComputedStyle(el).display));
-  console.log('activeElement:', await page.evaluate(() => document.activeElement && document.activeElement.id + '/' + document.activeElement.tagName));
+  await page.waitForTimeout(400);
+  console.log('[1] display:', await overlay.evaluate(el => getComputedStyle(el).display), '| focused:', await page.evaluate(() => document.activeElement.id));
+  const input = page.locator('#searchInput');
+  await input.fill('的');
+  await page.waitForTimeout(1500);
+  console.log('[1] results len:', (await page.locator('#local-search-results').innerText()).length, '| stats:', JSON.stringify(await page.locator('#local-search-stats').innerText()));
+  console.log('[1] activeElement:', await page.evaluate(() => document.activeElement.id));
+
+  // close via Escape
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  console.log('[1] after Esc display:', await overlay.evaluate(el => getComputedStyle(el).display));
+
+  // 2) focus monaco editor, then click search button
+  await page.locator('#editor-input').click();
+  await page.waitForTimeout(400);
+  console.log('[2] monaco focused:', await page.evaluate(() => { const a = document.activeElement; return a ? a.tagName + '.' + String(a.className).slice(0, 40) : 'none'; }));
+  await page.locator('#searchBtn').first().click();
+  await page.waitForTimeout(400);
+  console.log('[2] display:', await overlay.evaluate(el => getComputedStyle(el).display), '| focused:', await page.evaluate(() => document.activeElement.id));
+  await input.fill('的');
+  await page.waitForTimeout(1200);
+  console.log('[2] results len:', (await page.locator('#local-search-results').innerText()).length);
+  console.log('[2] activeElement:', await page.evaluate(() => document.activeElement.id));
+  await page.keyboard.press('Escape');
+
+  // 3) check search.json loaded properly
+  const idx = await page.evaluate(async () => {
+    const r = await fetch('/search.json');
+    const d = await r.json();
+    return { count: d.length, sample: d[0] ? d[0].title : null };
+  }).catch(e => ({ error: e.message }));
+  console.log('[3] search.json:', JSON.stringify(idx));
 
   console.log('---- errors ----');
   errors.forEach(e => console.log(e));
