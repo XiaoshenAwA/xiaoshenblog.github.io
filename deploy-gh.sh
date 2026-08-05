@@ -5,8 +5,8 @@ if [ -z "$GH_PAT" ]; then
   exit 0
 fi
 
-# Rebuild with GitHub Pages BASE_PATH
-BASE_PATH=/xiaoshenblog.github.io node build.js
+# Rebuild with GitHub Pages BASE_PATH (root for <user>.github.io user site)
+node build.js
 
 WORK_DIR="/tmp/gh-deploy"
 rm -rf "$WORK_DIR"

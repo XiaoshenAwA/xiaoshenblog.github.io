@@ -285,9 +285,9 @@ deploy:
   # 部署路径前缀。若部署在子目录（如 https://example.com/blog/），则填写 "/blog"。
   # 部署在根目录时留空即可。
   base_path: ""
-  # 静态构建时的路径前缀。用于 GitHub Pages 子目录部署场景。
-  # 例如仓库名为 xiaoshenblog.github.io，则填写 "/xiaoshenblog.github.io"。
-  static_base_path: "/xiaoshenblog.github.io"
+  # 静态构建时的路径前缀。GitHub Pages 用户站点（仓库名为 <用户名>.github.io）
+  # 与 Cloudflare Pages 都部署在根路径，留空即可。仅项目仓库子路径部署才需要填写。
+  static_base_path: ""
   # Cloudflare Pages 自动部署 Webhook URL。
   # 在后台保存文章后会自动 POST 请求此 URL 触发 Cloudflare Pages 重新部署。
   # 留空表示不触发自动部署。
@@ -334,7 +334,7 @@ nav:
       path: "/admin"
       icon: "fas fa-cog"
     - label: "编辑器"
-      path: "/editor"
+      path: "/editor/markdown"
       icon: "fas fa-pen"
 
 # ============================================================
