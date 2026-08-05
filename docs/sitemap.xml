@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/</loc>
+    <loc>/xiaoshenblog.github.io/</loc>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>/posts/21/</loc>
+    <loc>/xiaoshenblog.github.io/posts/21/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/19/</loc>
+    <loc>/xiaoshenblog.github.io/posts/19/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/7/</loc>
+    <loc>/xiaoshenblog.github.io/posts/7/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/6/</loc>
+    <loc>/xiaoshenblog.github.io/posts/6/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/5/</loc>
+    <loc>/xiaoshenblog.github.io/posts/5/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/4/</loc>
+    <loc>/xiaoshenblog.github.io/posts/4/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/3/</loc>
+    <loc>/xiaoshenblog.github.io/posts/3/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/2/</loc>
+    <loc>/xiaoshenblog.github.io/posts/2/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/posts/1/</loc>
+    <loc>/xiaoshenblog.github.io/posts/1/</loc>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>/archives/</loc>
+    <loc>/xiaoshenblog.github.io/archives/</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>/categories/</loc>
+    <loc>/xiaoshenblog.github.io/categories/</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>/tags/</loc>
+    <loc>/xiaoshenblog.github.io/tags/</loc>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>/about/</loc>
+    <loc>/xiaoshenblog.github.io/about/</loc>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>/friends/</loc>
+    <loc>/xiaoshenblog.github.io/friends/</loc>
     <priority>0.4</priority>
   </url>
 </urlset>

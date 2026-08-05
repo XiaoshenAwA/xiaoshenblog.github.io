@@ -21,6 +21,7 @@ jobs:
       - run: npx vite build
       - run: node build.js
         env:
+          BASE_PATH: /xiaoshenblog.github.io
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       - run: |
