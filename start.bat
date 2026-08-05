@@ -28,7 +28,7 @@ goto menu
 
 :build
 echo.
-set BASE_PATH=/xiaoshenblog.github.io
+set BASE_PATH=/blog
 node build.js
 pause
 goto menu
@@ -42,7 +42,7 @@ goto menu
 
 :deploy
 echo.
-set BASE_PATH=/xiaoshenblog.github.io
+set BASE_PATH=/blog
 node build.js
 echo Deploying to GitHub Pages...
 npx gh-pages -d dist

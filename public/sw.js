@@ -1,12 +1,12 @@
-const CACHE = 'blog-cache-v5';
+const CACHE = 'blog-cache-v6';
 const urlsToCache = [
   '.',
-  '/css/style.css',
-  '/assets/main.js',
-  '/assets/main.css',
-  '/manifest.json',
-  '/img/icon.svg',
-  '/img/favicon.svg'
+  'css/style.css',
+  'assets/main.js',
+  'assets/main.css',
+  'manifest.json',
+  'img/icon.svg',
+  'img/favicon.svg'
 ];
 
 self.addEventListener('install', event => {

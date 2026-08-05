@@ -35,7 +35,7 @@ const config = {
 
   // 部署
   BASE_PATH: env('BASE_PATH', cfg.deploy?.base_path ?? ''),
-  STATIC_BASE_PATH: cfg.deploy?.static_base_path ?? '/xiaoshenblog.github.io',
+  STATIC_BASE_PATH: cfg.deploy?.static_base_path ?? '/blog',
   DEPLOY_HOOK_URL: env('DEPLOY_HOOK_URL', cfg.deploy?.deploy_hook_url ?? ''),
   DEPLOY_BRANCH: cfg.deploy?.github_pages?.branch ?? 'gh-pages',
   IS_STATIC: env('STATIC_BUILD') === 'true',

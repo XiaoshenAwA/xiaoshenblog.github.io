@@ -6,11 +6,11 @@ if [ -z "$GH_PAT" ]; then
 fi
 
 # Rebuild with GitHub Pages BASE_PATH (project page sub-path)
-BASE_PATH=/xiaoshenblog.github.io node build.js
+BASE_PATH=/blog node build.js
 
 WORK_DIR="/tmp/gh-deploy"
 rm -rf "$WORK_DIR"
-git clone --depth 1 -b main "https://x-access-token:$GH_PAT@github.com/XiaoshenAwA/xiaoshenblog.github.io.git" "$WORK_DIR"
+git clone --depth 1 -b main "https://x-access-token:$GH_PAT@github.com/XiaoshenAwA/blog.git" "$WORK_DIR"
 rm -rf "$WORK_DIR/docs"
 cp -r dist "$WORK_DIR/docs"
 touch "$WORK_DIR/docs/.nojekyll"

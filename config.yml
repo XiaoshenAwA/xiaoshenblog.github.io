@@ -287,7 +287,7 @@ deploy:
   base_path: ""
   # 静态构建时的路径前缀。GitHub Pages 项目仓库（仓库名非 <用户名>.github.io）
   # 部署在 https://<用户名>.github.io/<仓库名>/ 子路径，需填写 "/<仓库名>"。
-  static_base_path: "/xiaoshenblog.github.io"
+  static_base_path: "/blog"
   # Cloudflare Pages 自动部署 Webhook URL。
   # 在后台保存文章后会自动 POST 请求此 URL 触发 Cloudflare Pages 重新部署。
   # 留空表示不触发自动部署。
@@ -724,7 +724,7 @@ comments:
   # Giscus 具体配置
   giscus:
     # GitHub 仓库名，格式：owner/repo。必须与 Giscus App 安装的仓库一致。
-    repo: "XiaoshenAwA/xiaoshenblog.github.io"
+    repo: "XiaoshenAwA/blog"
     # GitHub 仓库 ID。在 GitHub GraphQL API 中获取，或使用 giscus.app 网站生成。
     repo_id: "R_kgDOTWm7Wg"
     # Discussions 分类名称。将在仓库 Discussions 中创建对应分类。

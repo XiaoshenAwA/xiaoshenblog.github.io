@@ -9,11 +9,11 @@
   <% if (config.FAVICON) { %>
   <link rel="icon" href="<%= url(config.FAVICON) %>">
   <% } %>
-  <% if (config.PWA_FAVICON_32) { %><link rel="icon" type="image/png" sizes="32x32" href="<%= basePath %><%= config.PWA_FAVICON_32 %>"><% } %>
-  <% if (config.PWA_FAVICON_16) { %><link rel="icon" type="image/png" sizes="16x16" href="<%= basePath %><%= config.PWA_FAVICON_16 %>"><% } %>
+  <% if (config.PWA_FAVICON_32) { %><link rel="icon" type="image/png" sizes="32x32" href="<%= url(config.PWA_FAVICON_32) %>"><% } %>
+  <% if (config.PWA_FAVICON_16) { %><link rel="icon" type="image/png" sizes="16x16" href="<%= url(config.PWA_FAVICON_16) %>"><% } %>
   <% if (config.PWA_ENABLE) { %>
   <link rel="manifest" href="<%= basePath %><%= config.PWA_MANIFEST %>">
-  <link rel="apple-touch-icon" href="<%= basePath %><%= config.PWA_APPLE_TOUCH_ICON %>">
+  <link rel="apple-touch-icon" href="<%= url(config.PWA_APPLE_TOUCH_ICON) %>">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="application-name" content="<%= config.BLOG_NAME %>">
   <% } %>
