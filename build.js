@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 const ejs = require('ejs');
 const { getAllTags, getAllPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getPostCount, getSiteStats, getLastPostUpdateTime } = require('./db');
 const config = require('./config');
@@ -208,6 +209,15 @@ async function build() {
 
   console.log('\u6B63\u5728\u590D\u5236\u9759\u6001\u8D44\u6E90...');
   copyDirSync(path.join(__dirname, 'public'), dist);
+
+  console.log('\u6B63\u5728\u538B\u7F29 Typst \u7F16\u8BD1\u5668 WASM...');
+  const compilerWasm = path.join(dist, 'wasm', 'typst_ts_web_compiler_bg.wasm');
+  if (fs.existsSync(compilerWasm)) {
+    const gz = zlib.gzipSync(fs.readFileSync(compilerWasm), { level: 9 });
+    fs.writeFileSync(compilerWasm + '.gz', gz);
+    fs.rmSync(compilerWasm);
+    console.log(`  \u2714 wasm/typst_ts_web_compiler_bg.wasm.gz (${(gz.length / 1024 / 1024).toFixed(1)} MiB)`);
+  }
 
   console.log(`\n\u2705 \u6784\u5EFA\u5B8C\u6210\uFF01\u6587\u4EF6\u8F93\u51FA\u5230: ${dist}`);
   console.log(`   \u5171 ${allPosts.length} \u7BC7\u6587\u7AE0, ${allTags.length} \u4E2A\u6807\u7B7E, ${totalPages} \u9875`);

@@ -24,13 +24,24 @@ function patchFetch() {
   self.__typstFetchPatched = true
 }
 
+async function loadCompilerWasm() {
+  const res = await fetch(basePath + '/wasm/typst_ts_web_compiler_bg.wasm.gz')
+  if (!res.ok) throw new Error('Failed to load compiler wasm: HTTP ' + res.status)
+  let bytes = new Uint8Array(await res.arrayBuffer())
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    const stream = new Response(bytes).body.pipeThrough(new DecompressionStream('gzip'))
+    bytes = new Uint8Array(await new Response(stream).arrayBuffer())
+  }
+  return bytes
+}
+
 async function getTypst() {
   if ($typst) return $typst
   if (!initPromise) {
     initPromise = (async () => {
       patchFetch()
       const { $typst: t } = await import('@myriaddreamin/typst.ts/dist/esm/contrib/snippet')
-      t.setCompilerInitOptions({ getModule: () => basePath + '/wasm/typst_ts_web_compiler_bg.wasm' })
+      t.setCompilerInitOptions({ getModule: loadCompilerWasm })
       t.setRendererInitOptions({ getModule: () => basePath + '/wasm/typst_ts_renderer_bg.wasm' })
       $typst = t
     })()
