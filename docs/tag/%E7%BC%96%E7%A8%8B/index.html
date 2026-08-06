@@ -32,7 +32,7 @@
   <script>try{(function(){var u=window.location.href;var o=document.querySelector('meta[property="og:url"]');if(o)o.setAttribute('content',u);var c=document.querySelector('link[rel="canonical"]');if(c)c.setAttribute('href',u)})()}catch(e){}</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="/blog/fontawesome/css/all.min.css">
-  <link rel="stylesheet" href="/blog/assets/main.css?v=1785910320748" onerror="this.onerror=null;this.href='/blog/css/style.css'">
+  <link rel="stylesheet" href="/blog/assets/main.css?v=1786003704713" onerror="this.onerror=null;this.href='/blog/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -496,7 +496,7 @@
                   </div>
                   
                 </div>
-                <div class="content">测试标题 代码块 JavaScript复制function hello() { console.log(&#34;Hello World&#34;); }数学公式 行内公式 E=mc2E=mc^2E=mc2 和块级公式： ∑i=1ni=n(n+1)2\sum_{i=1}^n i = \frac{n(n+1)}{2}i=1∑n​i=2n(n+1)​ 警告块 提示 这是一条提示信息 注意 带自定义标题的警告 标记文本...</div>
+                <div class="content">测试标题 代码块 javascriptCopyfunction hello() { console.log(&#34;Hello World&#34;); }数学公式 行内公式 E=mc2E=mc^2E=mc2 和块级公式： ∑i=1ni=n(n+1)2\sum_{i=1}^n i = \frac{n(n+1)}{2}i=1∑n​i=2n(n+1)​ 警告块 提示 这是一条提示信息 注意 带自定义标题的警告 标记...</div>
               </div>
             </article>
           
@@ -547,7 +547,7 @@
                   </div>
                   
                 </div>
-                <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi TS复制// [!code word:console:1] ...</div>
+                <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi tsCopy// [!code word:console:1...</div>
               </div>
             </article>
           
@@ -594,7 +594,7 @@
                   </div>
                   
                 </div>
-                <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi TS复制// [!code word:console:1] ...</div>
+                <div class="content">快去点个 star⭐！ emoji: 😃 💯 📡 采用 GNU通用公共许可证 (GPL) 第3版 授权。详见 LICENSE.md 文件。 light mode 让我眼睛瞎了 这是一个基于 Vue 3 和 Vite 构建的博客网站，使用作者自己编写的博客框架。 提示 hi 完成 hi 注意 hi 错误 hi 危险 hi 详情 hi tsCopy// [!code word:console:1...</div>
               </div>
             </article>
           
@@ -907,13 +907,13 @@
       
       <div class="webinfo-item">
         <div class="item-name">本站访客数 :</div>
-        <div class="item-count webinfo-visitor-count">361</div>
+        <div class="item-count webinfo-visitor-count">529</div>
       </div>
       
       
       <div class="webinfo-item">
         <div class="item-name">本站总浏览量 :</div>
-        <div class="item-count webinfo-total-views">706</div>
+        <div class="item-count webinfo-total-views">941</div>
       </div>
       
       
@@ -1094,7 +1094,7 @@
     </div>
   </div>
 
-  <script type="module" src="/blog/assets/main.js?v=1785910320748"></script>
+  <script type="module" src="/blog/assets/main.js?v=1786003704713"></script>
   <script>
     try {
       var rt = document.querySelector('.runtime-days');
@@ -1464,16 +1464,50 @@
         if (!fig) return;
         var pre = fig.querySelector('pre.code-wrap');
         if (!pre) return;
-        pre.classList.toggle('code-shrink');
-        pre.classList.toggle('code-expanded');
-        if (pre.classList.contains('code-expanded')) {
-          btn.textContent = '折叠';
-        } else {
-          btn.textContent = '展开';
-        }
+        var collapsed = pre.classList.contains('code-shrink');
+        pre.classList.toggle('code-shrink', !collapsed);
+        pre.classList.toggle('code-expanded', collapsed);
+        btn.classList.toggle('shrunk', !collapsed);
       });
     } catch(e) {}
     
+
+    try {
+      document.addEventListener('click', function(e) {
+        var title = e.target.closest('.admonition-title');
+        if (!title) return;
+        var details = title.closest('details.admonition');
+        if (!details) return;
+        var content = details.querySelector('.admonition-content');
+        var inner = details.querySelector('.admonition-inner');
+        if (!content || !inner) return;
+        e.preventDefault();
+
+        var dur = 0.35;
+        var maxH = inner.scrollHeight;
+        var willOpen = !details.open;
+
+        if (willOpen) {
+          details.open = true;
+          if (!maxH) return;
+          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = '0px';
+          requestAnimationFrame(function() {
+            content.style.maxHeight = maxH + 'px';
+          });
+        } else {
+          content.style.maxHeight = maxH + 'px';
+          content.style.transition = 'max-height ' + dur + 's ease';
+          void content.offsetWidth;
+          content.style.maxHeight = '0px';
+          setTimeout(function() {
+            content.style.transition = '';
+            content.style.maxHeight = '';
+            details.open = false;
+          }, dur * 1000 + 50);
+        }
+      });
+    } catch(e) {}
 
     
     try {
@@ -1506,9 +1540,11 @@
 
         st.fig = fig.cloneNode(true);
         st.fig.classList.add('code-fullpage');
-        st.fig.style.background = '#e1e4e8';
-        st.fig.style.setProperty('--shiki-light-bg', '#e1e4e8');
-        st.fig.style.setProperty('--shiki-dark-bg', '#e1e4e8');
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var fpBg = isDark ? '#181820' : '#e1e4e8';
+        st.fig.style.background = fpBg;
+        st.fig.style.setProperty('--shiki-light-bg', fpBg);
+        st.fig.style.setProperty('--shiki-dark-bg', fpBg);
 
         var bd = document.createElement('div');
         bd.className = 'fullpage-backdrop';
@@ -1565,19 +1601,16 @@
     
     try {
       var giscusFrame = null;
+      var giscusDarkTheme = "dark";
+      var giscusLightTheme = "light";
+      function giscusCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? giscusDarkTheme : giscusLightTheme;
+      }
       function syncGiscusTheme() {
         var f = giscusFrame || document.querySelector('iframe.giscus-frame');
-        if (!f) return;
-        var theme = document.documentElement.getAttribute('data-theme') === 'dark' ? "dark" : "light";
+        if (!f || !f.contentWindow) return;
         try {
-          var src = f.src || '';
-          if (src.indexOf('https://giscus.app/') === 0) {
-            if (src.indexOf('theme=' + theme) < 0) {
-              f.src = src.replace(/([?&])theme=[^&]*/, '$1theme=' + theme);
-            }
-          } else if (f.contentWindow) {
-            f.contentWindow.postMessage({ giscus: { setConfig: { theme: theme } } }, 'https://giscus.app');
-          }
+          f.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusCurrentTheme() } } }, 'https://giscus.app');
         } catch(e) {}
       }
       document.getElementById('darkmode').addEventListener('click', function() {
@@ -1587,25 +1620,22 @@
         localStorage.setItem('theme', n);
         syncGiscusTheme();
       });
-      var _giscusTries = 0;
+      window.addEventListener('message', function(ev) {
+        if (ev.origin !== 'https://giscus.app') return;
+        var f = giscusFrame || document.querySelector('iframe.giscus-frame');
+        if (!f) return;
+        giscusFrame = f;
+        syncGiscusTheme();
+      });
       var _giscusTimer = setInterval(function() {
         var f = document.querySelector('iframe.giscus-frame');
         if (f) {
-          if (!giscusFrame) {
-            giscusFrame = f;
-            f.addEventListener('load', syncGiscusTheme);
-          }
-          syncGiscusTheme();
-          var src = f.src || '';
-          if (src.indexOf('https://giscus.app/') === 0 && src.indexOf('theme=') >= 0) {
-            clearInterval(_giscusTimer);
-          } else if (++_giscusTries > 100) {
-            clearInterval(_giscusTimer);
-          }
-        } else if (++_giscusTries > 100) {
           clearInterval(_giscusTimer);
+          giscusFrame = f;
+          f.addEventListener('load', syncGiscusTheme);
+          syncGiscusTheme();
         }
-      }, 200);
+      }, 500);
     } catch(e) {}
     
 
@@ -2160,6 +2190,8 @@
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && overlay.style.display === 'block') closeSearch();
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+        var t = e.target;
+        if (t && typeof t.closest === 'function' && t.closest('.editor-page, .editor-page *')) return;
         if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,textarea')) { e.preventDefault(); openSearch(); }
       });
 

@@ -420,21 +420,102 @@
     try {
       document.addEventListener('click', function(e) {
         var btn = e.target.closest('.shrink-btn');
-        if (!btn) return;
-        var fig = btn.closest('.highlight');
+        var tools = e.target.closest('.highlight-tools');
+        if (btn) {
+          var fig = btn.closest('.highlight');
+          toggleShrink(fig);
+          return;
+        }
+        if (tools && !e.target.closest('.hl-tools-right')) {
+          toggleShrink(tools.closest('.highlight'));
+        }
+      });
+      function toggleShrink(fig) {
         if (!fig) return;
         var pre = fig.querySelector('pre.code-wrap');
         if (!pre) return;
-        pre.classList.toggle('code-shrink');
-        pre.classList.toggle('code-expanded');
-        if (pre.classList.contains('code-expanded')) {
-          btn.textContent = '<%= locale.footer?.fold || '折叠' %>';
+        if (pre.__shrinkAnim) return;
+        var btn = fig.querySelector('.shrink-btn');
+        var collapsed = pre.classList.contains('code-shrink');
+        var dur = 0.35;
+        var fullH = pre.scrollHeight;
+        pre.__shrinkAnim = true;
+        pre.style.transition = 'max-height ' + dur + 's ease';
+        if (collapsed) {
+          pre.classList.remove('code-shrink');
+          pre.classList.add('code-expanded');
+          pre.style.maxHeight = '0px';
+          void pre.offsetWidth;
+          pre.style.maxHeight = fullH + 'px';
+          if (btn) btn.classList.remove('shrunk');
+          setTimeout(function() {
+            pre.style.transition = '';
+            pre.style.maxHeight = '';
+            pre.__shrinkAnim = false;
+          }, dur * 1000 + 50);
         } else {
-          btn.textContent = '<%= locale.footer?.expand || '展开' %>';
+          pre.classList.remove('code-expanded');
+          pre.style.maxHeight = fullH + 'px';
+          void pre.offsetWidth;
+          pre.style.maxHeight = '0px';
+          if (btn) btn.classList.add('shrunk');
+          setTimeout(function() {
+            pre.classList.add('code-shrink');
+            pre.style.transition = '';
+            pre.style.maxHeight = '';
+            pre.__shrinkAnim = false;
+          }, dur * 1000 + 50);
+        }
+      }
+    } catch(e) {}
+    <% } %>
+
+    try {
+      document.addEventListener('click', function(e) {
+        var title = e.target.closest('.admonition-title');
+        if (!title) return;
+        var details = title.closest('details.admonition');
+        if (!details) return;
+        var content = details.querySelector('.admonition-content');
+        var inner = details.querySelector('.admonition-inner');
+        if (!content || !inner) return;
+        e.preventDefault();
+        if (details.__adAnim) return;
+
+        var dur = 0.35;
+        var willOpen = !details.open;
+        details.__adAnim = true;
+
+        if (willOpen) {
+          details.open = true;
+          content.style.transition = 'none';
+          content.style.maxHeight = '0px';
+          void content.scrollHeight;
+          var h = content.scrollHeight;
+          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = h + 'px';
+          setTimeout(function() {
+            content.style.transition = '';
+            content.style.maxHeight = '';
+            details.__adAnim = false;
+          }, dur * 1000 + 50);
+        } else {
+          content.style.transition = 'none';
+          content.style.maxHeight = '';
+          var h2 = content.scrollHeight;
+          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = h2 + 'px';
+          void content.offsetWidth;
+          content.style.maxHeight = '0px';
+          setTimeout(function() {
+            content.style.transition = '';
+            content.style.maxHeight = '';
+            details.open = false;
+            details.__adAnim = false;
+          }, dur * 1000 + 50);
         }
       });
     } catch(e) {}
-    <% } %>
 
     <% if (config.CB_FULLPAGE) { %>
     try {
@@ -467,9 +548,11 @@
 
         st.fig = fig.cloneNode(true);
         st.fig.classList.add('code-fullpage');
-        st.fig.style.background = '#e1e4e8';
-        st.fig.style.setProperty('--shiki-light-bg', '#e1e4e8');
-        st.fig.style.setProperty('--shiki-dark-bg', '#e1e4e8');
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var fpBg = isDark ? '#181820' : '#e1e4e8';
+        st.fig.style.background = fpBg;
+        st.fig.style.setProperty('--shiki-light-bg', fpBg);
+        st.fig.style.setProperty('--shiki-dark-bg', fpBg);
 
         var bd = document.createElement('div');
         bd.className = 'fullpage-backdrop';
@@ -518,27 +601,44 @@
 
     /* Right-side buttons */
     try {
+      var rightsideHide = document.getElementById('rightside-config-hide');
+      var rightsideTimer = null;
+      var rightsideBusy = false;
       document.getElementById('rightside-config').addEventListener('click', function() {
-        document.getElementById('rightside-config-hide').classList.toggle('open');
+        if (rightsideBusy) return;
+        rightsideBusy = true;
+        clearTimeout(rightsideTimer);
+        var isOpen = rightsideHide.classList.contains('open');
+        if (isOpen) {
+          rightsideHide.classList.remove('open');
+          rightsideHide.classList.add('closing');
+          rightsideTimer = setTimeout(function() {
+            rightsideHide.classList.remove('closing');
+            rightsideBusy = false;
+          }, 700);
+        } else {
+          rightsideHide.classList.remove('closing');
+          rightsideHide.classList.add('open');
+          rightsideTimer = setTimeout(function() {
+            rightsideBusy = false;
+          }, 700);
+        }
       });
     } catch(e) {}
 
     <% if (config.DARKMODE_ENABLE && config.DARKMODE_BUTTON) { %>
     try {
       var giscusFrame = null;
+      var giscusDarkTheme = <%- JSON.stringify(config.GISCUS_DARK_THEME || 'dark').replace(/<\/script>/gi, '<\\/script>') %>;
+      var giscusLightTheme = <%- JSON.stringify(config.GISCUS_LIGHT_THEME || 'light').replace(/<\/script>/gi, '<\\/script>') %>;
+      function giscusCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'dark' ? giscusDarkTheme : giscusLightTheme;
+      }
       function syncGiscusTheme() {
         var f = giscusFrame || document.querySelector('iframe.giscus-frame');
-        if (!f) return;
-        var theme = document.documentElement.getAttribute('data-theme') === 'dark' ? <%- JSON.stringify(config.GISCUS_DARK_THEME || 'dark').replace(/<\/script>/gi, '<\\/script>') %> : <%- JSON.stringify(config.GISCUS_LIGHT_THEME || 'light').replace(/<\/script>/gi, '<\\/script>') %>;
+        if (!f || !f.contentWindow) return;
         try {
-          var src = f.src || '';
-          if (src.indexOf('https://giscus.app/') === 0) {
-            if (src.indexOf('theme=' + theme) < 0) {
-              f.src = src.replace(/([?&])theme=[^&]*/, '$1theme=' + theme);
-            }
-          } else if (f.contentWindow) {
-            f.contentWindow.postMessage({ giscus: { setConfig: { theme: theme } } }, 'https://giscus.app');
-          }
+          f.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusCurrentTheme() } } }, 'https://giscus.app');
         } catch(e) {}
       }
       document.getElementById('darkmode').addEventListener('click', function() {
@@ -548,25 +648,22 @@
         localStorage.setItem('theme', n);
         syncGiscusTheme();
       });
-      var _giscusTries = 0;
+      window.addEventListener('message', function(ev) {
+        if (ev.origin !== 'https://giscus.app') return;
+        var f = giscusFrame || document.querySelector('iframe.giscus-frame');
+        if (!f) return;
+        giscusFrame = f;
+        syncGiscusTheme();
+      });
       var _giscusTimer = setInterval(function() {
         var f = document.querySelector('iframe.giscus-frame');
         if (f) {
-          if (!giscusFrame) {
-            giscusFrame = f;
-            f.addEventListener('load', syncGiscusTheme);
-          }
-          syncGiscusTheme();
-          var src = f.src || '';
-          if (src.indexOf('https://giscus.app/') === 0 && src.indexOf('theme=') >= 0) {
-            clearInterval(_giscusTimer);
-          } else if (++_giscusTries > 100) {
-            clearInterval(_giscusTimer);
-          }
-        } else if (++_giscusTries > 100) {
           clearInterval(_giscusTimer);
+          giscusFrame = f;
+          f.addEventListener('load', syncGiscusTheme);
+          syncGiscusTheme();
         }
-      }, 200);
+      }, 500);
     } catch(e) {}
     <% } %>
 
@@ -1123,6 +1220,8 @@
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && overlay.style.display === 'block') closeSearch();
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
+        var t = e.target;
+        if (t && typeof t.closest === 'function' && t.closest('.editor-page, .editor-page *')) return;
         if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.target.closest('input,textarea')) { e.preventDefault(); openSearch(); }
       });
 

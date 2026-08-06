@@ -10,12 +10,32 @@ const adminAuth = require('./middleware/adminAuth');
 const app = express();
 const PORT = config.PORT;
 
-const cssVersion = Date.now();
+const cssVersion = (() => {
+  try {
+    const files = ['editor.js', 'editor.css', 'main.js', 'main.css', 'admin.js', 'admin.css'];
+    let max = 0;
+    for (const f of files) {
+      const t = fs.statSync(path.join(__dirname, 'public', 'assets', f)).mtimeMs;
+      if (t > max) max = t;
+    }
+    return max || Date.now();
+  } catch (e) {
+    return Date.now();
+  }
+})();
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-app.use(config.BASE_PATH, express.static(path.join(__dirname, 'public'), { etag: false, maxAge: 0 }));
+app.use(config.BASE_PATH, express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res, filePath) => {
+    const rel = path.relative(path.join(__dirname, 'public'), filePath);
+    const isVersioned = rel.split(path.sep)[0] === 'assets';
+    res.setHeader('Cache-Control', isVersioned ? 'no-cache' : 'public, max-age=86400');
+  },
+}));
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -51,7 +71,7 @@ const SAFE_CONFIG_KEYS = [
   'INDEX_CONFIG', 'INDEX_LAYOUT', 'INDEX_EXCERPT_METHOD', 'INDEX_EXCERPT_LENGTH',
   'INDEX_SUBTITLE_ENABLE', 'INDEX_SUBTITLE_EFFECT', 'INDEX_SUBTITLE_SUB',
   'INDEX_SUBTITLE_TYPE_SPEED', 'INDEX_SUBTITLE_BACK_SPEED', 'INDEX_SUBTITLE_PAUSE_TIME',
-  'TOC_POST', 'TOC_NUMBER', 'TOC_EXPAND', 'TOC_STYLE_SIMPLE',
+  'TOC_POST', 'TOC_NUMBER', 'TOC_STYLE_SIMPLE',
   'ASIDE_ENABLE', 'ASIDE_MOBILE', 'ASIDE_POSITION', 'ASIDE_FOLLOW_ME_PLATFORM',
   'ASIDE_CARD_AUTHOR', 'ASIDE_CARD_ANNOUNCEMENT', 'ASIDE_ANNOUNCEMENT_CONTENT',
   'ASIDE_CARD_RECENT_POST', 'ASIDE_RECENT_POST_LIMIT',

@@ -115,7 +115,6 @@ const config = {
   // 目录
   TOC_POST: cfg.toc?.post !== false,
   TOC_NUMBER: cfg.toc?.number !== false,
-  TOC_EXPAND: cfg.toc?.expand === true,
   TOC_STYLE_SIMPLE: cfg.toc?.style_simple === true,
 
   // 侧边栏

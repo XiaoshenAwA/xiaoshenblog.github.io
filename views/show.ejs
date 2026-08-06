@@ -83,11 +83,6 @@
     var tocContent = document.getElementById('toc-content');
     var headings = document.querySelectorAll('.post-content h1, .post-content h2, .post-content h3');
     if (tocWidget && tocContent && headings.length > 0) {
-      <%
-        var tocExpandClass = '';
-        if (config.TOC_EXPAND) tocExpandClass = ' toc-expand';
-      %>
-      tocContent.className += '<%= tocExpandClass %>';
       var root = document.createElement('ol');
       root.className = 'toc';
       var lastOl = [null, null, null, null];

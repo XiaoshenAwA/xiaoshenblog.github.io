@@ -7,6 +7,8 @@ import markdownitMark from 'markdown-it-mark'
 import markdownitInsDel from 'markdown-it-ins-del'
 import katex from 'katex'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs'
+import { zhTypstMsg } from './typst-msg.js'
+import { registerTypstLspFeatures } from './typst-lsp.js'
 pdfjsLib.GlobalWorkerOptions.workerSrc = (window.__CONFIG__?.BASE_PATH || '') + '/wasm/pdf.worker.mjs'
 
 // --- Markdown-it setup (shared with server-side render) ---
@@ -148,7 +150,7 @@ const SHIKI_LANGS = [
   'dockerfile', 'graphql', 'http', 'ini', 'makefile', 'nginx',
   'plaintext', 'regexp', 'sass', 'toml', 'csharp',
   'r', 'perl', 'lua', 'haskell', 'elixir',
-  'clojure', 'powershell', 'latex', 'tex'
+  'clojure', 'powershell', 'latex', 'tex', 'typst'
 ]
 const TS_LANG_IDS = { typescript: 'ts', javascript: 'js', tsx: 'tsx', jsx: 'jsx' }
 const INDENT_MODES = ['tab', 'spaces2', 'spaces4', 'spaces8']
@@ -335,8 +337,21 @@ function renderMarkdownPreview(source) {
   }
 }
 
+let shikiTransformers = []
+async function loadTransformers() {
+  try {
+    const m = await import('@shikijs/transformers')
+    shikiTransformers = [
+      m.transformerNotationHighlight(),
+      m.transformerNotationDiff(),
+      m.transformerNotationFocus(),
+      m.transformerNotationErrorLevel()
+    ]
+  } catch {}
+}
+
 function formatTypstError(e) {
-  if (!e) return 'Unknown error'
+  if (!e) return '<span class="typst-err-severity">错误</span><span class="typst-err-msg">未知错误</span>'
   const raw = String(e.message || e)
   const parts = []
 
@@ -345,57 +360,63 @@ function formatTypstError(e) {
     const pkgMatch = raw.match(/Failed to load '([^']+)'/)
     const pkgUrl = pkgMatch ? pkgMatch[1] : ''
     const pkgName = pkgUrl ? pkgUrl.split('/').pop().replace(/\.tar\.gz$/, '') : 'unknown'
-    parts.push('<span class="typst-err-severity">Package Error</span>')
-    parts.push('<span class="typst-err-msg">Failed to load package: ' + escapeHtml(pkgName) + '</span>')
-    parts.push('<span class="typst-err-hint">Network request to packages.typst.org failed. Check if the package exists, or remove the #import statement if not needed.</span>')
+    parts.push('<span class="typst-err-severity">包加载错误</span>')
+    parts.push('<span class="typst-err-msg">加载包失败：' + escapeHtml(pkgName) + '</span>')
+    parts.push('<span class="typst-err-hint">网络请求 packages.typst.org 失败。请检查包名是否正确，或移除不需要的 #import 语句。</span>')
     return parts.join('')
   }
 
-  // SourceDiagnostic errors
+  // SourceDiagnostic errors (may contain multiple diagnostics)
   if (raw.includes('SourceDiagnostic') || raw.includes('severity') || raw.includes('span')) {
-    // Try to extract severity
-    let severity = 'Error'
-    const sevMatch = raw.match(/severity:\s*(Error|Warning|Info)/i)
-    if (sevMatch) severity = sevMatch[1]
+    const decode = s => s
+      .replace(/\\n/g, '\n')
+      .replace(/\\t/g, '\t')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\')
 
-    // Try to extract message - handle escaped quotes and nested content
-    let msg = ''
-    const msgMatch = raw.match(/message:\s*"((?:[^"\\]|\\.)*)"/)
-    if (msgMatch) {
-      msg = msgMatch[1]
-        .replace(/\\n/g, '\n')
-        .replace(/\\t/g, '\t')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-    } else {
-      // Fallback: extract text between message: and trace/hints
-      const fallbackMatch = raw.match(/message:\s*(.*?)(?:,\s*trace|,\s*hints|\})/s)
-      if (fallbackMatch) msg = fallbackMatch[1].replace(/^"|"$/g, '')
+    const msgs = []
+    const reMsg = /message:\s*"((?:[^"\\]|\\.)*)"/g
+    let mm
+    while ((mm = reMsg.exec(raw))) msgs.push(decode(mm[1]))
+    if (!msgs.length) {
+      const fb = raw.match(/message:\s*(.*?)(?:,\s*trace|,\s*hints|\})/s)
+      if (fb) msgs.push(fb[1].replace(/^"|"$/g, ''))
     }
 
-    // Extract hints
-    let hints = ''
-    const hintMatch = raw.match(/hints:\s*\[(.*?)\]/s)
-    if (hintMatch && hintMatch[1].trim()) {
-      hints = hintMatch[1].replace(/"/g, '').trim()
+    const sevs = []
+    const reSev = /severity:\s*(Error|Warning|Info)/gi
+    let sm
+    while ((sm = reSev.exec(raw))) sevs.push(sm[1])
+
+    const hints = []
+    const reHint = /hints:\s*\[(.*?)\]/gs
+    let hm
+    while ((hm = reHint.exec(raw))) {
+      const h = hm[1].replace(/"/g, '').trim()
+      if (h) hints.push(h)
     }
 
-    const sevClass = severity === 'Warning' ? 'warn' : severity === 'Info' ? 'info' : ''
-    parts.push('<span class="typst-err-severity' + (sevClass ? ' ' + sevClass : '') + '">' + escapeHtml(severity) + '</span>')
-    if (msg) {
-      const firstLine = msg.split('\n')[0]
-      parts.push('<span class="typst-err-msg">' + escapeHtml(firstLine) + '</span>')
+    for (let i = 0; i < msgs.length; i++) {
+      const severity = sevs[i] || sevs[0] || 'Error'
+      const sevZh = severity === 'Warning' ? '警告' : severity === 'Info' ? '提示' : '错误'
+      const sevClass = severity === 'Warning' ? 'warn' : severity === 'Info' ? 'info' : ''
+      parts.push('<span class="typst-err-severity' + (sevClass ? ' ' + sevClass : '') + '">' + sevZh + '</span>')
+      if (msgs[i]) {
+        const zhMsg = zhTypstMsg(msgs[i])
+          .split('\n').map(line => escapeHtml(line)).join('<br>')
+        parts.push('<span class="typst-err-msg">' + zhMsg + '</span>')
+      }
+      if (hints[i]) {
+        parts.push('<span class="typst-err-hint">' + escapeHtml(zhTypstMsg(hints[i])) + '</span>')
+      }
     }
-    if (hints) {
-      parts.push('<span class="typst-err-hint">' + escapeHtml(hints) + '</span>')
-    }
-    if (parts.length > 1) return parts.join('')
+    if (parts.length) return parts.join('')
   }
 
   // Fallback: first meaningful line
   const clean = raw.replace(/^JsValue\(|\)$/g, '').replace(/\s+at\s+.*$/gm, '').trim()
   const firstLine = clean.split('\n')[0].slice(0, 300)
-  return '<span class="typst-err-severity">Error</span><span class="typst-err-msg">' + escapeHtml(firstLine) + '</span>'
+  return '<span class="typst-err-severity">错误</span><span class="typst-err-msg">' + escapeHtml(zhTypstMsg(firstLine)) + '</span>'
 }
 
 // --- Typst zoom controls ---
@@ -428,10 +449,16 @@ async function applyTypstZoom() {
   setupTypstPan()
 }
 
-// --- Scroll sync helpers ---
+// --- Scroll sync helpers (typst: content-anchor first, ratio fallback) ---
 
 let syncingEditor = false
 let syncingPreview = false
+let typstPageTexts = []
+let typstSyncReady = false
+
+function normText(s) {
+  return String(s || '').toLowerCase().replace(/[\s\p{P}\p{S}]+/gu, '')
+}
 
 function syncEditorToRatio(ratio) {
   if (!editor) return
@@ -441,6 +468,7 @@ function syncEditorToRatio(ratio) {
 
 function bindWrapScroll(wrap) {
   wrap.addEventListener('scroll', () => {
+    if (currentMode === 'typst') return
     if (syncingEditor) return
     syncingPreview = true
     const max = wrap.scrollHeight - wrap.clientHeight
@@ -451,13 +479,14 @@ function bindWrapScroll(wrap) {
 
 function setupScrollSync() {
   editor.onDidScrollChange(() => {
+    if (currentMode === 'typst') return
     if (syncingPreview) return
     syncingEditor = true
+    const wrap = preview.querySelector('.typst-page-wrap')
     const scrollTop = editor.getScrollTop()
     const editorMax = editor.getScrollHeight() - editor.getLayoutInfo().height
     if (editorMax > 0) {
       const ratio = Math.max(0, Math.min(1, scrollTop / editorMax))
-      const wrap = preview.querySelector('.typst-page-wrap')
       if (wrap) wrap.scrollTop = ratio * (wrap.scrollHeight - wrap.clientHeight)
       const previewMax = preview.scrollHeight - preview.clientHeight
       if (previewMax > 0) preview.scrollTop = ratio * previewMax
@@ -465,10 +494,17 @@ function setupScrollSync() {
     setTimeout(() => { syncingEditor = false }, 10)
   })
   preview.addEventListener('scroll', () => {
+    if (currentMode === 'typst') return
     if (syncingEditor) return
     syncingPreview = true
-    const previewMax = preview.scrollHeight - preview.clientHeight
-    if (previewMax > 0) syncEditorToRatio(Math.max(0, Math.min(1, preview.scrollTop / previewMax)))
+    const wrap = preview.querySelector('.typst-page-wrap')
+    if (wrap) {
+      const max = wrap.scrollHeight - wrap.clientHeight
+      if (max > 0) syncEditorToRatio(Math.max(0, Math.min(1, wrap.scrollTop / max)))
+    } else {
+      const previewMax = preview.scrollHeight - preview.clientHeight
+      if (previewMax > 0) syncEditorToRatio(Math.max(0, Math.min(1, preview.scrollTop / previewMax)))
+    }
     setTimeout(() => { syncingPreview = false }, 10)
   })
 }
@@ -484,6 +520,14 @@ function setupTypstPan() {
   let startScrollLeft = 0
   let startScrollTop = 0
   const canPan = () => wrap.scrollWidth > wrap.clientWidth + 1 || wrap.scrollHeight > wrap.clientHeight + 1
+  const updatePanCursor = () => wrap.classList.toggle('can-pan', canPan())
+  updatePanCursor()
+  wrap.addEventListener('scroll', updatePanCursor)
+  let panResizeObserver = null
+  try {
+    panResizeObserver = new ResizeObserver(updatePanCursor)
+    panResizeObserver.observe(wrap)
+  } catch {}
   wrap.addEventListener('pointerdown', e => {
     if (e.button !== 0 || currentMode !== 'typst') return
     if (!canPan()) return
@@ -519,11 +563,18 @@ function setupTypstPan() {
 }
 
 function updateZoomInput() {
-  const input = document.getElementById('editor-font-size-input')
-  if (input) {
-    input.value = Math.round(typstZoom * 100) + '%'
-    input.title = 'Typst 预览缩放 %'
+  const wrap = preview && preview.querySelector('.typst-page-wrap')
+  if (!wrap) return
+  let badge = wrap.querySelector('.typst-zoom-badge')
+  if (!badge) {
+    badge = document.createElement('div')
+    badge.className = 'typst-zoom-badge'
+    wrap.appendChild(badge)
   }
+  badge.textContent = Math.round(typstZoom * 100) + '%'
+  badge.style.opacity = '1'
+  clearTimeout(badge._t)
+  badge._t = setTimeout(() => { badge.style.opacity = '0' }, 900)
 }
 
 function typstZoomIn() {
@@ -616,6 +667,31 @@ async function renderTypstPage(host, pdf, page, dpr, zoomScale) {
   const ctx = canvas.getContext('2d')
   await page.render({ canvasContext: ctx, viewport }).promise
   pageEl.appendChild(canvas)
+  host.appendChild(pageEl)
+  try {
+    const tc = await page.getTextContent()
+    typstPageTexts.push(normText(tc.items.map(it => it.str || '').join('')))
+  } catch {
+    typstPageTexts.push('')
+  }
+  try {
+    const tc = await page.getTextContent()
+    typstPageTexts.push(normText(tc.items.map(it => it.str || '').join('')))
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready } catch {}
+    }
+    const layer = document.createElement('div')
+    layer.className = 'typst-text-layer'
+    layer.style.width = viewport.width + 'px'
+    layer.style.height = viewport.height + 'px'
+    layer.style.transform = 'scale(' + (1 / dpr) + ')'
+    layer.style.transformOrigin = '0 0'
+    pageEl.appendChild(layer)
+    buildTextLayer(layer, tc, viewport)
+    bindTextLayerClick(layer)
+  } catch {
+    typstPageTexts.push('')
+  }
   try {
     const annotations = await page.getAnnotations()
     const links = (annotations || []).filter(a => a.subtype === 'Link')
@@ -665,7 +741,117 @@ async function renderTypstPage(host, pdf, page, dpr, zoomScale) {
       pageEl.appendChild(layer)
     }
   } catch {}
-  host.appendChild(pageEl)
+}
+
+function buildTextLayer(layer, tc, viewport) {
+  const tr = viewport.transform
+  const m0 = Math.abs(tr[0]) || 1
+  const m3 = Math.abs(tr[3]) || 1
+  const frag = document.createDocumentFragment()
+  for (const it of tc.items || []) {
+    if (!it.str) continue
+    const im = it.transform || [1, 0, 0, 1, 0, 0]
+    const x = tr[0] * im[4] + tr[2] * im[5] + tr[4]
+    const y = tr[1] * im[4] + tr[3] * im[5] + tr[5]
+    const h = Math.max(4, it.height * m3)
+    const span = document.createElement('span')
+    span.textContent = it.str
+    span.style.left = x + 'px'
+    span.style.top = (y - h) + 'px'
+    span.style.width = Math.max(2, it.width * m0) + 'px'
+    span.style.height = h + 'px'
+    span.style.fontSize = h + 'px'
+    frag.appendChild(span)
+  }
+  layer.appendChild(frag)
+}
+
+function estimateCharIdx(raw, rect, clientX, font) {
+  const ctx = estimateCharIdx.__ctx || (estimateCharIdx.__ctx = document.createElement('canvas').getContext('2d'))
+  if (ctx.font !== font) ctx.font = font
+  const chars = [...raw]
+  const widths = chars.map(c => ctx.measureText(c).width)
+  const total = widths.reduce((a, b) => a + b, 1)
+  const target = (clientX - rect.left) * (total / Math.max(1, rect.width))
+  let acc = 0
+  for (let i = 0; i < widths.length; i++) {
+    acc += widths[i]
+    if (target <= acc) return i
+  }
+  return Math.max(0, chars.length - 1)
+}
+
+function bindTextLayerClick(layer) {
+  layer.addEventListener('click', (e) => {
+    const span = e.target && e.target.closest ? e.target.closest('span') : null
+    if (!span || !span.textContent) return
+    const raw = span.textContent
+    const frag = normText(raw)
+    if (!frag) return
+    let charIdx = 0
+    const rect = span.getBoundingClientRect()
+    if (rect.width > 0 && raw.length) {
+      const cs = getComputedStyle(span)
+      charIdx = estimateCharIdx(raw, rect, e.clientX, cs.fontSize + ' ' + cs.fontFamily)
+    }
+    const hit = locateSourcePos(raw, frag, charIdx)
+    if (location.search.includes('__debug')) {
+      try {
+        window.__typstDebug.lastJump = { raw, charIdx, hit }
+      } catch {}
+    }
+    if (hit) flashEditorAt(hit.line, hit.col)
+  })
+}
+
+function locateSourcePos(raw, frag, charIdx) {
+  if (!editor) return null
+  const lines = editor.getValue().split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    const rl = lines[i]
+    if (!rl) continue
+    const pos = rl.indexOf(raw)
+    if (pos >= 0) {
+      const idx = Math.max(0, Math.min(charIdx || 0, raw.length - 1))
+      return { line: i + 1, col: Math.min(pos + idx + 2, rl.length + 1) }
+    }    const nl = normText(rl)
+    if (nl && nl.includes(frag)) {
+      return { line: i + 1, col: nl.indexOf(frag) + 1 }
+    }
+  }
+  return null
+}
+
+function flashEditorAt(lineNo, col) {
+  if (!editor) return
+  const model = editor.getModel()
+  const maxCol = model ? model.getLineMaxColumn(lineNo) : 1
+  const column = Math.max(1, Math.min(col || 1, maxCol))
+  editor.setPosition(new monaco.Position(lineNo, column))
+  editor.revealPositionInCenter({ lineNumber: lineNo, column }, 1)
+  editor.focus()
+  try {
+    const deco = editor.createDecorationsCollection([{
+      range: new monaco.Range(lineNo, 1, lineNo, 1),
+      options: { isWholeLine: true, className: 'typst-jump-flash-line' }
+    }])
+    setTimeout(() => { try { deco.clear() } catch {} }, 1400)
+  } catch {}
+  const guard = document.querySelector('.monaco-editor .overflow-guard')
+  if (guard) {
+    requestAnimationFrame(() => {
+      const cur = document.querySelector('.monaco-editor .cursor')
+      if (!cur) return
+      const cr = cur.getBoundingClientRect()
+      const gr = guard.getBoundingClientRect()
+      const r = document.createElement('div')
+      r.className = 'typst-ripple'
+      r.style.left = (cr.x - gr.x + cr.width / 2) + 'px'
+      r.style.top = (cr.y - gr.y + cr.height / 2) + 'px'
+      guard.appendChild(r)
+      setTimeout(() => { try { r.remove() } catch {} }, 1000)
+    })
+  }
 }
 
 let typstWorker = null
@@ -741,6 +927,8 @@ async function typstRunLoop() {
   while (typstPending !== null) {
     const src = typstPending
     typstPending = null
+    typstPageTexts = []
+    typstSyncReady = false
     if (!src.trim()) {
       hideTypstStatus()
       preview.innerHTML = TYPST_EMPTY_HTML
@@ -758,7 +946,7 @@ async function typstRunLoop() {
     try {
       if (!window.__$typst) {
         hideTypstStatus()
-        preview.innerHTML = '<p class="muted">Typst is loading, please wait...</p>'
+        preview.innerHTML = '<p class="muted">正在加载 Typst，请稍候…</p>'
         continue
       }
       statusTimer = setTimeout(() => showTypstStatus('\u6B63\u5728\u7F16\u8BD1\u2026'), 400)
@@ -767,7 +955,7 @@ async function typstRunLoop() {
       hideTypstStatus()
       if (typstPending !== null) continue
       if (!pdfData || !pdfData.length) {
-        preview.innerHTML = '<p class="muted">Empty output</p>'
+        preview.innerHTML = '<p class="muted">输出为空</p>'
         continue
       }
       if (pdfData.length > TYPST_MAX_PDF_BYTES) {
@@ -795,9 +983,12 @@ async function typstRunLoop() {
       }
       if (oldWrap) preview.replaceChild(wrap, oldWrap)
       else { preview.innerHTML = ''; preview.appendChild(wrap) }
-      bindWrapScroll(wrap)
       setupTypstPan()
-      if (scrollRatio > 0) wrap.scrollTop = scrollRatio * (wrap.scrollHeight - wrap.clientHeight)
+      typstSyncReady = true
+      if (location.search.includes('__debug')) window.__typstDebug = { texts: typstPageTexts }
+      if (scrollRatio > 0) {
+        wrap.scrollTop = scrollRatio * (wrap.scrollHeight - wrap.clientHeight)
+      }
       if (typstPending !== null) continue
       updateZoomInput()
     } catch (e) {
@@ -819,6 +1010,20 @@ function insertAtCursor(text) {
   const start = sel.getStartPosition()
   editor.executeEdits('toolbar', [{ range: sel, text }])
   editor.setPosition(new monaco.Position(start.lineNumber, start.column + text.length))
+  editor.focus()
+}
+
+function insertAtLineStart(prefix) {
+  const sel = editor.getSelection()
+  const pos = editor.getPosition()
+  const line = sel.getStartPosition().lineNumber
+  const content = editor.getModel().getLineContent(line)
+  const trimmed = content.replace(/^\s+/, '')
+  const indent = content.length - trimmed.length
+  const startCol = indent + 1
+  editor.executeEdits('toolbar', [{ range: new monaco.Range(line, startCol, line, startCol), text: prefix }])
+  const newCol = Math.max(startCol, pos.column) + prefix.length
+  editor.setPosition(new monaco.Position(line, newCol))
   editor.focus()
 }
 
@@ -848,7 +1053,34 @@ function setMode(mode) {
   currentMode = mode
   monaco.editor.setModelLanguage(editor.getModel(), mode === 'typst' ? 'typst' : 'markdown')
   editor.setValue(loadDraft(mode))
-  if (downloadBtn) {
+const openBtn = document.getElementById('editor-open')
+if (openBtn) {
+  const fileInput = document.createElement('input')
+  fileInput.type = 'file'
+  fileInput.accept = '.typ,.md,.txt'
+  fileInput.style.display = 'none'
+  document.body.appendChild(fileInput)
+  openBtn.addEventListener('click', () => fileInput.click())
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files && fileInput.files[0]
+    if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (editor) {
+        editor.setValue(String(reader.result || ''))
+        editor.focus()
+      }
+    }
+    reader.onerror = () => {
+      showTypstStatus('读取文件失败')
+      setTimeout(hideTypstStatus, 2000)
+    }
+    reader.readAsText(f, 'utf-8')
+    fileInput.value = ''
+  })
+}
+
+if (downloadBtn) {
     downloadBtn.title = mode === 'typst' ? 'Download .typ file' : 'Download Markdown'
   }
   scheduleUpdate()
@@ -873,6 +1105,44 @@ async function initEditor() {
   // Monaco 0.56.0 handles workers via its built-in getWorker in editor.main.js
 
   monaco.languages.register({ id: 'typst' })
+
+  monaco.languages.setLanguageConfiguration('typst', {
+    comments: {
+      lineComment: '//',
+      blockComment: ['/*', '*/']
+    },
+    brackets: [
+      ['{', '}'],
+      ['[', ']'],
+      ['(', ')']
+    ],
+    autoClosingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      { open: '"', close: '"' },
+      { open: '`', close: '`' },
+      { open: '$', close: '$' },
+      { open: '/*', close: '*/' }
+    ],
+    surroundingPairs: [
+      { open: '{', close: '}' },
+      { open: '[', close: ']' },
+      { open: '(', close: ')' },
+      { open: '"', close: '"' },
+      { open: '`', close: '`' },
+      { open: '*', close: '*' },
+      { open: '_', close: '_' },
+      { open: '$', close: '$' }
+    ],
+    folding: {
+      markers: {
+        start: /^\s*(=|==|===|====|=====|======)\s/,
+        end: /^\s*(=|==|===|====|=====|======)\s/
+      }
+    },
+    wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
+  })
 
   monaco.languages.setMonarchTokensProvider('typst', {
     keywords: [
@@ -1027,34 +1297,116 @@ async function initEditor() {
         endLineNumber: position.lineNumber,
         endColumn: word.endColumn
       }
-      const suggestions = [
-        { label: '#heading[', insertText: '#heading[${1:Title}]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Heading', range },
-        { label: '#link(', insertText: '#link("${1:url}")[${2:text}]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Link', range },
-        { label: '#image(', insertText: '#image("${1:url}", width: ${2:100%})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Image', range },
-        { label: '#block[', insertText: '#block[\n  ${1}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Block', range },
-        { label: '#grid[', insertText: '#grid(columns: ${1:2})[\n  ${2}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Grid', range },
-        { label: '#stack[', insertText: '#stack(dir: ${1:ltr})[\n  ${2}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Stack', range },
-        { label: '#align(', insertText: '#align(${1:center})[\n  ${2}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Align', range },
-        { label: '#pad(', insertText: '#pad(${1:10pt})[\n  ${2}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Pad', range },
-        { label: '#box[', insertText: '#box[\n  ${1}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Box', range },
-        { label: '#text[', insertText: '#text(${1:12pt})[${2}]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Text size', range },
-        { label: '#strong[', insertText: '#strong[${1:text}]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Strong/Bold', range },
-        { label: '#emph[', insertText: '#emph[${1:text}]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Emphasis/Italic', range },
-        { label: '#raw(', insertText: '#raw(${1:"code"})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Raw code', range },
-        { label: '#table[', insertText: '#table(columns: ${1:2})[\n  ${2}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Table', range },
-        { label: '#enum[', insertText: '#enum[\n  ${1:Item}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Enum list', range },
-        { label: '#list[', insertText: '#list[\n  ${1:Item}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Bullet list', range },
-        { label: '#term[', insertText: '#term[\n  ${1:Term} ${2:Description}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Term list', range },
-        { label: '#page[', insertText: '#page(width: ${1:210mm}, height: ${2:297mm})[\n  ${3}\n]', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Page layout', range },
-        { label: '#set ', insertText: '#set ${1:page}(width: ${2:210mm})', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Set rule', range },
-        { label: '#let ', insertText: '#let ${1:name} = ${2:value}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Let binding', range },
-        { label: '#import ', insertText: '#import "${1:module}": ${2:symbol}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Import', range },
-        { label: '= ', insertText: '= ${1:Heading}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Markup heading', range },
-        { label: '== ', insertText: '== ${1:Heading}', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Keyword, detail: 'Markup heading 2', range },
-        { label: '```typst', insertText: '```typst\n${1}\n```', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Snippet, detail: 'Code block', range },
-        { label: '/* ', insertText: '/* ${1} */', insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, kind: monaco.languages.CompletionItemKind.Snippet, detail: 'Comment', range },
+      const mk = s => ({ ...s, kind: monaco.languages.CompletionItemKind.Snippet, insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet, range })
+      const snippets = [
+        // 页面与文档
+        { label: 'page', insertText: '#set page(paper: "${1:a4}", margin: (x: ${2:2.5cm}, y: ${3:2.5cm}))\n${0}', detail: '设置页面' },
+        { label: 'text', insertText: '#set text(size: ${1:12pt}, lang: "${2:zh}", font: ("${3:Roboto}", "${4:Noto Serif CJK SC}"))\n${0}', detail: '设置文本样式' },
+        { label: 'align', insertText: '#align(${1:center}, ${0})', detail: '对齐' },
+        { label: 'colbreak', insertText: '#colbreak()', detail: '分栏换页' },
+
+        // 标题
+        { label: 'h1', insertText: '= ${1:标题}\n${0}', detail: '一级标题' },
+        { label: 'h2', insertText: '== ${1:标题}\n${0}', detail: '二级标题' },
+        { label: 'h3', insertText: '=== ${1:标题}\n${0}', detail: '三级标题' },
+        { label: 'h4', insertText: '==== ${1:标题}\n${0}', detail: '四级标题' },
+
+        // 文本格式
+        { label: 'bold', insertText: '*${1:粗体}*\n${0}', detail: '粗体' },
+        { label: 'italic', insertText: '_${1:斜体}_\n${0}', detail: '斜体' },
+        { label: 'code', insertText: '`${1:代码}`\n${0}', detail: '行内代码' },
+        { label: 'link', insertText: 'https://${1:url}', detail: '链接' },
+        { label: 'ref', insertText: '@${1:label}', detail: '引用' },
+        { label: 'label', insertText: '<${1:label}>', detail: '标签' },
+
+        // 列表
+        { label: 'ul', insertText: '- ${1:项目}\n${0}', detail: '无序列表' },
+        { label: 'ol', insertText: '+ ${1:项目}\n${0}', detail: '有序列表' },
+        { label: 'task', insertText: '- [${1:${2| ,x,|}}] ${3:任务}\n${0}', detail: '任务列表' },
+
+        // 表格
+        { label: 'table', insertText: '#table(\n  columns: ${1:3},\n  [${2:表头1}], [${3:表头2}], [${4:表头3}],\n  [${5:内容1}], [${6:内容2}], [${7:内容3}],\n)${0}', detail: '表格' },
+        { label: 'table3', insertText: '#table(\n  columns: (auto, 1fr, auto),\n  [${1:名称}], [${2:描述}], [${3:值}],\n  [${4:}], [${5:}], [${6:}],\n)${0}', detail: '三列表格' },
+
+        // 数学公式
+        { label: 'math', insertText: '$ ${1:formula} $\n${0}', detail: '行内数学公式' },
+        { label: 'mathblock', insertText: '$ ${1:\n  formula\n} $\n${0}', detail: '块级数学公式' },
+        { label: 'frac', insertText: 'frac(${1:分子}, ${2:分母})', detail: '分数' },
+        { label: 'sqrt', insertText: 'sqrt(${1:x})', detail: '平方根' },
+        { label: 'sum', insertText: 'sum(${1:0}^{${2:n}}) ${3:x_n}', detail: '求和' },
+        { label: 'prod', insertText: 'prod(${1:0}^{${2:n}}) ${3:x_n}', detail: '求积' },
+        { label: 'int', insertText: 'int_${1:0}^{${2:oo}} ${3:f(x)} dif x', detail: '积分' },
+        { label: 'vec', insertText: 'vec(${1:x}, ${2:y})', detail: '向量' },
+        { label: 'mat', insertText: 'mat(${1:a}, ${2:b}; ${3:c}, ${4:d})', detail: '矩阵' },
+
+        // 图片与引用
+        { label: 'image', insertText: '#image("${1:path}", width: ${2:80%})\n${0}', detail: '图片' },
+        { label: 'figure', insertText: '#figure(\n  image("${1:path}", width: ${2:80%}),\n  caption: [${3:图片描述}],\n  kind: image,\n  supplement: "图",\n)<${4:fig}>\n${0}', detail: '带编号图片' },
+        { label: 'caption', insertText: '#figure(\n  ${1:内容},\n  caption: [${2:描述}],\n)${0}', detail: '带标题图形' },
+
+        // 代码块
+        { label: 'codeblock', insertText: '```${1:python}\n${2:# 代码}\n```\n${0}', detail: '代码块' },
+
+        // 脚注与注释
+        { label: 'footnote', insertText: '#footnote[${1:脚注内容}]${0}', detail: '脚注' },
+        { label: 'heading', insertText: '#heading(level: ${1:1})[${2:标题}]', detail: '标题函数' },
+
+        // 引用与导入
+        { label: 'import', insertText: '#import "${1:module}": ${2:item}\n${0}', detail: '导入模块' },
+        { label: 'include', insertText: '#include "${1:file.typ}"\n${0}', detail: '包含文件' },
+
+        // Typst 设置
+        { label: 'setpage', insertText: '#set page(\n  paper: "${1:a4}",\n  margin: (x: ${2:2.5cm}, y: ${3:2.5cm}),\n  numbering: "${4:1}",\n)${0}', detail: '设置页面属性' },
+        { label: 'setpar', insertText: '#set par(${1:justify: true, leading: ${2:0.78em}})\n${0}', detail: '设置段落' },
+        { label: 'showrule', insertText: '#show ${1:heading}: set text(${2:font: "serif"})\n${0}', detail: '显示规则' },
+
+        // 网格布局
+        { label: 'grid', insertText: '#grid(\n  columns: ${1:3},\n  gutter: ${2:1fr},\n  [${3:A}], [${4:B}], [${5:C}],\n)${0}', detail: '网格布局' },
+        { label: 'columns', insertText: '#columns(${1:2})[\n  ${0}\n]', detail: '分栏布局' },
+
+        // 字体样式
+        { label: 'highlight', insertText: '#highlight[${1:高亮文本}]${0}', detail: '高亮' },
+        { label: 'strike', insertText: '#strikethrough[${1:删除线文本}]${0}', detail: '删除线' },
+        { label: 'underline', insertText: '#underline[${1:下划线文本}]${0}', detail: '下划线' },
+
+        // 数学
+        { label: 'lr', insertText: 'lr(${1:(}[${2:公式}]${3:)})', detail: '自动括号' },
+        { label: 'cancel', insertText: '#cancel[${1:公式}]${0}', detail: '删除线公式' },
+        { label: 'overbrace', insertText: '#overbrace(${1:公式})[${2:说明}]${0}', detail: '上花括号' },
+        { label: 'underbrace', insertText: '#underbrace(${1:公式})[${2:说明}]${0}', detail: '下花括号' },
+
+        // 化学式
+        { label: 'chem', insertText: '#chem("${1:H2O}")\n${0}', detail: '化学式' },
+
+        // 文档模板
+        { label: 'doc', insertText: '#set page(paper: "a4", margin: (x: 2.5cm, y: 2.5cm))\n#set text(size: 12pt, lang: "zh")\n#set par(justify: true, leading: 0.78em)\n\n= ${1:标题}\n\n${0}\n', detail: '文档模板' },
+        { label: 'slide', insertText: '#set page(paper: "presentation-16-9", margin: 0cm)\n#set text(size: 24pt)\n\n#align(center + horizon)[\n  ${1:标题}\n]\n\n${0}\n', detail: '幻灯片模板' },
+        { label: 'article', insertText: '#set page(paper: "a4", margin: (x: 2.5cm, y: 2.5cm))\n#set text(size: 12pt, lang: "zh", font: ("Noto Serif CJK SC"))\n#set par(justify: true, leading: 0.78em)\n#set heading(numbering: "1.")\n\n= ${1:引言}\n\n${0}\n', detail: '文章模板' },
+
+        // alchemist 化学绘图
+        { label: 'bond-single', insertText: 'single()', detail: '单键 (alchemist)' },
+        { label: 'bond-double', insertText: 'double()', detail: '双键 (alchemist)' },
+        { label: 'fragment', insertText: 'fragment("${1:OH}")', detail: '化学片段 (alchemist)' },
+        { label: 'cycle', insertText: 'cycle(${1:6}, {\n  ${0}\n})', detail: '环状结构 (alchemist)' },
+        { label: 'branch', insertText: 'branch({\n  ${0}\n})', detail: '支链 (alchemist)' },
+        { label: 'skeletize', insertText: '#skeletize({\n  ${0}\n})', detail: '化学骨架 (alchemist)' },
+
+        // 常用布局/元素函数
+        { label: 'block', insertText: '#block[\n  ${1}\n]', detail: '块' },
+        { label: 'box', insertText: '#box[\n  ${1}\n]', detail: '盒子' },
+        { label: 'pad', insertText: '#pad(${1:10pt})[\n  ${2}\n]', detail: '内边距' },
+        { label: 'stack', insertText: '#stack(dir: ${1:ltr})[\n  ${2}\n]', detail: '垂直堆叠' },
+        { label: 'enum', insertText: '#enum[\n  ${1:Item}\n]', detail: '编号列表' },
+        { label: 'list', insertText: '#list[\n  ${1:Item}\n]', detail: '无序列表函数' },
+        { label: 'term', insertText: '#term[\n  ${1:Term} ${2:Description}\n]', detail: '术语列表' },
+        { label: 'strong', insertText: '#strong[${1:text}]', detail: '加粗' },
+        { label: 'emph', insertText: '#emph[${1:text}]', detail: '强调/斜体' },
+        { label: 'raw', insertText: '#raw(${1:"code"})', detail: '原始代码' },
+        { label: 'set', insertText: '#set ${1:page}(width: ${2:210mm})', detail: '设置规则' },
+        { label: 'let', insertText: '#let ${1:name} = ${2:value}', detail: '变量定义' },
+        { label: 'codeblock2', insertText: '```typst\n${1}\n```', detail: 'Typst 代码块' }
       ]
-      return { suggestions }
+      return { suggestions: snippets.map(mk) }
     }
   })
 
@@ -1080,6 +1432,26 @@ async function initEditor() {
   editor.onDidChangeModelContent(() => {
     saveDraft()
     scheduleUpdate()
+  })
+
+  if (currentMode === 'typst') {
+    registerTypstLspFeatures(monaco, editor)
+  }
+
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    saveDraft()
+    const st = document.getElementById('editor-save-status')
+    if (st) {
+      st.classList.remove('dirty')
+      st.classList.add('saved')
+      st.textContent = '已保存'
+      clearTimeout(st.__saveTimer)
+      st.__saveTimer = setTimeout(() => {
+        st.classList.remove('saved')
+        st.classList.add('dirty')
+        st.textContent = '未保存'
+      }, 2000)
+    }
   })
 
   setupScrollSync()
@@ -1120,6 +1492,8 @@ async function initEditor() {
       themes: [THEME_LIGHT, THEME_DARK],
       langs: SHIKI_LANGS
     })
+
+    loadTransformers()
 
     // Apply Shiki themes + tokenizer to Monaco editor so code colors match preview
     // Uses vscode-textmate encoded tokenization + CSS color map injection
@@ -1169,7 +1543,8 @@ async function initEditor() {
           lang,
           themes: { light: THEME_LIGHT, dark: THEME_DARK },
           defaultColor: false,
-          meta: { __raw: info }
+          meta: { __raw: info },
+          transformers: shikiTransformers
         })
       } catch (e) {
         return fallback()
@@ -1221,6 +1596,11 @@ document.querySelectorAll('.toolbar-btn[data-md]').forEach(btn => {
 
     if (action === 'code') {
       openCodeModal()
+      return
+    }
+
+    if (action === 'line-start') {
+      insertAtLineStart(btn.dataset.md)
       return
     }
 
@@ -1297,6 +1677,86 @@ if (downloadBtn) {
     a.download = downloadName()
     a.click()
     URL.revokeObjectURL(url)
+  })
+}
+
+function exportPdfName() {
+  return downloadName().replace(/\.[^.]+$/, '') + '.pdf'
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
+}
+
+const pdfExportBtn = document.getElementById('editor-export-pdf')
+if (pdfExportBtn) {
+  pdfExportBtn.addEventListener('click', async () => {
+    if (!editor) return
+    if (currentMode === 'typst') {
+      showTypstStatus('\u6B63\u5728\u751F\u6210 PDF\u2026')
+      compileTypstPdf(editor.getValue()).then(data => {
+        if (!data || !data.length) throw new Error('empty')
+        downloadBlob(new Blob([new Uint8Array(data)], { type: 'application/pdf' }), exportPdfName())
+        hideTypstStatus()
+      }).catch(() => {
+        showTypstStatus('\u5BFC\u51FA\u5931\u8D25\uFF1A\u7F16\u8BD1\u9519\u8BEF')
+        setTimeout(hideTypstStatus, 2500)
+      })
+      return
+    }
+    const clone = preview.cloneNode(true)
+    clone.style.cssText = 'position:absolute;left:-10000px;top:0;width:794px;max-width:none;padding:24px 28px;background:#fff;color:#1f2328;-webkit-print-color-adjust:exact;print-color-adjust:exact'
+    document.body.appendChild(clone)
+    const btn = pdfExportBtn
+    const prev = btn.innerHTML
+    btn.disabled = true
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+    try {
+      const [{ jsPDF }, h2cMod] = await Promise.all([
+        import('jspdf'),
+        import('html2canvas')
+      ])
+      const html2canvasFn = h2cMod.default || h2cMod
+      const canvas = await html2canvasFn(clone, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        onclone: doc => {
+          doc.documentElement.setAttribute('data-theme', 'light')
+        }
+      })
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+      const margin = 10
+      const pageW = 210
+      const pageH = 297
+      const contentW = pageW - margin * 2
+      const contentH = pageH - margin * 2
+      const imgW = contentW
+      const imgH = canvas.height * imgW / canvas.width
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      let position = margin
+      pdf.addImage(imgData, 'JPEG', margin, position, imgW, imgH)
+      let remaining = imgH - contentH
+      while (remaining > 0.1) {
+        pdf.addPage()
+        position = margin - remaining
+        pdf.addImage(imgData, 'JPEG', margin, position, imgW, imgH)
+        remaining -= contentH
+      }
+      pdf.save(exportPdfName())
+    } catch (e) {
+      console.error('PDF export failed:', e)
+    } finally {
+      btn.disabled = false
+      btn.innerHTML = prev
+      clone.remove()
+    }
   })
 }
 
@@ -1379,39 +1839,36 @@ function setEditorFontSize(size) {
 }
 function updateFontSizeInput() {
   if (!fontSizeInput) return
-  if (isTypstPage) {
-    fontSizeInput.value = Math.round(typstZoom * 100) + '%'
-    fontSizeInput.title = 'Typst 预览缩放 %'
-  } else {
-    fontSizeInput.value = getMonacoFontSize() + 'px'
-    fontSizeInput.title = '编辑器字体大小'
-  }
+  fontSizeInput.value = getMonacoFontSize() + 'px'
+  fontSizeInput.title = '编辑器字体大小'
 }
 if (fontSizeInput) {
   updateFontSizeInput()
   fontSizeInput.addEventListener('change', () => {
     const val = parseInt(fontSizeInput.value) || 0
-    if (isTypstPage) {
-      typstZoom = Math.max(TYPST_ZOOM_MIN, Math.min(TYPST_ZOOM_MAX, val / 100))
-      applyTypstZoom()
-    } else {
-      setEditorFontSize(val)
-    }
+    setEditorFontSize(val)
   })
   fontSizeInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); fontSizeInput.blur() }
   })
 }
 if (previewFontDecreaseBtn) previewFontDecreaseBtn.addEventListener('click', () => {
-  if (isTypstPage) typstZoomOut()
-  else setEditorFontSize(getMonacoFontSize() - 1)
+  setEditorFontSize(getMonacoFontSize() - 1)
   updateFontSizeInput()
 })
 if (previewFontIncreaseBtn) previewFontIncreaseBtn.addEventListener('click', () => {
-  if (isTypstPage) typstZoomIn()
-  else setEditorFontSize(getMonacoFontSize() + 1)
+  setEditorFontSize(getMonacoFontSize() + 1)
   updateFontSizeInput()
 })
+
+if (isTypstPage && preview) {
+  preview.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return
+    e.preventDefault()
+    if (e.deltaY < 0) typstZoomIn()
+    else typstZoomOut()
+  }, { passive: false })
+}
 
 // --- Font settings integration with footer panel ---
 function getFontSettings() {

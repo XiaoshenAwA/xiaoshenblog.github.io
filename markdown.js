@@ -16,15 +16,23 @@ let md = null;
 let ready = false;
 let initPromise = null;
 
+const renderCache = new Map();
+const RENDER_CACHE_MAX = 300;
+
+function clearCache() {
+  renderCache.clear();
+}
+
 const langDisplay = {
   vue: 'Vue', vuejs: 'Vue',
   jsx: 'JSX', tsx: 'TSX',
   html: 'HTML', css: 'CSS',
   javascript: 'JavaScript', typescript: 'TypeScript',
-  python: 'Python', sql: 'SQL',
-  json: 'JSON', yaml: 'YAML',
-  markdown: 'Markdown',
-  bash: 'Bash', shell: 'Shell', powershell: 'PowerShell',
+  js: 'JavaScript', ts: 'TypeScript',
+  python: 'Python', py: 'Python', sql: 'SQL',
+  json: 'JSON', yaml: 'YAML', yml: 'YAML',
+  markdown: 'Markdown', md: 'Markdown',
+  bash: 'Bash', shell: 'Shell', sh: 'Shell', powershell: 'PowerShell',
   xml: 'XML', dockerfile: 'Docker',
   go: 'Go', rust: 'Rust', java: 'Java',
   c: 'C', cpp: 'C++', csharp: 'C#',
@@ -143,29 +151,7 @@ async function init() {
 
   const allTagStacks = [];
 
-  function makeContainer(name, icon, defaultTitle) {
-    md.use(markdownItContainer, name, {
-      validate: function (params) {
-        return params.trim().startsWith(name) || params.trim().match(new RegExp('^' + name + '\\['));
-      },
-      render: function (tokens, idx) {
-        if (tokens[idx].nesting === 1) {
-          var title = defaultTitle;
-          var info = tokens[idx].info.trim().slice(name.length).trim();
-          var optMatch = info.match(/\{([^}]*)\}$/);
-          var opts = optMatch ? optMatch[1].trim() : '';
-          if (optMatch) info = info.slice(0, optMatch.index).trim();
-          var titleMatch = info.match(/^\[([\s\S]*)\]$/);
-          if (titleMatch) title = md.renderInline(titleMatch[1]);
-          var openAttr = opts === 'open' ? ' open' : '';
-          return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + icon + ' ' + title + '</summary>\n';
-        }
-        return '</details>\n';
-      }
-    });
-  }
-
-  function makeAdmonition(name, icon, defaultTitle) {
+  function makeAdmonition(name, defaultTitle) {
     var tagStack = [];
     allTagStacks.push(tagStack);
     md.use(markdownItContainer, name, {
@@ -183,26 +169,26 @@ async function init() {
             info = info.slice(0, optMatch.index).trim();
           }
           var titleMatch = info.match(/^\[([\s\S]*)\]$/);
-          var hasTitle = !!titleMatch;
           if (titleMatch) title = md.renderInline(titleMatch[1]);
-          if (hasTitle) {
-            tagStack.push('details');
-            return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + icon + ' ' + title + '</summary>\n';
-          }
-          tagStack.push('div');
-          return '<div class="admonition ' + name + '"><p class="admonition-title">' + icon + ' ' + title + '</p>\n';
+          tagStack.push('open');
+          return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + title + '</summary><div class="admonition-content"><div class="admonition-inner">\n';
         }
-        return (tagStack.pop() === 'details' ? '</details>\n' : '</div>\n');
+        return tagStack.pop() === 'open' ? '</div></div></details>\n' : '';
       }
     });
   }
 
-  makeAdmonition('info', '<i class="fas fa-circle-info"></i>', '提示');
-  makeAdmonition('success', '<i class="fas fa-circle-check"></i>', '完成');
-  makeAdmonition('warning', '<i class="fas fa-triangle-exclamation"></i>', '注意');
-  makeAdmonition('error', '<i class="fas fa-circle-xmark"></i>', '错误');
-  makeAdmonition('danger', '<i class="fas fa-ban"></i>', '危险');
-  makeContainer('details', '<i class="fas fa-chevron-right"></i>', '详情');
+  makeAdmonition('note', '备注');
+  makeAdmonition('tip', '技巧');
+  makeAdmonition('info', '提示');
+  makeAdmonition('question', '常见问题');
+  makeAdmonition('success', '完成');
+  makeAdmonition('warning', '注意');
+  makeAdmonition('failure', '失败');
+  makeAdmonition('error', '错误');
+  makeAdmonition('danger', '危险');
+  makeAdmonition('bug', '缺陷');
+  makeAdmonition('details', '详情');
 
   md.core.ruler.push('admonition_reset', function (state) {
     allTagStacks.forEach(function (ts) { ts.length = 0; });
@@ -226,8 +212,7 @@ async function init() {
     const fullInfo = token.info.trim();
     const parts = fullInfo.split(/\s+/);
     const lang = parts[0];
-    const langName = langDisplay[lang] || (lang ? lang.toUpperCase() : '');
-
+    const langName = lang ? (langDisplay[lang] || lang).toUpperCase() : 'TEXT';
     const html = originalFence.call(this, tokens, idx, options, env, self);
 
     const preMatch = html.match(/^<pre[^>]*>/);
@@ -248,9 +233,6 @@ async function init() {
     const closeIdx = afterPre.lastIndexOf(closePre);
     const innerCode = closeIdx >= 0 ? afterPre.slice(0, closeIdx) : afterPre;
 
-    var codeLineCount = (innerCode.match(/<span class="line/g) || []).length;
-    var shouldShrink = config.CB_SHRINK && codeLineCount >= 5;
-
     var toolsParts = '';
     if (config.CB_MACSTYLE) {
       toolsParts += '<div class="mac-style">'
@@ -262,20 +244,22 @@ async function init() {
     if (config.CB_LANGUAGE && langName) {
       toolsParts += '<span class="code-lang">' + langName + '</span>';
     }
-    if (shouldShrink) {
-      toolsParts += '<i class="shrink-btn" title="展开/折叠">展开</i>';
-    }
+    toolsParts += '<div class="hl-tools-right">';
     if (config.CB_FULLPAGE) {
       toolsParts += '<i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i>';
     }
     if (config.CB_COPY) {
-      toolsParts += '<i class="copy-btn" title="复制">复制</i>';
+      toolsParts += '<i class="copy-btn" title="Copy">Copy</i>';
     }
+    if (config.CB_SHRINK) {
+      toolsParts += '<i class="shrink-btn shrunk" title="展开/折叠"><i class="fas fa-chevron-right"></i></i>';
+    }
+    toolsParts += '</div>';
     var toolsHtml = toolsParts ? '<div class="highlight-tools">' + toolsParts + '</div>' : '';
 
     var wrapClass = 'code-wrap';
     if (config.CB_WORD_WRAP) wrapClass += ' code-wrap-on';
-    if (shouldShrink) wrapClass += ' code-shrink';
+    if (config.CB_SHRINK) wrapClass += ' code-shrink';
     var heightStyle = '';
     if (config.CB_HEIGHT_LIMIT) heightStyle = ' style="max-height:' + config.CB_HEIGHT_LIMIT + 'px;overflow-y:auto"';
 
@@ -315,14 +299,22 @@ async function init() {
 
 async function render(content) {
   await init();
-  const raw = md.render(breakResetLists(content || ''));
-  return DOMPurify.sanitize(raw, {
+  const key = String(content || '');
+  if (renderCache.has(key)) return renderCache.get(key);
+  const raw = md.render(breakResetLists(key));
+  const html = DOMPurify.sanitize(raw, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'del', 'ins', 'mark', 'sub', 'sup', 'a', 'img', 'figure', 'figcaption', 'pre', 'code', 'blockquote', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span', 'details', 'summary',
       'math', 'semantics', 'annotation', 'mrow', 'mi', 'mo', 'mn', 'msup', 'msub', 'mfrac', 'msqrt', 'mover', 'munder', 'mstyle', 'merror', 'mpadded', 'mphantom', 'menclose', 'mlabeledtr', 'mtable', 'mtr', 'mtd', 'mprescripts', 'none'],
     ALLOWED_ATTR: ['class', 'id', 'src', 'href', 'alt', 'title', 'target', 'rel', 'width', 'height', 'loading', 'datetime', 'open', 'start', 'type', 'colspan', 'rowspan', 'checked', 'disabled', 'draggable', 'data-line', 'data-language', 'mathvariant', 'encoding', 'definitionURL', 'style'],
     FORBID_TAGS: ['script', 'iframe', 'embed', 'object', 'applet', 'form', 'input', 'textarea', 'button', 'select', 'option', 'label', 'frameset', 'frame', 'marquee', 'template', 'style'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick', 'ondblclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onkeydown', 'onkeypress', 'onkeyup', 'onsubmit', 'onreset', 'onfocus', 'onblur', 'onchange', 'onselect', 'onabort', 'onbeforeunload', 'onhashchange', 'onpopstate', 'onstorage', 'onfocusin', 'onfocusout', 'oninput', 'oninvalid', 'oncontextmenu', 'oncopy', 'oncut', 'onpaste', 'onwheel', 'onpointerdown', 'onpointerup', 'onpointermove', 'onpointerover', 'onpointerout', 'onpointerenter', 'onpointerleave', 'onpointercancel', 'ongotpointercapture', 'onlostpointercapture', 'ontouchstart', 'ontouchend', 'ontouchmove', 'ontouchcancel', 'onanimationend', 'onanimationstart', 'onanimationiteration', 'ontransitionend', 'ontransitionrun', 'ontransitionstart', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onpageshow', 'onpagehide', 'onmessage', 'onmessageerror', 'onplay', 'onplaying', 'onpause', 'onended', 'onvolumechange', 'onwaiting', 'onscroll'],
   });
+  renderCache.set(key, html);
+  if (renderCache.size > RENDER_CACHE_MAX) {
+    const oldest = renderCache.keys().next().value;
+    renderCache.delete(oldest);
+  }
+  return html;
 }
 
 async function excerpt(content, maxLen = 200) {
@@ -331,4 +323,4 @@ async function excerpt(content, maxLen = 200) {
   return text.length > maxLen ? text.substring(0, maxLen) + '...' : text;
 }
 
-module.exports = { render, excerpt, init };
+module.exports = { render, excerpt, init, clearCache };

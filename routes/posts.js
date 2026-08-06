@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { getAllTags, getPostsPage, getPost, getPostAdmin, createPost, updatePost, deletePost, getPostCount, getAllPosts, getAdjacentPosts, getAllCategories, getCategoryTree, getArchives, getRecentPosts, getTotalWordCount, getSiteStats, incrementVisitorCount, incrementViewCount, getLastPostUpdateTime, getManagedTags, createManagedTag, deleteManagedTag, renameManagedTag, getManagedCategories, createManagedCategory, deleteManagedCategory, renameManagedCategory, moveManagedCategory, getManagedCategoriesFlat } = require('../db');
 const config = require('../config');
-const { render, excerpt } = require('../markdown');
+const { render, excerpt, clearCache } = require('../markdown');
 const adminAuth = require('../middleware/adminAuth');
 
 router.get('/', async (req, res) => {
@@ -56,6 +56,7 @@ router.post('/posts', adminAuth, async (req, res) => {
     const { title, content, tags, cover, category } = req.body;
     if (!title || !content) return res.status(400).send(config.locale?.common?.empty_error || '标题和内容不能为空');
     const id = await createPost({ title, content, tags, cover, category });
+    clearCache();
     res.redirect(`${config.BASE_PATH}/posts/${id}`);
   } catch (e) {
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
@@ -65,6 +66,7 @@ router.post('/posts', adminAuth, async (req, res) => {
 router.delete('/posts/:id', adminAuth, async (req, res) => {
   try {
     await deletePost(req.params.id);
+    clearCache();
     res.redirect(config.BASE_PATH || '/');
   } catch (e) {
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
@@ -88,6 +90,7 @@ router.put('/posts/:id', adminAuth, async (req, res) => {
     const { title, content, tags, cover, category } = req.body;
     if (!title || !content) return res.status(400).send(config.locale?.common?.empty_error || '标题和内容不能为空');
     await updatePost(req.params.id, { title, content, tags, cover, category });
+    clearCache();
     res.redirect(`${config.BASE_PATH}/posts/${req.params.id}`);
   } catch (e) {
     res.status(500).send(config.locale?.common?.server_error || '服务器错误');
