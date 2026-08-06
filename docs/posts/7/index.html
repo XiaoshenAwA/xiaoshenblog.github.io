@@ -35,7 +35,7 @@
   <script>try{(function(){var u=window.location.href;var o=document.querySelector('meta[property="og:url"]');if(o)o.setAttribute('content',u);var c=document.querySelector('link[rel="canonical"]');if(c)c.setAttribute('href',u)})()}catch(e){}</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="/blog/fontawesome/css/all.min.css">
-  <link rel="stylesheet" href="/blog/assets/main.css?v=1786003704713" onerror="this.onerror=null;this.href='/blog/css/style.css'">
+  <link rel="stylesheet" href="/blog/assets/main.css?v=1786009964579" onerror="this.onerror=null;this.href='/blog/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -464,7 +464,7 @@
       <article class="post-article reveal">
         <div class="post-content"><h1>测试标题</h1>
 <h2>代码块</h2>
-<figure class="highlight" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">javascript</span><div class="hl-tools-right"><i class="shrink-btn shrunk" title="展开/折叠"><i class="fas fa-chevron-right"></i></i><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="Copy">Copy</i></div></div><pre class="code-wrap code-wrap-on code-shrink"><code class="language-javascript"><span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> hello</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">() {</span></span>
+<figure class="highlight" style="--shiki-light:#000000;--shiki-dark:#D4D4D4;--shiki-light-bg:#FFFFFF;--shiki-dark-bg:#1E1E1E"><div class="highlight-tools"><div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div><span class="code-lang">JAVASCRIPT</span><div class="hl-tools-right"><i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i><i class="copy-btn" title="Copy">Copy</i><i class="shrink-btn shrunk" title="展开/折叠"><i class="fas fa-chevron-right"></i></i></div></div><pre class="code-wrap code-wrap-on code-shrink"><code class="language-javascript"><span class="line"><span style="--shiki-light:#0000FF;--shiki-dark:#569CD6">function</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA"> hello</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">() {</span></span>
 <span class="line"><span style="--shiki-light:#001080;--shiki-dark:#9CDCFE">  console</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">.</span><span style="--shiki-light:#795E26;--shiki-dark:#DCDCAA">log</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">(</span><span style="--shiki-light:#A31515;--shiki-dark:#CE9178">"Hello World"</span><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">);</span></span>
 <span class="line"><span style="--shiki-light:#000000;--shiki-dark:#D4D4D4">}</span></span></code></pre></figure><h2>数学公式</h2>
 <p>行内公式 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E=mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">E</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord mathnormal">m</span><span class="mord"><span class="mord mathnormal">c</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> 和块级公式：</p>
@@ -782,7 +782,7 @@
     </div>
   </div>
 
-  <script type="module" src="/blog/assets/main.js?v=1786003704713"></script>
+  <script type="module" src="/blog/assets/main.js?v=1786009964579"></script>
   <script>
     try {
       var rt = document.querySelector('.runtime-days');
@@ -1147,16 +1147,53 @@
     try {
       document.addEventListener('click', function(e) {
         var btn = e.target.closest('.shrink-btn');
-        if (!btn) return;
-        var fig = btn.closest('.highlight');
+        var tools = e.target.closest('.highlight-tools');
+        if (btn) {
+          var fig = btn.closest('.highlight');
+          toggleShrink(fig);
+          return;
+        }
+        if (tools && !e.target.closest('.hl-tools-right')) {
+          toggleShrink(tools.closest('.highlight'));
+        }
+      });
+      function toggleShrink(fig) {
         if (!fig) return;
         var pre = fig.querySelector('pre.code-wrap');
         if (!pre) return;
+        if (pre.__shrinkAnim) return;
+        var btn = fig.querySelector('.shrink-btn');
         var collapsed = pre.classList.contains('code-shrink');
-        pre.classList.toggle('code-shrink', !collapsed);
-        pre.classList.toggle('code-expanded', collapsed);
-        btn.classList.toggle('shrunk', !collapsed);
-      });
+        var dur = 0.35;
+        var fullH = pre.scrollHeight;
+        pre.__shrinkAnim = true;
+        pre.style.transition = 'max-height ' + dur + 's ease';
+        if (collapsed) {
+          pre.classList.remove('code-shrink');
+          pre.classList.add('code-expanded');
+          pre.style.maxHeight = '0px';
+          void pre.offsetWidth;
+          pre.style.maxHeight = fullH + 'px';
+          if (btn) btn.classList.remove('shrunk');
+          setTimeout(function() {
+            pre.style.transition = '';
+            pre.style.maxHeight = '';
+            pre.__shrinkAnim = false;
+          }, dur * 1000 + 50);
+        } else {
+          pre.classList.remove('code-expanded');
+          pre.style.maxHeight = fullH + 'px';
+          void pre.offsetWidth;
+          pre.style.maxHeight = '0px';
+          if (btn) btn.classList.add('shrunk');
+          setTimeout(function() {
+            pre.classList.add('code-shrink');
+            pre.style.transition = '';
+            pre.style.maxHeight = '';
+            pre.__shrinkAnim = false;
+          }, dur * 1000 + 50);
+        }
+      }
     } catch(e) {}
     
 
@@ -1170,28 +1207,38 @@
         var inner = details.querySelector('.admonition-inner');
         if (!content || !inner) return;
         e.preventDefault();
+        if (details.__adAnim) return;
 
         var dur = 0.35;
-        var maxH = inner.scrollHeight;
         var willOpen = !details.open;
+        details.__adAnim = true;
 
         if (willOpen) {
           details.open = true;
-          if (!maxH) return;
-          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.transition = 'none';
           content.style.maxHeight = '0px';
-          requestAnimationFrame(function() {
-            content.style.maxHeight = maxH + 'px';
-          });
-        } else {
-          content.style.maxHeight = maxH + 'px';
+          void content.scrollHeight;
+          var h = content.scrollHeight;
           content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = h + 'px';
+          setTimeout(function() {
+            content.style.transition = '';
+            content.style.maxHeight = '';
+            details.__adAnim = false;
+          }, dur * 1000 + 50);
+        } else {
+          content.style.transition = 'none';
+          content.style.maxHeight = '';
+          var h2 = content.scrollHeight;
+          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = h2 + 'px';
           void content.offsetWidth;
           content.style.maxHeight = '0px';
           setTimeout(function() {
             content.style.transition = '';
             content.style.maxHeight = '';
             details.open = false;
+            details.__adAnim = false;
           }, dur * 1000 + 50);
         }
       });
@@ -1281,8 +1328,28 @@
 
     /* Right-side buttons */
     try {
+      var rightsideHide = document.getElementById('rightside-config-hide');
+      var rightsideTimer = null;
+      var rightsideBusy = false;
       document.getElementById('rightside-config').addEventListener('click', function() {
-        document.getElementById('rightside-config-hide').classList.toggle('open');
+        if (rightsideBusy) return;
+        rightsideBusy = true;
+        clearTimeout(rightsideTimer);
+        var isOpen = rightsideHide.classList.contains('open');
+        if (isOpen) {
+          rightsideHide.classList.remove('open');
+          rightsideHide.classList.add('closing');
+          rightsideTimer = setTimeout(function() {
+            rightsideHide.classList.remove('closing');
+            rightsideBusy = false;
+          }, 700);
+        } else {
+          rightsideHide.classList.remove('closing');
+          rightsideHide.classList.add('open');
+          rightsideTimer = setTimeout(function() {
+            rightsideBusy = false;
+          }, 700);
+        }
       });
     } catch(e) {}
 

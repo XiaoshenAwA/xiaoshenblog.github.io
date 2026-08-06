@@ -32,7 +32,7 @@
   <script>try{(function(){var u=window.location.href;var o=document.querySelector('meta[property="og:url"]');if(o)o.setAttribute('content',u);var c=document.querySelector('link[rel="canonical"]');if(c)c.setAttribute('href',u)})()}catch(e){}</script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.min.css">
   <link rel="stylesheet" href="/blog/fontawesome/css/all.min.css">
-  <link rel="stylesheet" href="/blog/assets/main.css?v=1786003704713" onerror="this.onerror=null;this.href='/blog/css/style.css'">
+  <link rel="stylesheet" href="/blog/assets/main.css?v=1786009964579" onerror="this.onerror=null;this.href='/blog/css/style.css'">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css" crossorigin="anonymous">
 
   <style>
@@ -401,19 +401,19 @@
           
             
             
-            <a href="/blog/tag/%E7%BC%96%E7%A8%8B/" style="font-size:1.25em;color:hsl(32,55%,45%)">
+            <a href="/blog/tag/%E7%BC%96%E7%A8%8B/" style="font-size:1.25em;color:hsl(176,55%,45%)">
               编程
             </a>
           
             
             
-            <a href="/blog/tag/%E6%B5%8B%E8%AF%95/" style="font-size:1.1em;color:hsl(6,55%,45%)">
+            <a href="/blog/tag/%E6%B5%8B%E8%AF%95/" style="font-size:1.1em;color:hsl(235,55%,45%)">
               测试
             </a>
           
             
             
-            <a href="/blog/tag/%E6%8A%80%E6%9C%AF/" style="font-size:0.9500000000000001em;color:hsl(76,55%,45%)">
+            <a href="/blog/tag/%E6%8A%80%E6%9C%AF/" style="font-size:0.9500000000000001em;color:hsl(9,55%,45%)">
               技术
             </a>
           
@@ -706,13 +706,13 @@
       
       <div class="webinfo-item">
         <div class="item-name">本站访客数 :</div>
-        <div class="item-count webinfo-visitor-count">529</div>
+        <div class="item-count webinfo-visitor-count">552</div>
       </div>
       
       
       <div class="webinfo-item">
         <div class="item-name">本站总浏览量 :</div>
-        <div class="item-count webinfo-total-views">941</div>
+        <div class="item-count webinfo-total-views">981</div>
       </div>
       
       
@@ -771,7 +771,7 @@
     </div>
   </div>
 
-  <script type="module" src="/blog/assets/main.js?v=1786003704713"></script>
+  <script type="module" src="/blog/assets/main.js?v=1786009964579"></script>
   <script>
     try {
       var rt = document.querySelector('.runtime-days');
@@ -1136,16 +1136,53 @@
     try {
       document.addEventListener('click', function(e) {
         var btn = e.target.closest('.shrink-btn');
-        if (!btn) return;
-        var fig = btn.closest('.highlight');
+        var tools = e.target.closest('.highlight-tools');
+        if (btn) {
+          var fig = btn.closest('.highlight');
+          toggleShrink(fig);
+          return;
+        }
+        if (tools && !e.target.closest('.hl-tools-right')) {
+          toggleShrink(tools.closest('.highlight'));
+        }
+      });
+      function toggleShrink(fig) {
         if (!fig) return;
         var pre = fig.querySelector('pre.code-wrap');
         if (!pre) return;
+        if (pre.__shrinkAnim) return;
+        var btn = fig.querySelector('.shrink-btn');
         var collapsed = pre.classList.contains('code-shrink');
-        pre.classList.toggle('code-shrink', !collapsed);
-        pre.classList.toggle('code-expanded', collapsed);
-        btn.classList.toggle('shrunk', !collapsed);
-      });
+        var dur = 0.35;
+        var fullH = pre.scrollHeight;
+        pre.__shrinkAnim = true;
+        pre.style.transition = 'max-height ' + dur + 's ease';
+        if (collapsed) {
+          pre.classList.remove('code-shrink');
+          pre.classList.add('code-expanded');
+          pre.style.maxHeight = '0px';
+          void pre.offsetWidth;
+          pre.style.maxHeight = fullH + 'px';
+          if (btn) btn.classList.remove('shrunk');
+          setTimeout(function() {
+            pre.style.transition = '';
+            pre.style.maxHeight = '';
+            pre.__shrinkAnim = false;
+          }, dur * 1000 + 50);
+        } else {
+          pre.classList.remove('code-expanded');
+          pre.style.maxHeight = fullH + 'px';
+          void pre.offsetWidth;
+          pre.style.maxHeight = '0px';
+          if (btn) btn.classList.add('shrunk');
+          setTimeout(function() {
+            pre.classList.add('code-shrink');
+            pre.style.transition = '';
+            pre.style.maxHeight = '';
+            pre.__shrinkAnim = false;
+          }, dur * 1000 + 50);
+        }
+      }
     } catch(e) {}
     
 
@@ -1159,28 +1196,38 @@
         var inner = details.querySelector('.admonition-inner');
         if (!content || !inner) return;
         e.preventDefault();
+        if (details.__adAnim) return;
 
         var dur = 0.35;
-        var maxH = inner.scrollHeight;
         var willOpen = !details.open;
+        details.__adAnim = true;
 
         if (willOpen) {
           details.open = true;
-          if (!maxH) return;
-          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.transition = 'none';
           content.style.maxHeight = '0px';
-          requestAnimationFrame(function() {
-            content.style.maxHeight = maxH + 'px';
-          });
-        } else {
-          content.style.maxHeight = maxH + 'px';
+          void content.scrollHeight;
+          var h = content.scrollHeight;
           content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = h + 'px';
+          setTimeout(function() {
+            content.style.transition = '';
+            content.style.maxHeight = '';
+            details.__adAnim = false;
+          }, dur * 1000 + 50);
+        } else {
+          content.style.transition = 'none';
+          content.style.maxHeight = '';
+          var h2 = content.scrollHeight;
+          content.style.transition = 'max-height ' + dur + 's ease';
+          content.style.maxHeight = h2 + 'px';
           void content.offsetWidth;
           content.style.maxHeight = '0px';
           setTimeout(function() {
             content.style.transition = '';
             content.style.maxHeight = '';
             details.open = false;
+            details.__adAnim = false;
           }, dur * 1000 + 50);
         }
       });
@@ -1270,8 +1317,28 @@
 
     /* Right-side buttons */
     try {
+      var rightsideHide = document.getElementById('rightside-config-hide');
+      var rightsideTimer = null;
+      var rightsideBusy = false;
       document.getElementById('rightside-config').addEventListener('click', function() {
-        document.getElementById('rightside-config-hide').classList.toggle('open');
+        if (rightsideBusy) return;
+        rightsideBusy = true;
+        clearTimeout(rightsideTimer);
+        var isOpen = rightsideHide.classList.contains('open');
+        if (isOpen) {
+          rightsideHide.classList.remove('open');
+          rightsideHide.classList.add('closing');
+          rightsideTimer = setTimeout(function() {
+            rightsideHide.classList.remove('closing');
+            rightsideBusy = false;
+          }, 700);
+        } else {
+          rightsideHide.classList.remove('closing');
+          rightsideHide.classList.add('open');
+          rightsideTimer = setTimeout(function() {
+            rightsideBusy = false;
+          }, 700);
+        }
       });
     } catch(e) {}
 
