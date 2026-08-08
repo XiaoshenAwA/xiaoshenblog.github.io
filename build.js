@@ -219,6 +219,18 @@ async function build() {
     console.log(`  \u2714 wasm/typst_ts_web_compiler_bg.wasm.gz (${(gz.length / 1024 / 1024).toFixed(1)} MiB)`);
   }
 
+  console.log('\u6B63\u5728\u538B\u7F29 Typst LSP WASM...');
+  const lspWasmSrc = path.join(__dirname, 'node_modules', '@vedivad', 'typst-web-service', 'dist', 'typsten_bg.wasm');
+  const lspWasm = path.join(dist, 'assets', 'typsten_bg.wasm');
+  if (fs.existsSync(lspWasmSrc)) {
+    fs.mkdirSync(path.dirname(lspWasm), { recursive: true });
+    fs.copyFileSync(lspWasmSrc, lspWasm);
+    const gz = zlib.gzipSync(fs.readFileSync(lspWasm), { level: 9 });
+    fs.writeFileSync(lspWasm + '.gz', gz);
+    fs.rmSync(lspWasm);
+    console.log(`  \u2714 assets/typsten_bg.wasm.gz (${(gz.length / 1024 / 1024).toFixed(1)} MiB)`);
+  }
+
   console.log(`\n\u2705 \u6784\u5EFA\u5B8C\u6210\uFF01\u6587\u4EF6\u8F93\u51FA\u5230: ${dist}`);
   console.log(`   \u5171 ${allPosts.length} \u7BC7\u6587\u7AE0, ${allTags.length} \u4E2A\u6807\u7B7E, ${totalPages} \u9875`);
 }

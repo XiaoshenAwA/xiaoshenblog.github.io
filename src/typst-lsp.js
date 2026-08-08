@@ -1,4 +1,5 @@
 import { TypstProject } from '@vedivad/typst-web-service'
+import * as Comlink from 'comlink'
 import { zhTypstMsg } from './typst-msg.js'
 
 let project = null
@@ -30,14 +31,36 @@ export function isTypstLspReady() {
   return projectReady
 }
 
+async function loadTypstenWasm() {
+  const base = (window.__CONFIG__ && window.__CONFIG__.BASE_PATH) || ''
+  let res = await fetch(base + '/assets/typsten_bg.wasm.gz')
+  let gzipped = true
+  if (!res.ok) {
+    res = await fetch(base + '/assets/typsten_bg.wasm')
+    gzipped = false
+  }
+  if (!res.ok) throw new Error('Failed to load typsten wasm: HTTP ' + res.status)
+  let bytes = new Uint8Array(await res.arrayBuffer())
+  if (gzipped && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+    const stream = new Response(bytes).body.pipeThrough(new DecompressionStream('gzip'))
+    bytes = new Uint8Array(await new Response(stream).arrayBuffer())
+  }
+  return bytes
+}
+
 export function initTypstLsp() {
   if (initPromise) return initPromise
   initPromise = (async () => {
     try {
-      project = await TypstProject.create({
+      const worker = new Worker(new URL('./typsten-lsp-worker.js', import.meta.url), { type: 'module' })
+      const engine = Comlink.wrap(worker)
+      const wasmBytes = await loadTypstenWasm()
+      await engine.init(wasmBytes)
+      project = new TypstProject(engine, worker, {
         entry: entryPath,
         autoCompile: { debounceMs: 600, maxWaitMs: 3000 }
       })
+      await engine.setEntry(project.entry)
       for (const f of FONT_PATHS) {
         try {
           const resp = await fetch(basePath + '/' + f)
