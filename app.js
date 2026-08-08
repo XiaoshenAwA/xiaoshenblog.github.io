@@ -4,6 +4,7 @@ const fs = require('fs');
 const methodOverride = require('method-override');
 const helmet = require('helmet');
 const postsRouter = require('./routes/posts');
+const imagesRouter = require('./routes/images');
 const config = require('./config');
 const adminAuth = require('./middleware/adminAuth');
 
@@ -192,6 +193,7 @@ app.get(`${config.BASE_PATH}/typst-packages/*`, (req, res) => {
   });
 });
 
+app.use(config.BASE_PATH, imagesRouter);
 app.use(config.BASE_PATH, postsRouter);
 
 app.listen(PORT, () => {

@@ -9,6 +9,8 @@ import katex from 'katex'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs'
 import { zhTypstMsg } from './typst-msg.js'
 import { registerTypstLspFeatures } from './typst-lsp.js'
+import { registerMarkdownMathCompletion } from './md-math-completion.js'
+import { markdownMonarchLanguage } from './markdown-monarch.js'
 pdfjsLib.GlobalWorkerOptions.workerSrc = (window.__CONFIG__?.BASE_PATH || '') + '/wasm/pdf.worker.mjs'
 
 // --- Markdown-it setup (shared with server-side render) ---
@@ -196,6 +198,46 @@ let typstRendering = false
 
 const EMPTY_TOKENS = new Uint32Array(0)
 
+// Monaco 主题：保留 vs/vs-dark 默认规则，追加数学公式 token 配色。
+// 色值对齐 VS Code 官方 md-math + dark-plus/light-plus（见 md-color-probe 探测结果）。
+const MONACO_THEME_DARK = 'monaco-md-dark'
+const MONACO_THEME_LIGHT = 'monaco-md-light'
+function defineMathThemes() {
+  if (!monaco) return
+  monaco.editor.defineTheme(MONACO_THEME_DARK, {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+      { token: 'math.command.md', foreground: '569CD6' },
+      { token: 'math.function.md', foreground: 'DCDCAA' },
+      { token: 'math.number.md', foreground: 'B5CEA8' },
+      { token: 'math.operator.md', foreground: 'B5CEA8' },
+      { token: 'math.comment.md', foreground: '6A9955' },
+      { token: 'math.escape.md', foreground: 'D7BA7D' }
+    ],
+    colors: {
+      'editor.foreground': '#D4D4D4',
+      'editor.background': '#1E1E1E'
+    }
+  })
+  monaco.editor.defineTheme(MONACO_THEME_LIGHT, {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'math.command.md', foreground: '0000FF' },
+      { token: 'math.function.md', foreground: '795E26' },
+      { token: 'math.number.md', foreground: '098658' },
+      { token: 'math.operator.md', foreground: '098658' },
+      { token: 'math.comment.md', foreground: '008000' },
+      { token: 'math.escape.md', foreground: 'EE0000' }
+    ],
+    colors: {
+      'editor.foreground': '#000000',
+      'editor.background': '#FFFFFF'
+    }
+  })
+}
+
 let indentMode = ''
 try { indentMode = localStorage.getItem('editor-indent-mode') } catch {}
 indentMode = indentMode || cfg.EDITOR_INDENT_MODE || 'tab'
@@ -219,7 +261,7 @@ function isDark() {
 function injectShikiTheme(highlighter, themeId) {
   const { colorMap } = highlighter.setTheme(themeId)
   monaco.languages.setColorMap(colorMap)
-  monaco.editor.setTheme(themeId === THEME_DARK ? 'vs-dark' : 'vs')
+  monaco.editor.setTheme(themeId === THEME_DARK ? MONACO_THEME_DARK : MONACO_THEME_LIGHT)
   let style = document.getElementById('shiki-monaco-colors')
   if (!style) {
     style = document.createElement('style')
@@ -232,6 +274,29 @@ function injectShikiTheme(highlighter, themeId) {
     if (c && c !== 'transparent') rules.push('.mtk' + i + '{color:' + c + '!important}')
   }
   style.textContent = rules.join('')
+
+  // 数学公式 token 配色（VS Code 官方 md-math scope → dark-plus/light-plus 色值）。
+  // 双重类名提升 specificity，压过上方 .mtkN!important 与 Monaco 自带主题样式。
+  let mathStyle = document.getElementById('shiki-monaco-math-colors')
+  if (!mathStyle) {
+    mathStyle = document.createElement('style')
+    mathStyle.id = 'shiki-monaco-math-colors'
+    document.head.appendChild(mathStyle)
+  }
+  const mathColors = themeId === THEME_DARK
+    ? { fg: '#D4D4D4', cmd: '#569CD6', fn: '#DCDCAA', num: '#B5CEA8', op: '#B5CEA8', comment: '#6A9955', esc: '#D7BA7D' }
+    : { fg: '#000000', cmd: '#0000FF', fn: '#795E26', num: '#098658', op: '#098658', comment: '#008000', esc: '#EE0000' }
+  const part = (k, c) => `.editor-page .monaco-editor .md-math-${k}.md-math-${k}{color:${c}!important}`
+  mathStyle.textContent = [
+    part('inline', mathColors.fg),
+    part('display', mathColors.fg),
+    part('cmd', mathColors.cmd),
+    part('fn', mathColors.fn),
+    part('num', mathColors.num),
+    part('op', mathColors.op),
+    part('comment', mathColors.comment),
+    part('esc', mathColors.esc)
+  ].join('')
 }
 
 function indentOptions() {
@@ -268,10 +333,139 @@ function loadDraft(mode) {
 
 // --- Preview rendering ---
 
+// 数学公式 token：对齐 VS Code 官方 md-math 语法配色。
+// 在 formula 范围内按 (VS Code markdown-math 的 math repo) 规则切 token：
+//   命令 \alpha        -> cmd     蓝  #569CD6 / #0000FF
+//   函数 \frac{        -> fn      黄  #DCDCAA / #795E26
+//   数字               -> num     绿  #B5CEA8 / #098658
+//   运算符 + - * / _ ^ -> op      绿  #B5CEA8 / #098658
+//   注释 %...          -> comment 绿  #6A9955 / #008000
+//   转义 \\ \$         -> esc     橙  #D7BA7D / #EE0000
+const MATH_TOKEN_RE =
+  /(%[^\n]*)|((\\)([A-Za-z_]+)(?=\s*\{))|(\\[A-Za-z_]+)|(\d+(?:\.\d+)?)|([+\-*/_^])|(\\([\\$&%#_{}~^]))/g
+
+// 扫描数学范围：$...$ / $$...$$（跳过代码围栏与转义），
+// returns: [{ open, close, cls, lineNumbers }]，close 为闭定界符后的字符位置
+function findMathRanges(model) {
+  const text = model.getValue()
+  const ranges = []
+  if (!text.includes('$')) return ranges
+  // 代码围栏区间（屏蔽其内部）
+  const fenceAreas = []
+  const reFence = /^(`{3,}|~{3,})[^\n]*$/gm
+  let fm
+  while ((fm = reFence.exec(text))) {
+    const open = fm.index
+    const closeRe = new RegExp('^\\s*' + fm[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^\\n]*$', 'gm')
+    closeRe.lastIndex = fm.index + fm[0].length
+    const cm = closeRe.exec(text)
+    const end = cm ? cm.index + cm[0].length : text.length
+    fenceAreas.push([open, end])
+  }
+  const inFence = pos => fenceAreas.some(([s, e]) => pos >= s && pos < e)
+  // $$...$$ 块级（可跨行）
+  const reBlock = /\$\$(?!\$)/g
+  let bm
+  while ((bm = reBlock.exec(text))) {
+    const open = bm.index
+    if (inFence(open)) continue
+    const close = text.indexOf('$$', open + 2)
+    if (close === -1 || inFence(close)) break
+    ranges.push({ open, end: close + 2, cls: 'md-math-display' })
+    reBlock.lastIndex = close + 2
+  }
+  // $...$ 行内（单行、非空、非转义、不含 $$）
+  const reInline = /(?<!\\)\$(?!\$)([^$\n]+?)\$(?!\$)/g
+  let im
+  while ((im = reInline.exec(text))) {
+    if (inFence(im.index)) continue
+    ranges.push({ open: im.index, end: im.index + im[0].length, cls: 'md-math-inline' })
+  }
+  return ranges
+}
+
+// 对公式范围细分 math token 装饰段
+function mathTokenDecorations(model, text, f) {
+  const decos = []
+  const pushToken = (start, end, type) => {
+    if (start >= end) return
+    const s = model.getPositionAt(start)
+    const e = model.getPositionAt(end)
+    decos.push({
+      range: new monaco.Range(s.lineNumber, s.column, e.lineNumber, e.column),
+      options: { inlineClassName: f.cls + ' md-math-' + type }
+    })
+  }
+  const skip = f.cls === 'md-math-display' ? 2 : 1
+  const closedAt = f.end - skip
+  MATH_TOKEN_RE.lastIndex = f.open + skip
+  let guard = 0
+  while (MATH_TOKEN_RE.lastIndex < closedAt && guard++ < 10000) {
+    const m = MATH_TOKEN_RE.exec(text)
+    if (!m) {
+      // 无匹配字符（括号/空格/等号等）跳过
+      MATH_TOKEN_RE.lastIndex++
+      continue
+    }
+    if (m.index >= closedAt) break
+    if (m.index < f.open + skip) {
+      // 半截公式（闭定界符在内部出现）不细分
+      MATH_TOKEN_RE.lastIndex = f.open + skip
+      break
+    }
+    if (m[1]) {
+      // 注释 %...：延伸到行尾（对齐 VS Code）
+      let lineEnd = text.indexOf('\n', m.index)
+      if (lineEnd === -1) lineEnd = text.length
+      lineEnd = Math.min(lineEnd, f.end)
+      if (lineEnd > m.index) pushToken(m.index, lineEnd, 'comment')
+      MATH_TOKEN_RE.lastIndex = lineEnd
+    } else if (m[2]) {
+      // 函数命令：反斜杠蓝 + 函数名黄
+      const mEnd = m.index + m[0].length
+      pushToken(m.index, m.index + 1, 'cmd')
+      pushToken(m.index + 1, mEnd, 'fn')
+      MATH_TOKEN_RE.lastIndex = mEnd
+    } else if (m[5]) {
+      pushToken(m.index, m.index + m[0].length, 'cmd')
+    } else if (m[6]) {
+      pushToken(m.index, m.index + m[0].length, 'num')
+    } else if (m[7]) {
+      pushToken(m.index, m.index + m[0].length, 'op')
+    } else if (m[8]) {
+      pushToken(m.index, m.index + m[0].length, 'esc')
+    }
+  }
+  return decos
+}
+
+let mathDecos = null
+function updateMathDecorations() {
+  if (!editor || currentMode === 'typst') return
+  const model = editor.getModel()
+  if (!model) return
+  const text = model.getValue()
+  const found = findMathRanges(model)
+  if (found.length === 0) {
+    if (mathDecos) mathDecos.set([])
+    return
+  }
+  const decos = []
+  for (const f of found) {
+    const s = model.getPositionAt(f.open)
+    const e = model.getPositionAt(f.end)
+    decos.push({ range: new monaco.Range(s.lineNumber, s.column, e.lineNumber, e.column), options: { inlineClassName: f.cls } })
+    decos.push(...mathTokenDecorations(model, text, f))
+  }
+  if (!mathDecos) mathDecos = editor.createDecorationsCollection()
+  mathDecos.set(decos)
+}
+
 function scheduleUpdate() {
   clearTimeout(updateTimer)
   const delay = currentMode === 'typst' ? 600 : 350
   updateTimer = setTimeout(warmAndRender, delay)
+  if (currentMode !== 'typst') updateMathDecorations()
 }
 
 async function warmAndRender() {
@@ -1024,10 +1218,15 @@ function openCodeModal() {
 
 async function initEditor() {
   monaco = await window.__monacoReady
+  defineMathThemes()
 
   // Monaco 0.56.0 handles workers via its built-in getWorker in editor.main.js
 
   monaco.languages.register({ id: 'typst' })
+  registerMarkdownMathCompletion(monaco)
+
+  // 自定义 markdown 高亮（内置版 + $...$/$$...$$ 数学配色，对齐 VS Code Markdown）
+  monaco.languages.setMonarchTokensProvider('markdown', markdownMonarchLanguage)
 
   monaco.languages.setLanguageConfiguration('typst', {
     comments: {
@@ -1333,7 +1532,7 @@ async function initEditor() {
     }
   })
 
-  monaco.editor.setTheme(isDark() ? 'vs-dark' : 'vs')
+  monaco.editor.setTheme(isDark() ? MONACO_THEME_DARK : MONACO_THEME_LIGHT)
 
   editor = monaco.editor.create(document.getElementById('editor-input'), {
     value: loadDraft(currentMode),
@@ -1382,6 +1581,7 @@ async function initEditor() {
   if (currentMode === 'typst') {
     renderTypstPreview(initial)
   } else {
+    updateMathDecorations()
     renderMarkdownPreview(editor.getValue())
   }
 
@@ -1420,6 +1620,8 @@ async function initEditor() {
       const monacoLangs = new Set(monaco.languages.getLanguages().map(l => l.id))
       for (const lang of highlighter.getLoadedLanguages()) {
         if (!monacoLangs.has(lang)) continue
+        // markdown 使用自定义 Monarch（含 $ 数学配色），不交给 shiki textmate 覆盖
+        if (lang === 'markdown') continue
         const grammar = highlighter.getLanguage(lang)
         if (!grammar || !grammar.tokenizeLine2) continue
         monaco.languages.setTokensProvider(lang, {
@@ -2021,7 +2223,7 @@ new MutationObserver(() => {
     if (highlighter) {
       injectShikiTheme(highlighter, isDark() ? THEME_DARK : THEME_LIGHT)
     } else {
-      monaco.editor.setTheme(isDark() ? 'vs-dark' : 'vs')
+      monaco.editor.setTheme(isDark() ? MONACO_THEME_DARK : MONACO_THEME_LIGHT)
     }
   }
   if (editor && currentMode !== 'typst') renderMarkdownPreview(editor.getValue())

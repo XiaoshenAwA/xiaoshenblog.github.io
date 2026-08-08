@@ -2545,3 +2545,245 @@ window.editPost = async function(id) {
   updateTagsDisplay()
   setTimeout(loadPickerData, 100)
 }
+
+// ============ 图床 (Image Hosting) ============
+
+const IMG_API = '/api/admin/images'
+
+function imgHeaders() {
+  return { 'accept': 'application/json' }
+}
+
+async function imgAuthHeader() {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session && session.access_token) return { 'Authorization': 'Bearer ' + session.access_token }
+  } catch (e) {}
+  return {}
+}
+
+function showImgMessage(text, type) {
+  const el = $('#images-message')
+  if (!el) return
+  el.textContent = text
+  el.className = 'message-msg ' + type
+  el.style.display = 'block'
+  setTimeout(() => { el.style.display = 'none' }, 3000)
+}
+
+function imgStatus(text) {
+  const el = $('#img-status')
+  if (el) el.textContent = text
+}
+
+let imgList = []
+
+function formatImgSize(bytes) {
+  if (!bytes) return ''
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / 1024 / 1024).toFixed(2) + ' MB'
+}
+
+async function copyImgText(text, hintEl, fallback, btnEl) {
+  if (!text) return
+  const restore = (msg, cls) => {
+    if (btnEl) {
+      const orig = btnEl.innerHTML
+      btnEl.innerHTML = '<i class="fas fa-check"></i> ' + msg
+      btnEl.classList.add('copied-feedback')
+      setTimeout(() => { btnEl.innerHTML = orig; btnEl.classList.remove('copied-feedback') }, 1500)
+    }
+    if (hintEl) hintEl.textContent = msg
+    if (cls) showImgMessage(msg, cls)
+  }
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      if (!ok) throw new Error('execCommand copy failed')
+    }
+    restore(fallback || '已复制', 'success')
+  } catch (e) {
+    restore('复制失败', 'error')
+  }
+}
+
+function renderImgGrid(images) {
+  const grid = $('#img-grid')
+  if (!grid) return
+  grid.innerHTML = ''
+  const countEl = $('#img-count')
+  if (countEl) countEl.textContent = '(' + images.length + ')'
+  imgStatus(images.length + ' 张图片')
+  if (!images.length) {
+    grid.innerHTML = '<div class="explorer-empty"><i class="fas fa-images"></i><p>暂无图片</p><p class="muted">点击上方或下方区域上传图片，即可获得外链</p></div>'
+    return
+  }
+  for (const img of images) {
+    const card = document.createElement('div')
+    card.className = 'img-card'
+    card.innerHTML = `
+      <div class="img-card-thumb"><img loading="lazy" src="${escapeHtml(img.url)}" alt="${escapeHtml(img.name)}" onerror="this.closest('.img-card').style.opacity='0.35'"></div>
+      <div class="img-card-info">
+        <div class="img-card-name" title="${escapeHtml(img.name)}">${escapeHtml(img.name)}</div>
+        <div class="img-card-size">${formatImgSize(img.size)}</div>
+      </div>
+      <div class="img-card-actions">
+        <button class="btn btn-sm btn-outline" title="复制链接"><i class="fas fa-link"></i> 链接</button>
+        <button class="btn btn-sm btn-outline" title="复制 Markdown 语法"><i class="fab fa-markdown"></i> MD</button>
+        <button class="btn btn-sm btn-danger" title="删除图片"><i class="fas fa-trash"></i></button>
+      </div>`
+    const thumb = card.querySelector('.img-card-thumb')
+    thumb.addEventListener('click', () => window.open(img.url, '_blank'))
+    const btns = card.querySelectorAll('.img-card-actions .btn')
+    btns[0].addEventListener('click', () => copyImgText(img.url, null, '已复制链接', btns[0]))
+    btns[1].addEventListener('click', () => copyImgText('![' + img.name.replace(/\.[^.]+$/, '') + '](' + img.url + ')', null, '已复制 Markdown', btns[1]))
+    btns[2].addEventListener('click', () => deleteImage(img))
+    grid.appendChild(card)
+  }
+}
+
+async function loadImages() {
+  const grid = $('#img-grid')
+  if (grid) grid.innerHTML = '<div class="explorer-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>'
+  try {
+    const headers = Object.assign({}, imgHeaders(), await imgAuthHeader())
+    const res = await fetch(IMG_API, { headers })
+    if (res.status === 401 || res.status === 403) {
+      renderImgGrid([])
+      showImgMessage('登录状态已失效，请重新登录', 'error')
+      return
+    }
+    if (!res.ok) throw new Error(await res.text())
+    const data = await res.json()
+    imgList = data.images || []
+    renderImgGrid(imgList)
+  } catch (e) {
+    if (grid) grid.innerHTML = '<div class="explorer-empty"><i class="fas fa-exclamation-triangle"></i><p>加载失败: ' + escapeHtml(e.message) + '</p></div>'
+    imgStatus('加载失败')
+  }
+}
+
+async function uploadFiles(files) {
+  if (!files || !files.length) return
+  const valid = Array.from(files).filter(f => f.type && f.type.startsWith('image/'))
+  if (!valid.length) {
+    showImgMessage('请选择图片文件', 'error')
+    return
+  }
+  const grid = $('#img-grid')
+  const dropzone = $('#img-dropzone')
+  if (grid) grid.classList.add('img-uploading')
+  if (dropzone) dropzone.classList.add('img-uploading')
+  try {
+    const fd = new FormData()
+    for (const f of valid) fd.append('images', f)
+    const headers = Object.assign({}, imgHeaders(), await imgAuthHeader())
+    const res = await fetch(IMG_API, { method: 'POST', headers, body: fd })
+    if (!res.ok) {
+      let msg = '上传失败'
+      try { const d = await res.json(); msg = d.error || msg } catch (e2) {}
+      throw new Error(res.status + ': ' + msg)
+    }
+    await res.json()
+    showImgMessage('上传成功 ' + valid.length + ' 张图片', 'success')
+    await loadImages()
+  } catch (e) {
+    showImgMessage('上传失败: ' + e.message, 'error')
+  } finally {
+    if (grid) grid.classList.remove('img-uploading')
+    if (dropzone) dropzone.classList.remove('img-uploading')
+  }
+}
+
+async function deleteImage(img) {
+  if (!img || !img.name) return
+  if (!confirm('确定删除图片 ' + img.name + ' ？\n文章中使用该链接的图片将无法显示。')) return
+  try {
+    const headers = Object.assign({}, imgHeaders(), await imgAuthHeader())
+    const res = await fetch(IMG_API + '/' + encodeURIComponent(img.name), { method: 'DELETE', headers })
+    if (!res.ok) {
+      let msg = '删除失败'
+      try { const d = await res.json(); msg = d.error || msg } catch (e2) {}
+      throw new Error(msg)
+    }
+    showImgMessage('已删除 ' + img.name, 'success')
+    await loadImages()
+  } catch (e) {
+    showImgMessage('删除失败: ' + e.message, 'error')
+  }
+}
+
+function setupImgDropzone() {
+  const dz = $('#img-dropzone')
+  const input = $('#img-file-input')
+  if (!dz || !input) return
+  dz.addEventListener('click', () => input.click())
+  input.addEventListener('change', () => { uploadFiles(input.files); input.value = '' })
+  ;['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('dragover') }))
+  ;['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('dragover') }))
+  dz.addEventListener('drop', e => {
+    if (e.dataTransfer && e.dataTransfer.files) uploadFiles(e.dataTransfer.files)
+  })
+}
+
+$('#img-hosting-btn').addEventListener('click', () => {
+  showView('view-images')
+  loadImages()
+})
+
+$('#img-upload-btn').addEventListener('click', () => {
+  const input = $('#img-file-input')
+  if (input) input.click()
+})
+
+$('#img-back-btn').addEventListener('click', () => showView('view-posts'))
+
+setupImgDropzone()
+
+// ============ 插入图片弹窗 ============
+
+async function insertImageUpload(files) {
+  const hint = $('#insert-img-upload-hint')
+  if (!files || !files.length) return
+  const valid = Array.from(files).filter(f => f.type && f.type.startsWith('image/'))
+  if (!valid.length) { if (hint) hint.textContent = '请选择图片文件'; return }
+  const btn = $('#insert-img-upload-btn')
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上传中...' }
+  if (hint) hint.textContent = ''
+  try {
+    const fd = new FormData()
+    for (const f of valid) fd.append('images', f)
+    const headers = Object.assign({}, imgHeaders(), await imgAuthHeader())
+    const res = await fetch(IMG_API, { method: 'POST', headers, body: fd })
+    if (!res.ok) {
+      let msg = '上传失败'
+      try { const d = await res.json(); msg = d.error || msg } catch (e2) {}
+      throw new Error(msg)
+    }
+    const data = await res.json()
+    const url = document.getElementById('image-url')
+    if (url && data.images && data.images.length) url.value = data.images[0].url
+    if (hint) hint.textContent = '已上传 ' + data.images.length + ' 张，第一张已自动填入'
+  } catch (e) {
+    if (hint) hint.textContent = '上传失败: ' + e.message
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload"></i> 上传到图床' }
+  }
+}
+
+const insertImgUploadBtn = $('#insert-img-upload-btn')
+const insertImgFileInput = $('#insert-img-file-input')
+if (insertImgUploadBtn && insertImgFileInput) {
+  insertImgUploadBtn.addEventListener('click', () => insertImgFileInput.click())
+  insertImgFileInput.addEventListener('change', () => { insertImageUpload(insertImgFileInput.files); insertImgFileInput.value = '' })
+}

@@ -263,6 +263,19 @@ html.is-editor-fullscreen body {
 .editor-page .monaco-editor .zone-widget {
   max-width: 100% !important;
 }
+/* Suggest 补全框：圆角 + 阴影（对齐 VS Code 观感） */
+.editor-page .monaco-editor .suggest-widget {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+.editor-page .monaco-editor .suggest-widget .monaco-list {
+  border-radius: 8px;
+}
+[data-theme="dark"] .editor-page .monaco-editor .suggest-widget {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+
 .editor-page .monaco-editor .marker-widget {
   max-width: calc(100% - 8px) !important;
 }

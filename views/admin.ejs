@@ -173,6 +173,7 @@
       <button class="btn btn-outline" id="edit-about-btn"><i class="fas fa-pen"></i> <%= locale.admin?.edit_about_button || '编辑关于页' %></button>
       <button class="btn btn-outline" id="manage-tags-btn"><i class="fas fa-tags"></i> 标签管理</button>
       <button class="btn btn-outline" id="manage-categories-btn"><i class="fas fa-folder-open"></i> 分类管理</button>
+      <button class="btn btn-outline" id="img-hosting-btn"><i class="fas fa-images"></i> 图床</button>
       <a href="<%= basePath %>/" class="btn btn-outline"><i class="fas fa-arrow-left"></i> <%= locale.admin?.home_button || '返回首页' %></a>
     </div>
     <div class="search-bar">
@@ -385,6 +386,35 @@
     </div>
   </div>
 
+  <div class="admin-view" id="view-images">
+    <div class="explorer-wrap">
+      <div class="explorer-toolbar">
+        <div class="explorer-toolbar-left">
+          <button class="btn btn-sm btn-outline" id="img-back-btn"><i class="fas fa-arrow-left"></i> 返回</button>
+          <span class="toolbar-divider"></span>
+          <div class="explorer-breadcrumb">
+            <span class="breadcrumb-item current"><i class="fas fa-images"></i> 图床</span>
+            <span style="font-size:0.82em;color:var(--text-muted);" id="img-count"></span>
+          </div>
+        </div>
+        <div class="explorer-toolbar-right">
+          <input type="file" id="img-file-input" multiple accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/avif,image/bmp,image/x-icon" hidden>
+          <button class="btn btn-sm btn-primary" id="img-upload-btn"><i class="fas fa-upload"></i> 上传图片</button>
+        </div>
+      </div>
+      <div id="img-dropzone" class="img-dropzone">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p><%= locale.admin?.img_dropzone_hint || '点击选择或拖拽图片到此处上传' %></p>
+        <p class="muted"><%= locale.admin?.img_dropzone_sub || '支持 PNG / JPG / GIF / WebP / SVG / AVIF / BMP / ICO，单张最大 10MB' %></p>
+      </div>
+      <div id="images-message" class="message-msg" style="display:none;"></div>
+      <div class="explorer-content" id="img-grid">
+        <div class="explorer-loading"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>
+      </div>
+      <div class="explorer-status" id="img-status"></div>
+    </div>
+  </div>
+
   <!-- Right-click Context Menu -->
   <div id="context-menu" class="context-menu">
     <div class="context-menu-item" data-action="new-cat"><i class="fas fa-plus"></i> 新建分类</div>
@@ -517,6 +547,13 @@
         <input type="url" id="image-url" placeholder="https://example.com/image.png" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;"></div>
         <div><label style="display:block;font-size:0.85em;font-weight:500;margin-bottom:6px;color:var(--text-secondary);">替代文本 (Alt)</label>
         <input type="text" id="image-alt" placeholder="图片描述" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.95em;background:var(--input-bg);color:var(--text);box-sizing:border-box;outline:none;"></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm btn-outline" id="insert-img-upload-btn"><i class="fas fa-upload"></i> 上传到图床</button>
+            <input type="file" id="insert-img-file-input" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/avif,image/bmp,image/x-icon" hidden>
+            <span class="muted" id="insert-img-upload-hint" style="font-size:0.82em;color:var(--text-muted);"></span>
+          </div>
+        </div>
       </div>
       <div class="picker-footer" style="justify-content:flex-end;">
         <div>
