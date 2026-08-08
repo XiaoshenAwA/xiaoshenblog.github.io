@@ -113,8 +113,13 @@
 
   // 点击产生流星爆发
   var clickComets = [];
+  var lastThemeSwitch = 0;
 
   function onDarkClick(e) {
+    // 主题切换期间及切换后短暂窗口内不触发爆发，避免与整页重绘争抢主线程造成卡顿
+    if (document.documentElement.classList.contains('theme-switching')) return;
+    if (Date.now() - lastThemeSwitch < 400) return;
+    if (e.target && e.target.closest && e.target.closest('#darkmode')) return;
     var cx = e.clientX, cy = e.clientY;
     var count = 8 + Math.floor(Math.random() * 6);
     for (var i = 0; i < count; i++) {
@@ -256,6 +261,7 @@
   }
 
   function switchEffect() {
+    lastThemeSwitch = Date.now();
     cleanup();
     if (isDarkMode()) {
       initDark();

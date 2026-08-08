@@ -24,6 +24,20 @@ const cssVersion = (() => {
   }
 })();
 
+function getCssVersion() {
+  try {
+    const files = ['editor.js', 'editor.css', 'main.js', 'main.css', 'admin.js', 'admin.css'];
+    let max = 0;
+    for (const f of files) {
+      const t = fs.statSync(path.join(__dirname, 'public', 'assets', f)).mtimeMs;
+      if (t > max) max = t;
+    }
+    return max || Date.now();
+  } catch (e) {
+    return Date.now();
+  }
+}
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -131,7 +145,7 @@ app.use((req, res, next) => {
   }
   res.locals.config = safeConfig;
   res.locals.locale = config.locale;
-  res.locals.cssVersion = cssVersion;
+  res.locals.cssVersion = getCssVersion();
   res.locals.formatDate = function(d) {
     if (!d) return '';
     var dt = new Date(d);

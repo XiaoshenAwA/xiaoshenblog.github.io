@@ -41,6 +41,10 @@
     <button class="toolbar-btn" id="preview-font-decrease" title="编辑器字体缩小"><i class="fas fa-minus"></i></button>
     <input type="text" class="toolbar-font-input" id="editor-font-size-input" value="14px" title="编辑器字体大小">
     <button class="toolbar-btn" id="preview-font-increase" title="编辑器字体放大"><i class="fas fa-plus"></i></button>
+    <span class="toolbar-divider typst-only"></span>
+    <button class="toolbar-btn typst-only" id="typst-zoom-decrease" title="预览缩小"><i class="fas fa-minus"></i></button>
+    <input type="text" class="toolbar-font-input typst-only" id="typst-zoom-input" value="100%" title="Typst 预览缩放 %">
+    <button class="toolbar-btn typst-only" id="typst-zoom-increase" title="预览放大"><i class="fas fa-plus"></i></button>
     <span class="toolbar-divider"></span>
     <span id="editor-save-status" class="editor-save-status dirty" title="保存状态（Ctrl+S 保存）">未保存</span>
     <span class="toolbar-divider"></span>
@@ -51,7 +55,7 @@
       <div class="editor-input-wrap" id="editor-input"></div>
     </div>
     <div class="editor-pane">
-      <div id="editor-preview"></div>
+      <div id="editor-preview" class="post-content"></div>
     </div>
   </div>
 </div>
@@ -203,6 +207,13 @@ window.__CONFIG__ = {
   EDITOR_INDENT_MODE: <%- JSON.stringify(config.EDITOR_INDENT_MODE).replace(/<\/script>/gi, '<\\/script>') %>,
   MD_SHIKI_THEME_LIGHT: <%- JSON.stringify(config.MD_SHIKI_THEME_LIGHT).replace(/<\/script>/gi, '<\\/script>') %>,
   MD_SHIKI_THEME_DARK: <%- JSON.stringify(config.MD_SHIKI_THEME_DARK).replace(/<\/script>/gi, '<\\/script>') %>,
+  CB_MACSTYLE: <%- JSON.stringify(config.CB_MACSTYLE) %>,
+  CB_HEIGHT_LIMIT: <%- JSON.stringify(config.CB_HEIGHT_LIMIT) %>,
+  CB_WORD_WRAP: <%- JSON.stringify(config.CB_WORD_WRAP) %>,
+  CB_SHRINK: <%- JSON.stringify(config.CB_SHRINK) %>,
+  CB_FULLPAGE: <%- JSON.stringify(config.CB_FULLPAGE) %>,
+  CB_COPY: <%- JSON.stringify(config.CB_COPY) %>,
+  CB_LANGUAGE: <%- JSON.stringify(config.CB_LANGUAGE) %>,
   TYPST_COMPILER_WASM: '<%= basePath %>/wasm/typst_ts_web_compiler_bg.wasm',
   TYPST_RENDERER_WASM: '<%= basePath %>/wasm/typst_ts_renderer_bg.wasm'
 };

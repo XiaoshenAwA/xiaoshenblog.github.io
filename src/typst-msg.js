@@ -18,6 +18,8 @@ export function zhTypstMsg(s) {
   }
   const zhType = str => str.split(',').map(x => x.trim()).map(x => TYPE_ZH[x.toLowerCase()] || x).join('、')
   const fixes = [
+    [/unexpected end of (file|input|content)/i, '意外的输入结尾'],
+    [/unexpected\s+([^,\s]+)/i, (m, a) => '意外的' + zhType(a)],
     [/expected string, dictionary, location, or label, found content/i, '期望字符串、字典、位置或标签，但找到的是内容'],
     [/expected at least (\d+) arguments?/i, '期望至少 $1 个参数'],
     [/expected at most (\d+) arguments?/i, '期望至多 $1 个参数'],
@@ -44,7 +46,6 @@ export function zhTypstMsg(s) {
     [/unclosed string/i, '未闭合的字符串'],
     [/unclosed block/i, '未闭合的代码块'],
     [/unclosed delimiter/i, '未闭合的定界符'],
-    [/unexpected end of (file|input|content)/i, '意外的输入结尾'],
     [/unexpected token/i, '意外的标记'],
     [/syntax error/i, '语法错误'],
     [/division by zero/i, '除以零'],

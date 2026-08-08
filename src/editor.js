@@ -21,7 +21,7 @@ function renderMath(str, displayMode) {
   }
 }
 
-const md = markdownit({ html: true, linkify: true })
+const md = markdownit({ html: true, linkify: true, typographer: true })
 md.use(markdownitEmoji)
 md.use(markdownitMark)
 md.use(markdownitInsDel)
@@ -80,29 +80,13 @@ md.renderer.rules.math_display = (tokens, idx) => {
   return renderMath(tokens[idx].content, true)
 }
 
-function makeContainer(md, name, icon, defaultTitle) {
+const allTagStacks = []
+
+function makeAdmonition(md, name, defaultTitle) {
+  const tagStack = []
+  allTagStacks.push(tagStack)
   md.use(markdownItContainer, name, {
     validate: params => params.trim().startsWith(name) || params.trim().match(new RegExp('^' + name + '\\[')),
-    render: (tokens, idx) => {
-      if (tokens[idx].nesting === 1) {
-        const info = tokens[idx].info.trim().slice(name.length).trim()
-        let title = defaultTitle
-        const titleMatch = info.match(/^\[([\s\S]*)\]$/)
-        if (titleMatch) title = md.renderInline(titleMatch[1])
-        const optMatch = info.match(/\{([^}]*)\}$/)
-        const opts = optMatch ? optMatch[1].trim() : ''
-        const openAttr = opts === 'open' ? ' open' : ''
-        return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + icon + ' ' + title + '</summary>\n'
-      }
-      return '</details>\n'
-    }
-  })
-}
-
-function makeAdmonition(md, name, icon, defaultTitle) {
-  const tagStack = []
-  md.use(markdownItContainer, name, {
-    validate: params => params.trim() === name || params.trim().match(new RegExp('^' + name + '\\[')),
     render: (tokens, idx) => {
       if (tokens[idx].nesting === 1) {
         let info = tokens[idx].info.trim().slice(name.length).trim()
@@ -114,26 +98,30 @@ function makeAdmonition(md, name, icon, defaultTitle) {
           info = info.slice(0, optMatch.index).trim()
         }
         const titleMatch = info.match(/^\[([\s\S]*)\]$/)
-        const hasTitle = !!titleMatch
         if (titleMatch) title = md.renderInline(titleMatch[1])
-        if (hasTitle) {
-          tagStack.push('details')
-          return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + icon + ' ' + title + '</summary>\n'
-        }
-        tagStack.push('div')
-        return '<div class="admonition ' + name + '"><p class="admonition-title">' + icon + ' ' + title + '</p>\n'
+        tagStack.push('open')
+        return '<details' + openAttr + ' class="admonition ' + name + '"><summary class="admonition-title">' + title + '</summary><div class="admonition-content"><div class="admonition-inner">\n'
       }
-      return (tagStack.pop() === 'details' ? '</details>\n' : '</div>\n')
+      return tagStack.pop() === 'open' ? '</div></div></details>\n' : ''
     }
   })
 }
 
-makeAdmonition(md, 'info', '<i class="fas fa-circle-info"></i>', '提示')
-makeAdmonition(md, 'success', '<i class="fas fa-circle-check"></i>', '完成')
-makeAdmonition(md, 'warning', '<i class="fas fa-triangle-exclamation"></i>', '注意')
-makeAdmonition(md, 'error', '<i class="fas fa-circle-xmark"></i>', '错误')
-makeAdmonition(md, 'danger', '<i class="fas fa-ban"></i>', '危险')
-makeContainer(md, 'details', '<i class="fas fa-chevron-right"></i>', '详情')
+md.core.ruler.push('admonition_reset', state => {
+  allTagStacks.forEach(ts => { ts.length = 0 })
+})
+
+makeAdmonition(md, 'note', '备注')
+makeAdmonition(md, 'tip', '技巧')
+makeAdmonition(md, 'info', '提示')
+makeAdmonition(md, 'question', '常见问题')
+makeAdmonition(md, 'success', '完成')
+makeAdmonition(md, 'warning', '注意')
+makeAdmonition(md, 'failure', '失败')
+makeAdmonition(md, 'error', '错误')
+makeAdmonition(md, 'danger', '危险')
+makeAdmonition(md, 'bug', '缺陷')
+makeAdmonition(md, 'details', '详情')
 
 // --- Config & state ---
 
@@ -141,6 +129,37 @@ const cfg = window.__CONFIG__ || {}
 const STORAGE_KEY = cfg.EDITOR_DRAFT_PREFIX || 'editor-draft'
 const THEME_LIGHT = cfg.MD_SHIKI_THEME_LIGHT || 'light-plus'
 const THEME_DARK = cfg.MD_SHIKI_THEME_DARK || 'dark-plus'
+
+const CB_MACSTYLE = cfg.CB_MACSTYLE !== false
+const CB_HEIGHT_LIMIT = cfg.CB_HEIGHT_LIMIT || false
+const CB_WORD_WRAP = cfg.CB_WORD_WRAP === true
+const CB_SHRINK = cfg.CB_SHRINK === true
+const CB_FULLPAGE = cfg.CB_FULLPAGE === true
+const CB_COPY = cfg.CB_COPY !== false
+const CB_LANGUAGE = cfg.CB_LANGUAGE !== false
+
+const langDisplay = {
+  vue: 'Vue', vuejs: 'Vue',
+  jsx: 'JSX', tsx: 'TSX',
+  html: 'HTML', css: 'CSS',
+  javascript: 'JavaScript', typescript: 'TypeScript',
+  js: 'JavaScript', ts: 'TypeScript',
+  python: 'Python', py: 'Python', sql: 'SQL',
+  json: 'JSON', yaml: 'YAML', yml: 'YAML',
+  markdown: 'Markdown', md: 'Markdown',
+  bash: 'Bash', shell: 'Shell', sh: 'Shell', powershell: 'PowerShell',
+  xml: 'XML', dockerfile: 'Docker',
+  go: 'Go', rust: 'Rust', java: 'Java',
+  c: 'C', cpp: 'C++', csharp: 'C#',
+  php: 'PHP', ruby: 'Ruby', swift: 'Swift',
+  kotlin: 'Kotlin',
+  scss: 'SCSS', sass: 'Sass', less: 'Less',
+  diff: 'Diff', graphql: 'GraphQL',
+  http: 'HTTP', ini: 'INI', toml: 'TOML',
+  makefile: 'Makefile', nginx: 'Nginx',
+  plaintext: 'Text', text: 'Text',
+  latex: 'LaTeX', tex: 'TeX'
+}
 
 const SHIKI_LANGS = [
   'javascript', 'typescript', 'html', 'css', 'vue', 'vue-html',
@@ -342,6 +361,7 @@ async function loadTransformers() {
   try {
     const m = await import('@shikijs/transformers')
     shikiTransformers = [
+      m.transformerMetaHighlight(),
       m.transformerNotationHighlight(),
       m.transformerNotationDiff(),
       m.transformerNotationFocus(),
@@ -397,18 +417,20 @@ function formatTypstError(e) {
     }
 
     for (let i = 0; i < msgs.length; i++) {
+      const item = []
       const severity = sevs[i] || sevs[0] || 'Error'
       const sevZh = severity === 'Warning' ? '警告' : severity === 'Info' ? '提示' : '错误'
       const sevClass = severity === 'Warning' ? 'warn' : severity === 'Info' ? 'info' : ''
-      parts.push('<span class="typst-err-severity' + (sevClass ? ' ' + sevClass : '') + '">' + sevZh + '</span>')
+      item.push('<span class="typst-err-severity' + (sevClass ? ' ' + sevClass : '') + '">' + sevZh + '</span>')
       if (msgs[i]) {
         const zhMsg = zhTypstMsg(msgs[i])
           .split('\n').map(line => escapeHtml(line)).join('<br>')
-        parts.push('<span class="typst-err-msg">' + zhMsg + '</span>')
+        item.push('<span class="typst-err-msg">' + zhMsg + '</span>')
       }
       if (hints[i]) {
-        parts.push('<span class="typst-err-hint">' + escapeHtml(zhTypstMsg(hints[i])) + '</span>')
+        item.push('<span class="typst-err-hint">' + escapeHtml(zhTypstMsg(hints[i])) + '</span>')
       }
+      parts.push('<div class="typst-err-item">' + item.join('') + '</div>')
     }
     if (parts.length) return parts.join('')
   }
@@ -424,6 +446,9 @@ let typstZoom = parseFloat(localStorage.getItem('typst-zoom') || '1') || 1
 const TYPST_ZOOM_STEP = 0.1
 const TYPST_ZOOM_MIN = 0.25
 const TYPST_ZOOM_MAX = 3
+const typstZoomInput = document.getElementById('typst-zoom-input')
+const typstZoomDecreaseBtn = document.getElementById('typst-zoom-decrease')
+const typstZoomIncreaseBtn = document.getElementById('typst-zoom-increase')
 let typstPdfDoc = null
 let typstZoomSeq = 0
 
@@ -431,13 +456,14 @@ async function applyTypstZoom() {
   localStorage.setItem('typst-zoom', String(typstZoom))
   updateZoomInput()
   const wrap = preview.querySelector('.typst-page-wrap')
-  const host = wrap && wrap.querySelector('.typst-canvas-host')
-  if (!host || !typstPdfDoc) return
+  const oldHost = wrap && wrap.querySelector('.typst-canvas-host')
+  if (!wrap || !oldHost || !typstPdfDoc) return
   const seq = ++typstZoomSeq
   const maxBefore = wrap.scrollHeight - wrap.clientHeight
   const ratio = maxBefore > 0 ? wrap.scrollTop / maxBefore : 0
   const dpr = window.devicePixelRatio || 1
-  host.innerHTML = ''
+  const host = document.createElement('div')
+  host.className = 'typst-canvas-host'
   for (let i = 1; i <= typstPdfDoc.numPages; i++) {
     if (seq !== typstZoomSeq) return
     const page = await typstPdfDoc.getPage(i)
@@ -445,6 +471,7 @@ async function applyTypstZoom() {
     await renderTypstPage(host, typstPdfDoc, page, dpr, 1.5 * typstZoom)
     if (seq !== typstZoomSeq) return
   }
+  oldHost.replaceWith(host)
   if (ratio > 0) wrap.scrollTop = ratio * (wrap.scrollHeight - wrap.clientHeight)
   setupTypstPan()
 }
@@ -563,18 +590,8 @@ function setupTypstPan() {
 }
 
 function updateZoomInput() {
-  const wrap = preview && preview.querySelector('.typst-page-wrap')
-  if (!wrap) return
-  let badge = wrap.querySelector('.typst-zoom-badge')
-  if (!badge) {
-    badge = document.createElement('div')
-    badge.className = 'typst-zoom-badge'
-    wrap.appendChild(badge)
-  }
-  badge.textContent = Math.round(typstZoom * 100) + '%'
-  badge.style.opacity = '1'
-  clearTimeout(badge._t)
-  badge._t = setTimeout(() => { badge.style.opacity = '0' }, 900)
+  const pct = Math.round(typstZoom * 100) + '%'
+  if (typstZoomInput) typstZoomInput.value = pct
 }
 
 function typstZoomIn() {
@@ -592,20 +609,13 @@ function addPageGaps() {
 }
 
 const TYPST_EMPTY_HTML = `<div class="typst-page-wrap">
-  <div class="typst-page typst-page-empty">
-    <div class="typst-empty">
-      <div class="typst-empty-icon">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="4" width="48" height="56" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
-          <line x1="16" y1="16" x2="48" y2="16" stroke="currentColor" stroke-width="2" opacity="0.4"/>
-          <line x1="16" y1="24" x2="40" y2="24" stroke="currentColor" stroke-width="2" opacity="0.3"/>
-          <line x1="16" y1="32" x2="44" y2="32" stroke="currentColor" stroke-width="2" opacity="0.2"/>
-          <line x1="16" y1="40" x2="36" y2="40" stroke="currentColor" stroke-width="2" opacity="0.15"/>
-        </svg>
-      </div>
-      <p class="typst-empty-hint">Start typing to preview your Typst document</p>
-      <p class="typst-empty-examples">e.g. <code>#heading[Hello World]</code></p>
-    </div>
+  <div class="typst-blank-page"></div>
+</div>`
+
+const TYPST_LOADING_HTML = `<div class="typst-page-wrap">
+  <div class="typst-loading">
+    <div class="typst-loading-spinner"></div>
+    <p>正在加载 Typst…</p>
   </div>
 </div>`
 
@@ -688,7 +698,6 @@ async function renderTypstPage(host, pdf, page, dpr, zoomScale) {
     layer.style.transformOrigin = '0 0'
     pageEl.appendChild(layer)
     buildTextLayer(layer, tc, viewport)
-    bindTextLayerClick(layer)
   } catch {
     typstPageTexts.push('')
   }
@@ -764,94 +773,6 @@ function buildTextLayer(layer, tc, viewport) {
     frag.appendChild(span)
   }
   layer.appendChild(frag)
-}
-
-function estimateCharIdx(raw, rect, clientX, font) {
-  const ctx = estimateCharIdx.__ctx || (estimateCharIdx.__ctx = document.createElement('canvas').getContext('2d'))
-  if (ctx.font !== font) ctx.font = font
-  const chars = [...raw]
-  const widths = chars.map(c => ctx.measureText(c).width)
-  const total = widths.reduce((a, b) => a + b, 1)
-  const target = (clientX - rect.left) * (total / Math.max(1, rect.width))
-  let acc = 0
-  for (let i = 0; i < widths.length; i++) {
-    acc += widths[i]
-    if (target <= acc) return i
-  }
-  return Math.max(0, chars.length - 1)
-}
-
-function bindTextLayerClick(layer) {
-  layer.addEventListener('click', (e) => {
-    const span = e.target && e.target.closest ? e.target.closest('span') : null
-    if (!span || !span.textContent) return
-    const raw = span.textContent
-    const frag = normText(raw)
-    if (!frag) return
-    let charIdx = 0
-    const rect = span.getBoundingClientRect()
-    if (rect.width > 0 && raw.length) {
-      const cs = getComputedStyle(span)
-      charIdx = estimateCharIdx(raw, rect, e.clientX, cs.fontSize + ' ' + cs.fontFamily)
-    }
-    const hit = locateSourcePos(raw, frag, charIdx)
-    if (location.search.includes('__debug')) {
-      try {
-        window.__typstDebug.lastJump = { raw, charIdx, hit }
-      } catch {}
-    }
-    if (hit) flashEditorAt(hit.line, hit.col)
-  })
-}
-
-function locateSourcePos(raw, frag, charIdx) {
-  if (!editor) return null
-  const lines = editor.getValue().split('\n')
-  for (let i = 0; i < lines.length; i++) {
-    const rl = lines[i]
-    if (!rl) continue
-    const pos = rl.indexOf(raw)
-    if (pos >= 0) {
-      const idx = Math.max(0, Math.min(charIdx || 0, raw.length - 1))
-      return { line: i + 1, col: Math.min(pos + idx + 2, rl.length + 1) }
-    }    const nl = normText(rl)
-    if (nl && nl.includes(frag)) {
-      return { line: i + 1, col: nl.indexOf(frag) + 1 }
-    }
-  }
-  return null
-}
-
-function flashEditorAt(lineNo, col) {
-  if (!editor) return
-  const model = editor.getModel()
-  const maxCol = model ? model.getLineMaxColumn(lineNo) : 1
-  const column = Math.max(1, Math.min(col || 1, maxCol))
-  editor.setPosition(new monaco.Position(lineNo, column))
-  editor.revealPositionInCenter({ lineNumber: lineNo, column }, 1)
-  editor.focus()
-  try {
-    const deco = editor.createDecorationsCollection([{
-      range: new monaco.Range(lineNo, 1, lineNo, 1),
-      options: { isWholeLine: true, className: 'typst-jump-flash-line' }
-    }])
-    setTimeout(() => { try { deco.clear() } catch {} }, 1400)
-  } catch {}
-  const guard = document.querySelector('.monaco-editor .overflow-guard')
-  if (guard) {
-    requestAnimationFrame(() => {
-      const cur = document.querySelector('.monaco-editor .cursor')
-      if (!cur) return
-      const cr = cur.getBoundingClientRect()
-      const gr = guard.getBoundingClientRect()
-      const r = document.createElement('div')
-      r.className = 'typst-ripple'
-      r.style.left = (cr.x - gr.x + cr.width / 2) + 'px'
-      r.style.top = (cr.y - gr.y + cr.height / 2) + 'px'
-      guard.appendChild(r)
-      setTimeout(() => { try { r.remove() } catch {} }, 1000)
-    })
-  }
 }
 
 let typstWorker = null
@@ -935,8 +856,10 @@ async function typstRunLoop() {
       continue
     }
     const oldWrap = preview.querySelector('.typst-page-wrap')
-    const oldMax = oldWrap ? oldWrap.scrollHeight - oldWrap.clientHeight : 0
+    const hadCanvas = !!(oldWrap && oldWrap.querySelector('.canvas-page'))
+    const oldMax = hadCanvas ? oldWrap.scrollHeight - oldWrap.clientHeight : 0
     const scrollRatio = oldMax > 0 ? oldWrap.scrollTop / oldMax : 0
+    if (!hadCanvas) preview.innerHTML = TYPST_LOADING_HTML
     const wrap = document.createElement('div')
     wrap.className = 'typst-page-wrap'
     const host = document.createElement('div')
@@ -946,7 +869,7 @@ async function typstRunLoop() {
     try {
       if (!window.__$typst) {
         hideTypstStatus()
-        preview.innerHTML = '<p class="muted">正在加载 Typst，请稍候…</p>'
+        preview.innerHTML = TYPST_LOADING_HTML
         continue
       }
       statusTimer = setTimeout(() => showTypstStatus('\u6B63\u5728\u7F16\u8BD1\u2026'), 400)
@@ -981,7 +904,7 @@ async function typstRunLoop() {
         note.textContent = '文档共 ' + pdf.numPages + ' 页,仅预览前 ' + TYPST_MAX_PAGES + ' 页。'
         wrap.appendChild(note)
       }
-      if (oldWrap) preview.replaceChild(wrap, oldWrap)
+      if (hadCanvas) preview.replaceChild(wrap, oldWrap)
       else { preview.innerHTML = ''; preview.appendChild(wrap) }
       setupTypstPan()
       typstSyncReady = true
@@ -1439,19 +1362,7 @@ async function initEditor() {
   }
 
   editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-    saveDraft()
-    const st = document.getElementById('editor-save-status')
-    if (st) {
-      st.classList.remove('dirty')
-      st.classList.add('saved')
-      st.textContent = '已保存'
-      clearTimeout(st.__saveTimer)
-      st.__saveTimer = setTimeout(() => {
-        st.classList.remove('saved')
-        st.classList.add('dirty')
-        st.textContent = '未保存'
-      }, 2000)
-    }
+    handleSaveShortcut()
   })
 
   setupScrollSync()
@@ -1535,20 +1446,83 @@ async function initEditor() {
 
     md.renderer.rules.fence = (tokens, idx) => {
       const token = tokens[idx]
-      const info = (token.info || '').trim()
-      const lang = info.split(/\s+/)[0] || 'text'
-      const fallback = () => '<pre><code class="language-' + lang + '">' + md.utils.escapeHtml(token.content) + '</code></pre>'
+      const fullInfo = (token.info || '').trim()
+      const parts = fullInfo.split(/\s+/)
+      const lang = parts[0] || 'text'
+      const langName = lang ? (langDisplay[lang] || lang).toUpperCase() : 'TEXT'
+      const fallback = () => {
+        return '<figure class="highlight">'
+          + '<div class="highlight-tools">'
+          + (CB_MACSTYLE ? '<div class="mac-style"><span class="mac-close"></span><span class="mac-minimize"></span><span class="mac-maximize"></span></div>' : '')
+          + (CB_LANGUAGE && langName ? '<span class="code-lang">' + langName + '</span>' : '')
+          + '<div class="hl-tools-right">'
+          + (CB_FULLPAGE ? '<i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i>' : '')
+          + (CB_COPY ? '<i class="copy-btn" title="Copy">Copy</i>' : '')
+          + (CB_SHRINK ? '<i class="shrink-btn shrunk" title="展开/折叠"><i class="fas fa-chevron-right"></i></i>' : '')
+          + '</div></div>'
+          + '<pre class="code-wrap' + (CB_WORD_WRAP ? ' code-wrap-on' : '') + (CB_SHRINK ? ' code-shrink' : '') + '"><code class="language-' + lang + '">' + md.utils.escapeHtml(token.content) + '</code></pre>'
+          + '</figure>'
+      }
+      let html
       try {
-        return highlighter.codeToHtml(token.content, {
+        html = highlighter.codeToHtml(token.content, {
           lang,
           themes: { light: THEME_LIGHT, dark: THEME_DARK },
           defaultColor: false,
-          meta: { __raw: info },
+          meta: { __raw: fullInfo },
           transformers: shikiTransformers
         })
       } catch (e) {
         return fallback()
       }
+
+      const preMatch = html.match(/^<pre[^>]*>/)
+      if (!preMatch) return html
+
+      const preTag = preMatch[0]
+      const styleMatch = preTag.match(/style="([^"]+)"/)
+      const preStyle = styleMatch ? styleMatch[1] : ''
+
+      const otherAttrs = preTag.replace(/^<pre\s*/i, '').replace(/\s*>$/i, '').replace(/(style|class)="[^"]*"/g, '').trim()
+
+      const afterPre = html.slice(preTag.length)
+      const closeIdx = afterPre.lastIndexOf('</pre>')
+      const innerCode = closeIdx >= 0 ? afterPre.slice(0, closeIdx) : afterPre
+
+      let toolsParts = ''
+      if (CB_MACSTYLE) {
+        toolsParts += '<div class="mac-style">'
+          + '<span class="mac-close"></span>'
+          + '<span class="mac-minimize"></span>'
+          + '<span class="mac-maximize"></span>'
+          + '</div>'
+      }
+      if (CB_LANGUAGE && langName) {
+        toolsParts += '<span class="code-lang">' + langName + '</span>'
+      }
+      toolsParts += '<div class="hl-tools-right">'
+      if (CB_FULLPAGE) {
+        toolsParts += '<i class="fullpage-btn" title="全屏"><i class="fas fa-expand"></i></i>'
+      }
+      if (CB_COPY) {
+        toolsParts += '<i class="copy-btn" title="Copy">Copy</i>'
+      }
+      if (CB_SHRINK) {
+        toolsParts += '<i class="shrink-btn shrunk" title="展开/折叠"><i class="fas fa-chevron-right"></i></i>'
+      }
+      toolsParts += '</div>'
+      const toolsHtml = toolsParts ? '<div class="highlight-tools">' + toolsParts + '</div>' : ''
+
+      let wrapClass = 'code-wrap'
+      if (CB_WORD_WRAP) wrapClass += ' code-wrap-on'
+      if (CB_SHRINK) wrapClass += ' code-shrink'
+      let heightStyle = ''
+      if (CB_HEIGHT_LIMIT) heightStyle = ' style="max-height:' + CB_HEIGHT_LIMIT + 'px;overflow-y:auto"'
+
+      return '<figure class="highlight" style="' + preStyle + '">'
+        + toolsHtml
+        + '<pre class="' + wrapClass + '"' + heightStyle + (otherAttrs ? ' ' + otherAttrs : '') + '>' + innerCode + '</pre>'
+        + '</figure>'
     }
 
     // Re-render preview now that Shiki highlighter is ready
@@ -1660,6 +1634,240 @@ document.querySelectorAll('.view-mode-btn').forEach(btn => {
     if (container) container.className = 'editor-container mode-' + btn.dataset.mode
   })
 })
+
+// --- Save to file (File System Access API) ---
+
+const saveFileModal = document.getElementById('save-file-modal')
+const saveFileNameInput = document.getElementById('save-file-name')
+const saveFilePathInput = document.getElementById('save-file-path')
+const saveFilePathPick = document.getElementById('save-file-path-pick')
+const saveFileConfirm = document.getElementById('save-file-confirm')
+
+let saveTarget = null
+
+function canSaveToFile() {
+  return typeof window.showDirectoryPicker === 'function'
+}
+
+function showSaveStatus(text, isSaved) {
+  const st = document.getElementById('editor-save-status')
+  if (!st) return
+  st.classList.toggle('saved', !!isSaved)
+  st.classList.toggle('dirty', !isSaved)
+  st.textContent = text
+  clearTimeout(st.__saveTimer)
+  st.__saveTimer = setTimeout(() => {
+    st.classList.remove('saved')
+    st.classList.add('dirty')
+    st.textContent = '未保存'
+  }, 2500)
+}
+
+function saveTargetKey() {
+  return 'target:' + currentMode
+}
+
+function idbOpen() {
+  return new Promise(resolve => {
+    try {
+      const req = indexedDB.open('editor-save-state', 1)
+      req.onupgradeneeded = () => {
+        if (!req.result.objectStoreNames.contains('targets')) {
+          req.result.createObjectStore('targets')
+        }
+      }
+      req.onsuccess = () => resolve(req.result)
+      req.onerror = () => resolve(null)
+    } catch {
+      resolve(null)
+    }
+  })
+}
+
+async function idbGet(key) {
+  const db = await idbOpen()
+  if (!db) return null
+  return new Promise(resolve => {
+    try {
+      const req = db.transaction('targets', 'readonly').objectStore('targets').get(key)
+      req.onsuccess = () => resolve(req.result || null)
+      req.onerror = () => resolve(null)
+    } catch {
+      resolve(null)
+    }
+  })
+}
+
+async function idbSet(key, value) {
+  const db = await idbOpen()
+  if (!db) return
+  return new Promise(resolve => {
+    try {
+      const tx = db.transaction('targets', 'readwrite')
+      tx.objectStore('targets').put(value, key)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => resolve()
+    } catch {
+      resolve()
+    }
+  })
+}
+
+function resolveSaveRelPath(typed, name) {
+  let rel = (typed || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
+  if (!rel || (saveTarget && saveTarget.dirHandle && rel === saveTarget.dirHandle.name)) return name
+  if (/^[A-Za-z]:/.test(rel) || rel.startsWith('/')) return false
+  if (saveTarget && saveTarget.dirHandle && rel.indexOf(saveTarget.dirHandle.name + '/') === 0) {
+    rel = rel.slice(saveTarget.dirHandle.name.length + 1)
+  }
+  if (!rel) return name
+  return rel + '/' + name
+}
+
+async function pickSaveFolder() {
+  try {
+    return await window.showDirectoryPicker({ mode: 'readwrite' })
+  } catch {
+    return null
+  }
+}
+
+async function writeToDir(dirHandle, filePath, content) {
+  const parts = filePath.split('/').filter(p => p && p !== '.' && p !== '..')
+  const fileName = parts.pop()
+  let dir = dirHandle
+  for (const part of parts) {
+    dir = await dir.getDirectoryHandle(part, { create: true })
+  }
+  const fh = await dir.getFileHandle(fileName, { create: true })
+  const w = await fh.createWritable()
+  await w.write(content)
+  await w.close()
+}
+
+async function persistSaveTarget() {
+  if (!saveTarget || !saveTarget.dirHandle) return
+  try {
+    localStorage.setItem(saveTargetKey() + ':meta', JSON.stringify({ name: saveTarget.name, relPath: saveTarget.relPath }))
+  } catch {}
+  await idbSet(saveTargetKey(), saveTarget.dirHandle)
+}
+
+async function restoreSaveTarget() {
+  const dirHandle = await idbGet(saveTargetKey())
+  if (!dirHandle) return
+  let meta = null
+  try { meta = JSON.parse(localStorage.getItem(saveTargetKey() + ':meta') || 'null') } catch {}
+  saveTarget = {
+    name: (meta && meta.name) || downloadName(),
+    relPath: (meta && meta.relPath) || downloadName(),
+    dirHandle
+  }
+  const st = document.getElementById('editor-save-status')
+  if (st && saveTarget.dirHandle) st.textContent = '保存到 ' + saveTarget.dirHandle.name
+}
+
+function openSaveFileModal() {
+  if (!saveFileModal) return
+  if (saveFileNameInput && !saveFileNameInput.value) saveFileNameInput.value = downloadName()
+  if (saveFilePathInput) {
+    saveFilePathInput.value = saveTarget && saveTarget.dirHandle ? saveTarget.dirHandle.name : ''
+  }
+  if (saveFilePathPick) {
+    saveFilePathPick.disabled = !canSaveToFile()
+    saveFilePathPick.title = canSaveToFile() ? '选择保存文件夹' : '当前浏览器不支持选择文件夹'
+  }
+  saveFileModal.style.display = ''
+  setTimeout(() => { if (saveFileNameInput) saveFileNameInput.focus() }, 60)
+}
+
+async function saveToTarget() {
+  if (!editor || !saveTarget || !saveTarget.dirHandle) return false
+  try {
+    await writeToDir(saveTarget.dirHandle, saveTarget.relPath, editor.getValue() || '')
+    saveDraft()
+    showSaveStatus('已保存', true)
+    return true
+  } catch (e) {
+    console.error('save to file failed', e)
+    if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) {
+      saveTarget = null
+      showSaveStatus('需要重新选择保存文件夹', false)
+      openSaveFileModal()
+      return false
+    }
+    showSaveStatus('保存失败', false)
+    return false
+  }
+}
+
+async function confirmSaveFile() {
+  if (!editor) return
+  const name = ((saveFileNameInput && saveFileNameInput.value) || '').trim()
+  if (!name) {
+    if (saveFileNameInput) saveFileNameInput.focus()
+    return
+  }
+  if (!canSaveToFile()) {
+    saveFileModal.style.display = 'none'
+    saveDraft()
+    if (downloadBtn) downloadBtn.click()
+    showSaveStatus('已下载到下载目录', true)
+    return
+  }
+  if (!saveTarget || !saveTarget.dirHandle) {
+    const dir = await pickSaveFolder()
+    if (!dir) return
+    saveTarget = { name, dirHandle: dir }
+  } else {
+    saveTarget.name = name
+  }
+  const rel = resolveSaveRelPath(saveFilePathInput ? saveFilePathInput.value : '', name)
+  if (rel === false) {
+    showSaveStatus('请输入所选文件夹内的相对路径', false)
+    return
+  }
+  saveTarget.relPath = rel
+  saveFileModal.style.display = 'none'
+  if (await saveToTarget()) await persistSaveTarget()
+}
+
+async function handleSaveShortcut() {
+  if (!editor) return
+  saveDraft()
+  if (saveTarget && saveTarget.dirHandle) {
+    await saveToTarget()
+    return
+  }
+  if (!canSaveToFile()) {
+    if (downloadBtn) downloadBtn.click()
+    showSaveStatus('已下载到下载目录', true)
+    return
+  }
+  openSaveFileModal()
+}
+
+if (saveFilePathPick) {
+  saveFilePathPick.addEventListener('click', async () => {
+    if (!canSaveToFile()) return
+    const dir = await pickSaveFolder()
+    if (!dir) return
+    saveTarget = { name: ((saveFileNameInput && saveFileNameInput.value) || '').trim() || downloadName(), dirHandle: dir }
+    if (saveFilePathInput) saveFilePathInput.value = dir.name
+  })
+}
+
+if (saveFileConfirm) {
+  saveFileConfirm.addEventListener('click', confirmSaveFile)
+}
+
+if (saveFileNameInput) {
+  saveFileNameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmSaveFile() }
+  })
+}
+
+restoreSaveTarget()
 
 function downloadName() {
   const base = cfg.EDITOR_DOWNLOAD_FILENAME || 'document.md'
@@ -1832,10 +2040,6 @@ function setEditorFontSize(size) {
   localStorage.setItem('editor_font_size', size)
   if (editor) editor.updateOptions({ fontSize: size })
   if (codeEditor) codeEditor.updateOptions({ fontSize: Math.max(8, size - 1) })
-  if (!isTypstPage) {
-    const previewEl = document.getElementById('editor-preview')
-    if (previewEl) previewEl.style.setProperty('font-size', Math.round(size * 0.95) + 'px', 'important')
-  }
 }
 function updateFontSizeInput() {
   if (!fontSizeInput) return
@@ -1861,12 +2065,35 @@ if (previewFontIncreaseBtn) previewFontIncreaseBtn.addEventListener('click', () 
   updateFontSizeInput()
 })
 
+if (isTypstPage) {
+  if (typstZoomDecreaseBtn) typstZoomDecreaseBtn.addEventListener('click', typstZoomOut)
+  if (typstZoomIncreaseBtn) typstZoomIncreaseBtn.addEventListener('click', typstZoomIn)
+  if (typstZoomInput) {
+    if (!typstZoomInput.value) typstZoomInput.value = Math.round(typstZoom * 100) + '%'
+    typstZoomInput.addEventListener('change', () => {
+      const val = parseInt(typstZoomInput.value) || 0
+      typstZoom = Math.max(TYPST_ZOOM_MIN, Math.min(TYPST_ZOOM_MAX, val / 100))
+      applyTypstZoom()
+    })
+    typstZoomInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); typstZoomInput.blur() }
+    })
+  }
+}
+
+let typstZoomWheelTimer = null
 if (isTypstPage && preview) {
   preview.addEventListener('wheel', e => {
     if (!e.ctrlKey) return
     e.preventDefault()
-    if (e.deltaY < 0) typstZoomIn()
-    else typstZoomOut()
+    if (e.deltaY < 0) {
+      typstZoom = Math.min(TYPST_ZOOM_MAX, Math.round((typstZoom + TYPST_ZOOM_STEP) * 100) / 100)
+    } else {
+      typstZoom = Math.max(TYPST_ZOOM_MIN, Math.round((typstZoom - TYPST_ZOOM_STEP) * 100) / 100)
+    }
+    updateZoomInput()
+    clearTimeout(typstZoomWheelTimer)
+    typstZoomWheelTimer = setTimeout(() => applyTypstZoom(), 150)
   }, { passive: false })
 }
 
@@ -1888,10 +2115,6 @@ function applyFontToMonaco() {
   fontSize = getMonacoFontSize()
   editor.updateOptions({ fontFamily, fontSize })
   if (codeEditor) codeEditor.updateOptions({ fontFamily, fontSize: Math.max(8, fontSize - 1) })
-  if (!isTypstPage) {
-    const previewEl = document.getElementById('editor-preview')
-    if (previewEl) previewEl.style.fontSize = Math.round(fontSize * 0.95) + 'px'
-  }
 }
 window.addEventListener('storage', e => {
   if (e.key === 'blog_font_settings') applyFontToMonaco()

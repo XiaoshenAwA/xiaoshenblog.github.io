@@ -1142,7 +1142,7 @@
     } catch(e) {}
 
     /* 打字机辅助函数 (拼音->汉字) */
-    function pinyinType(el, text, cb) {
+    function pinyinType(el, text, cb, showPinyin) {
       el.textContent = '';
       var chars = [], idxMap = [];
       for (var i = 0; i < text.length; i++) {
@@ -1167,6 +1167,9 @@
         return;
       }
       var bp = "/blog";
+      if (showPinyin === false) {
+        startType({});
+      } else {
       fetch(bp + '/api/pinyin?text=' + encodeURIComponent(chars.join('')))
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -1175,6 +1178,7 @@
           startType(pyMap);
         })
         .catch(function() { startType({}); });
+      }
       function startType(pyMap) {
         var idx = 0;
         var cur = document.createElement('span');
@@ -1190,6 +1194,11 @@
             s.textContent = ch; idx++;
             setTimeout(next, 60 + Math.random() * 20);
           } else {
+            if (showPinyin === false) {
+              s.textContent = ch; idx++;
+              setTimeout(next, 200);
+              return;
+            }
             var py = pyMap[idx] || ch;
             if (!py || py === ch) { s.textContent = ch; idx++; setTimeout(next, 200); return; }
             s.className = 'typing-pinyin';
@@ -1220,12 +1229,13 @@
           textEl.textContent = '';
           textEl.style.opacity = '1';
           fromEl.style.opacity = '0';
+          /* 保留打字机效果,不打印拼音 */
           pinyinType(textEl, text, function() {
             fromEl.textContent = from;
             fromEl.style.transition = 'opacity 0.5s';
             fromEl.style.opacity = '1';
             if (cb) cb();
-          });
+          }, false);
         }
 
         function load() {
